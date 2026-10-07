@@ -115,4 +115,27 @@ struct FoodParserTests {
     @Test func emptyLineIsEmpty() {
         #expect(parser.estimate("   ") == .empty)
     }
+
+    // MARK: - Fast food (tabelas oficiais das redes)
+
+    @Test func countsFastFoodByTheUnit() {
+        let estimate = parser.estimate("2 big mac")
+        #expect(estimate.items.map(\.foodName) == ["Big Mac (McDonald's)"])
+        #expect(Int(estimate.total.kcal.rounded()) == 1048)
+    }
+
+    @Test func readsChainSizesAndNicknames() {
+        #expect(parser.estimate("mc fritas média").items.first?.foodName == "McFritas Média (McDonald's)")
+        #expect(parser.estimate("batata do mc").items.first?.foodName == "McFritas Média (McDonald's)")
+        #expect(Int(parser.estimate("whopper").total.kcal.rounded()) == 717)
+        #expect(parser.estimate("whopper do bk").items.first?.foodName == "Whopper (Burger King)")
+        #expect(parser.estimate("mcflurry").items.first?.foodName == "McFlurry Ovomaltine Rocks chocolate (McDonald's)")
+        #expect(Int(parser.estimate("10 mcnuggets").total.kcal.rounded()) == 387)
+    }
+
+    @Test func chainsDoNotStealCommonFood() {
+        #expect(parser.estimate("batata frita").items.first?.foodName == "Batata frita")
+        #expect(parser.estimate("pão de queijo").items.first?.foodName == "Pão de queijo")
+        #expect(parser.estimate("cheeseburger").items.first?.foodName?.contains("(") != true)
+    }
 }

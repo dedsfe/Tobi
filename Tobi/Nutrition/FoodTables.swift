@@ -6,6 +6,8 @@ enum FoodSource: Equatable, Sendable {
     case taco(String)
     /// POF 2008-2009 (IBGE): comida como o brasileiro come, com açúcar e medidas caseiras.
     case ibge(String)
+    /// Tabela nutricional oficial de rede de fast food (McDonald's, Burger King...).
+    case chain(String)
     /// Rótulo do produto, via Open Food Facts (código de barras).
     case brand(String)
     /// Estimativa nossa, pra prato pronto que nenhuma tabela tem.
@@ -33,6 +35,7 @@ struct TableFood: Decodable, Sendable {
 enum FoodTables {
     static let taco = load("taco")
     static let ibge = load("ibge")
+    static let fastfood = load("fastfood")
     static let tacoByID = Dictionary(uniqueKeysWithValues: taco.map { ($0.id, $0) })
 
     private static func load(_ name: String) -> [TableFood] {

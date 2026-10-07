@@ -23,9 +23,10 @@ enum FoodDatabase {
         "lanche", "lanche da manha", "lanche da tarde", "pre treino", "pos treino",
     ]
 
-    /// Ordem = prioridade quando dois apelidos empatam: a lista do dia a dia, depois o IBGE
-    /// (comida pronta do jeito brasileiro), depois a TACO (ingredientes).
+    /// Ordem = prioridade quando dois apelidos empatam: a lista do dia a dia, as tabelas oficiais
+    /// das redes de fast food, o IBGE (comida pronta do jeito brasileiro) e por fim a TACO (ingredientes).
     static let foods: [Food] = curated
+        + FoodTables.fastfood.map { Food(table: $0, source: .chain($0.id)) }
         + FoodTables.ibge.map { Food(table: $0, source: .ibge($0.id)) }
         + FoodTables.taco.map { Food(table: $0, source: .taco($0.id)) }
 
