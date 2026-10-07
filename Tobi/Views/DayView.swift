@@ -128,7 +128,7 @@ struct DayView: View {
                 }
             }
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, isEditing ? 20 : 32)
         .padding(.bottom, isEditing ? 12 : 4)
         .padding(.top, 12)
         .background { EdgeFade(edge: .bottom) }

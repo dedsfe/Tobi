@@ -18,9 +18,11 @@ struct KeyboardBar: View {
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .contentTransition(.numericText(value: Double(kcal)))
+                    .lineLimit(1)
+                    .fixedSize()
             }
-            .padding(.horizontal, 22)
-            .frame(minWidth: 104)
+            .padding(.horizontal, 16)
+            .frame(minWidth: 96)
             .frame(height: 44)
             .glassEffect(.regular, in: .capsule)
             .glassEffectID("totals", in: glass)
