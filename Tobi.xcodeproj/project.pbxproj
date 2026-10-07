@@ -1,0 +1,638 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		19A4554982F37800C4D916AB /* LineEditingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E951F4742B5EFD8897822E6E /* LineEditingUITests.swift */; };
+		31AD92836C08C9713CE4457E /* DayNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2D449DF7D2B65CDE6700E42 /* DayNote.swift */; };
+		3A40FCE8DCFB7B67BC1DEB6E /* LineRewriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28C85519ACF4096B51BC3535 /* LineRewriterTests.swift */; };
+		3B667804ECE8C9FF530CE847 /* LineEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D62362ADE564D645E875216 /* LineEditor.swift */; };
+		5CF651F012F4A1CCD3A49B2E /* Dictation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C304B2749615A9C8558D00 /* Dictation.swift */; };
+		62734DD3F35E21CA38AFACD5 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 849BBE740074FABF951F498A /* Theme.swift */; };
+		73A29CA35A4D4B571090FE1A /* TotalsBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0047EB4EB0B56B8E2ED251B /* TotalsBar.swift */; };
+		76D459DF5D937386DAF12206 /* Motion.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1994A7BED207538543F656B /* Motion.swift */; };
+		85A03EFDDA3D7B24646FC2DD /* TobiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5944BEFBCE0A6BC683771E /* TobiApp.swift */; };
+		8D24C9183E293DC3E8DC81F7 /* GoalsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 953F49314598C47639854B69 /* GoalsCard.swift */; };
+		8E3E1AA54F455F6455A96B16 /* taco.json in Resources */ = {isa = PBXBuildFile; fileRef = 3E46D592AB857DDE87A3E279 /* taco.json */; };
+		92994DBBB9C2FE837CA5670E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EF17015117CAFBD333185A7 /* SettingsView.swift */; };
+		988D62DB0C9E2AB97C0914A3 /* Nutrition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA65013DB3626F696AD1207 /* Nutrition.swift */; };
+		A17543C64D9C4306850BE85F /* DayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30CA4C9B21F8C3BEFF79C118 /* DayView.swift */; };
+		B7CFC256A15133CCE2655D22 /* KeyboardBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2751B53BA08C6765765F0715 /* KeyboardBar.swift */; };
+		BEC070B5CD52869753A2C583 /* ibge.json in Resources */ = {isa = PBXBuildFile; fileRef = F114B1E25377701C98EEFCF0 /* ibge.json */; };
+		C43FE44916787D7ADD1601DA /* FoodDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 330296912C2E99B26C68D398 /* FoodDatabase.swift */; };
+		DB0945C61BAA86B1575D2F49 /* FoodTables.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC10422EB949975055CDB990 /* FoodTables.swift */; };
+		F10047776139D6EE95053CB9 /* FoodParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A61D93B4C4C2B1562F8CBA23 /* FoodParserTests.swift */; };
+		FB452BB1ED37189C55EFF16B /* LineRewriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C87CE0B25D3C707E51A6DBA /* LineRewriter.swift */; };
+		FDD953D0FE09F4316F02D6DC /* FoodParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A46A98F03E2CF68A0D4D7978 /* FoodParser.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		622B5199F173CB7C2FDA5691 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1FDF005C269014936688677A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9C44C406D4E47A5A63E3B149;
+			remoteInfo = Tobi;
+		};
+		B8A37C21BE495723A4809FBF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1FDF005C269014936688677A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9C44C406D4E47A5A63E3B149;
+			remoteInfo = Tobi;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0D62362ADE564D645E875216 /* LineEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineEditor.swift; sourceTree = "<group>"; };
+		1C87CE0B25D3C707E51A6DBA /* LineRewriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineRewriter.swift; sourceTree = "<group>"; };
+		2751B53BA08C6765765F0715 /* KeyboardBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardBar.swift; sourceTree = "<group>"; };
+		28C85519ACF4096B51BC3535 /* LineRewriterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineRewriterTests.swift; sourceTree = "<group>"; };
+		30CA4C9B21F8C3BEFF79C118 /* DayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayView.swift; sourceTree = "<group>"; };
+		330296912C2E99B26C68D398 /* FoodDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodDatabase.swift; sourceTree = "<group>"; };
+		3C5944BEFBCE0A6BC683771E /* TobiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TobiApp.swift; sourceTree = "<group>"; };
+		3E46D592AB857DDE87A3E279 /* taco.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = taco.json; sourceTree = "<group>"; };
+		3FA65013DB3626F696AD1207 /* Nutrition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nutrition.swift; sourceTree = "<group>"; };
+		41C304B2749615A9C8558D00 /* Dictation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictation.swift; sourceTree = "<group>"; };
+		45A6CD938A64353750C04F9A /* TobiTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TobiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		5EF17015117CAFBD333185A7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		6DDD333EB71EFBF77A7476E6 /* Tobi.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tobi.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		849BBE740074FABF951F498A /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		953F49314598C47639854B69 /* GoalsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsCard.swift; sourceTree = "<group>"; };
+		A2D449DF7D2B65CDE6700E42 /* DayNote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayNote.swift; sourceTree = "<group>"; };
+		A46A98F03E2CF68A0D4D7978 /* FoodParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodParser.swift; sourceTree = "<group>"; };
+		A61D93B4C4C2B1562F8CBA23 /* FoodParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodParserTests.swift; sourceTree = "<group>"; };
+		C0047EB4EB0B56B8E2ED251B /* TotalsBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TotalsBar.swift; sourceTree = "<group>"; };
+		E1994A7BED207538543F656B /* Motion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion.swift; sourceTree = "<group>"; };
+		E951F4742B5EFD8897822E6E /* LineEditingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineEditingUITests.swift; sourceTree = "<group>"; };
+		F114B1E25377701C98EEFCF0 /* ibge.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ibge.json; sourceTree = "<group>"; };
+		F22DD0603754279324293121 /* TobiUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TobiUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FC10422EB949975055CDB990 /* FoodTables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodTables.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		043BB0472D4B09E963CFC188 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				3C5944BEFBCE0A6BC683771E /* TobiApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		1050D008790E920C10D84724 = {
+			isa = PBXGroup;
+			children = (
+				ACCE96EE5608DD8053FEBD4E /* Tobi */,
+				22717634C632AF809F7A655B /* TobiTests */,
+				D7FC5BB26AC27DA44D71C5E8 /* TobiUITests */,
+				34AEF3B9EB6A46C994955C63 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		2067EA3ADB64A7D60255A807 /* Nutrition */ = {
+			isa = PBXGroup;
+			children = (
+				330296912C2E99B26C68D398 /* FoodDatabase.swift */,
+				A46A98F03E2CF68A0D4D7978 /* FoodParser.swift */,
+				FC10422EB949975055CDB990 /* FoodTables.swift */,
+				1C87CE0B25D3C707E51A6DBA /* LineRewriter.swift */,
+				3FA65013DB3626F696AD1207 /* Nutrition.swift */,
+			);
+			path = Nutrition;
+			sourceTree = "<group>";
+		};
+		22717634C632AF809F7A655B /* TobiTests */ = {
+			isa = PBXGroup;
+			children = (
+				A61D93B4C4C2B1562F8CBA23 /* FoodParserTests.swift */,
+				28C85519ACF4096B51BC3535 /* LineRewriterTests.swift */,
+			);
+			path = TobiTests;
+			sourceTree = "<group>";
+		};
+		34AEF3B9EB6A46C994955C63 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6DDD333EB71EFBF77A7476E6 /* Tobi.app */,
+				45A6CD938A64353750C04F9A /* TobiTests.xctest */,
+				F22DD0603754279324293121 /* TobiUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		7F67FF23429A7B508996553F /* Input */ = {
+			isa = PBXGroup;
+			children = (
+				41C304B2749615A9C8558D00 /* Dictation.swift */,
+			);
+			path = Input;
+			sourceTree = "<group>";
+		};
+		89DD1B90E614A9922E1AA155 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				30CA4C9B21F8C3BEFF79C118 /* DayView.swift */,
+				953F49314598C47639854B69 /* GoalsCard.swift */,
+				2751B53BA08C6765765F0715 /* KeyboardBar.swift */,
+				0D62362ADE564D645E875216 /* LineEditor.swift */,
+				E1994A7BED207538543F656B /* Motion.swift */,
+				5EF17015117CAFBD333185A7 /* SettingsView.swift */,
+				849BBE740074FABF951F498A /* Theme.swift */,
+				C0047EB4EB0B56B8E2ED251B /* TotalsBar.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		ACCE96EE5608DD8053FEBD4E /* Tobi */ = {
+			isa = PBXGroup;
+			children = (
+				043BB0472D4B09E963CFC188 /* App */,
+				7F67FF23429A7B508996553F /* Input */,
+				CB72E6588123A31FE3331B54 /* Models */,
+				2067EA3ADB64A7D60255A807 /* Nutrition */,
+				FA714D49D7B050751EC6D8C2 /* Resources */,
+				89DD1B90E614A9922E1AA155 /* Views */,
+			);
+			path = Tobi;
+			sourceTree = "<group>";
+		};
+		CB72E6588123A31FE3331B54 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A2D449DF7D2B65CDE6700E42 /* DayNote.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		D7FC5BB26AC27DA44D71C5E8 /* TobiUITests */ = {
+			isa = PBXGroup;
+			children = (
+				E951F4742B5EFD8897822E6E /* LineEditingUITests.swift */,
+			);
+			path = TobiUITests;
+			sourceTree = "<group>";
+		};
+		FA714D49D7B050751EC6D8C2 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F114B1E25377701C98EEFCF0 /* ibge.json */,
+				3E46D592AB857DDE87A3E279 /* taco.json */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		9C44C406D4E47A5A63E3B149 /* Tobi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B48661DA5F6AD66103E18A3D /* Build configuration list for PBXNativeTarget "Tobi" */;
+			buildPhases = (
+				E68827120B8E412B31D46DC3 /* Sources */,
+				75F731371E45F2AC1E05CEDE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Tobi;
+			packageProductDependencies = (
+			);
+			productName = Tobi;
+			productReference = 6DDD333EB71EFBF77A7476E6 /* Tobi.app */;
+			productType = "com.apple.product-type.application";
+		};
+		CC8D50720BB5B3037F66D80B /* TobiTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DED7AB144AC5918A18A9C76D /* Build configuration list for PBXNativeTarget "TobiTests" */;
+			buildPhases = (
+				6383F8C426F3022EDFDF83DA /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9A95DBCAEDCB53B0B2F4B371 /* PBXTargetDependency */,
+			);
+			name = TobiTests;
+			packageProductDependencies = (
+			);
+			productName = TobiTests;
+			productReference = 45A6CD938A64353750C04F9A /* TobiTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		F714602D9BD1127C287099E4 /* TobiUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7BDCBBFAB32B01E631EEC66B /* Build configuration list for PBXNativeTarget "TobiUITests" */;
+			buildPhases = (
+				9F1783FC5B299BE013765DCA /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				05C9F51BBAE74CC0471B00FF /* PBXTargetDependency */,
+			);
+			name = TobiUITests;
+			packageProductDependencies = (
+			);
+			productName = TobiUITests;
+			productReference = F22DD0603754279324293121 /* TobiUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1FDF005C269014936688677A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					9C44C406D4E47A5A63E3B149 = {
+						DevelopmentTeam = 4ZQ8PBTL5U;
+						ProvisioningStyle = Automatic;
+					};
+					CC8D50720BB5B3037F66D80B = {
+						DevelopmentTeam = 4ZQ8PBTL5U;
+					};
+					F714602D9BD1127C287099E4 = {
+						DevelopmentTeam = 4ZQ8PBTL5U;
+						TestTargetID = 9C44C406D4E47A5A63E3B149;
+					};
+				};
+			};
+			buildConfigurationList = 1A8DE1F594C20E637C19D8EC /* Build configuration list for PBXProject "Tobi" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 1050D008790E920C10D84724;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 34AEF3B9EB6A46C994955C63 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				9C44C406D4E47A5A63E3B149 /* Tobi */,
+				CC8D50720BB5B3037F66D80B /* TobiTests */,
+				F714602D9BD1127C287099E4 /* TobiUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		75F731371E45F2AC1E05CEDE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BEC070B5CD52869753A2C583 /* ibge.json in Resources */,
+				8E3E1AA54F455F6455A96B16 /* taco.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6383F8C426F3022EDFDF83DA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F10047776139D6EE95053CB9 /* FoodParserTests.swift in Sources */,
+				3A40FCE8DCFB7B67BC1DEB6E /* LineRewriterTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9F1783FC5B299BE013765DCA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				19A4554982F37800C4D916AB /* LineEditingUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E68827120B8E412B31D46DC3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				31AD92836C08C9713CE4457E /* DayNote.swift in Sources */,
+				A17543C64D9C4306850BE85F /* DayView.swift in Sources */,
+				5CF651F012F4A1CCD3A49B2E /* Dictation.swift in Sources */,
+				C43FE44916787D7ADD1601DA /* FoodDatabase.swift in Sources */,
+				FDD953D0FE09F4316F02D6DC /* FoodParser.swift in Sources */,
+				DB0945C61BAA86B1575D2F49 /* FoodTables.swift in Sources */,
+				8D24C9183E293DC3E8DC81F7 /* GoalsCard.swift in Sources */,
+				B7CFC256A15133CCE2655D22 /* KeyboardBar.swift in Sources */,
+				3B667804ECE8C9FF530CE847 /* LineEditor.swift in Sources */,
+				FB452BB1ED37189C55EFF16B /* LineRewriter.swift in Sources */,
+				76D459DF5D937386DAF12206 /* Motion.swift in Sources */,
+				988D62DB0C9E2AB97C0914A3 /* Nutrition.swift in Sources */,
+				92994DBBB9C2FE837CA5670E /* SettingsView.swift in Sources */,
+				62734DD3F35E21CA38AFACD5 /* Theme.swift in Sources */,
+				85A03EFDDA3D7B24646FC2DD /* TobiApp.swift in Sources */,
+				73A29CA35A4D4B571090FE1A /* TotalsBar.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		05C9F51BBAE74CC0471B00FF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9C44C406D4E47A5A63E3B149 /* Tobi */;
+			targetProxy = 622B5199F173CB7C2FDA5691 /* PBXContainerItemProxy */;
+		};
+		9A95DBCAEDCB53B0B2F4B371 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9C44C406D4E47A5A63E3B149 /* Tobi */;
+			targetProxy = B8A37C21BE495723A4809FBF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		02CA0583E52A820222C00FB7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 4ZQ8PBTL5U;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		23AA8D54BC3F612AA8DDE35C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.andrefelipe.TobiUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Tobi;
+			};
+			name = Release;
+		};
+		2B8D60C031F27631235B7D89 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Tobi;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "O Tobi usa o microfone pra você ditar o que comeu.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "O Tobi transforma sua fala em texto pra registrar as refeições.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.andrefelipe.tobi;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		3C7AF4ABAE4D9D61BAB5B20E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.andrefelipe.TobiUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Tobi;
+			};
+			name = Debug;
+		};
+		8EB1E62C60E7F0C65BBB8825 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.andrefelipe.TobiTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tobi.app/Tobi";
+			};
+			name = Debug;
+		};
+		AA35F51BE66B57EE164FAF27 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Tobi;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "O Tobi usa o microfone pra você ditar o que comeu.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "O Tobi transforma sua fala em texto pra registrar as refeições.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.andrefelipe.tobi;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		B319CD4FD8DA3C439F9974A1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.andrefelipe.TobiTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tobi.app/Tobi";
+			};
+			name = Release;
+		};
+		BC0481CD775BB962B4C03705 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 4ZQ8PBTL5U;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1A8DE1F594C20E637C19D8EC /* Build configuration list for PBXProject "Tobi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				02CA0583E52A820222C00FB7 /* Debug */,
+				BC0481CD775BB962B4C03705 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7BDCBBFAB32B01E631EEC66B /* Build configuration list for PBXNativeTarget "TobiUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3C7AF4ABAE4D9D61BAB5B20E /* Debug */,
+				23AA8D54BC3F612AA8DDE35C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B48661DA5F6AD66103E18A3D /* Build configuration list for PBXNativeTarget "Tobi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2B8D60C031F27631235B7D89 /* Debug */,
+				AA35F51BE66B57EE164FAF27 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DED7AB144AC5918A18A9C76D /* Build configuration list for PBXNativeTarget "TobiTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8EB1E62C60E7F0C65BBB8825 /* Debug */,
+				B319CD4FD8DA3C439F9974A1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 1FDF005C269014936688677A /* Project object */;
+}

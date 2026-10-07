@@ -1,0 +1,56 @@
+name: Tobi
+options:
+  bundleIdPrefix: com.andrefelipe
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: 4ZQ8PBTL5U
+targets:
+  Tobi:
+    type: application
+    platform: iOS
+    sources: [Tobi]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.andrefelipe.tobi
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Tobi
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "O Tobi usa o microfone pra você ditar o que comeu."
+        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "O Tobi transforma sua fala em texto pra registrar as refeições."
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+  TobiTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [TobiTests]
+    dependencies:
+      - target: Tobi
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+  TobiUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [TobiUITests]
+    dependencies:
+      - target: Tobi
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  Tobi:
+    build:
+      targets:
+        Tobi: all
+        TobiTests: [test]
+        TobiUITests: [test]
+    test:
+      targets: [TobiTests, TobiUITests]
