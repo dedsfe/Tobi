@@ -451,6 +451,9 @@ struct FoodCoverageTests {
         Sample(group: "ditado", phrase: "brownie do outback", expected: [
             Expected(name: "Brownie (Outback)", grams: 100.0, kcal: 287.1000...292.9000, confidence: .estimated, source: "fastfood:outback-537"),
         ]),
+        Sample(group: "ditado", phrase: "eu gostaria muito de ter um", expected: [
+            Expected(name: nil, grams: 0, kcal: 0...0, confidence: .unknown, source: "frase sem alimento: não soma"),
+        ]),
     ]
 
     @Test func everyRequestedGroupHasAtLeastFifteenPhrases() {

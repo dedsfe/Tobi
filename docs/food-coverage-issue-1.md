@@ -1,15 +1,16 @@
 # Issue #1: cobertura do parser de comida
 
-136 frases em Swift Testing: 22 em cada grupo solicitado, mais quatro regressões adicionais no grupo de ditado. Cada caso confere nomes, quantidade em gramas, faixa de kcal e confiança por item; também verifica o total da linha.
+137 frases em Swift Testing: 22 em cada grupo solicitado, mais cinco regressões adicionais no grupo de ditado. Cada caso confere nomes, quantidade em gramas, faixa de kcal e confiança por item; também verifica o total da linha.
 
 ## Validação real
 
 - Destino exclusivo: iPhone 15 físico, `00008120-000A28A411F1A01E`.
 - `xcodegen generate` foi executado após adicionar o arquivo.
 - Baseline: 132 casos de cobertura, 19 frases com divergências, 68 expectativas falhando.
-- Depois: as 136 frases passam; suíte de unidade passa sem falhas ou testes ignorados.
-- A validação final usou uma cópia isolada do índice de Git para testar exatamente os arquivos deste commit, sem as mudanças ainda não commitadas de outras sessões.
-- Resultado final do xcresult: 42 testes declarados, 200 execuções no dispositivo (incluindo parâmetros), zero falhas e zero ignorados.
+- Regressão adicional pedida no comentário da issue: `eu gostaria muito de ter um` reproduziu Mostarda, 6,30 kcal, `estimated`, antes da proteção de correspondência completa.
+- Depois: as 137 frases passam; suíte de unidade passa sem falhas ou testes ignorados.
+- A validação final usou uma cópia isolada dos arquivos deste trabalho, sem as mudanças fora de escopo de outras sessões. A proteção de correspondência completa da outra sessão foi incorporada conforme o pedido explícito na issue.
+- Resultado final do xcresult: 42 testes declarados, 201 execuções no dispositivo (incluindo parâmetros), zero falhas e zero ignorados.
 - Não foi iniciado nem utilizado simulador. A primeira tentativa dentro do sandbox não localizou o aparelho e não executou testes; as execuções no aparelho foram feitas fora do sandbox.
 
 Comando de teste (mesma invocação na cópia isolada):
@@ -20,7 +21,7 @@ xcodebuild test -project Tobi.xcodeproj -scheme Tobi \
   -only-testing:TobiTests -derivedDataPath build/dd
 ```
 
-Os valores da tabela abaixo são SAÍDAS CAPTURADAS no iPhone, arredondadas a duas casas apenas para leitura. Os logs e bundles locais estão em `build/coverage-baseline.log`, `build/coverage-baseline.xcresult`, `build/coverage-final.log` e `/private/tmp/Tobi-issue1-verify/build/coverage-final.xcresult`.
+Os valores da tabela abaixo são SAÍDAS CAPTURADAS no iPhone, arredondadas a duas casas apenas para leitura. O baseline original está em `build/coverage-baseline.log` e `build/coverage-baseline.xcresult`. A regressão adicional e a validação final estão em `/private/tmp/Tobi-issue1-verify/build/coverage-sentence-before.xcresult` e `coverage-sentence-after.xcresult`; os logs de ação exportados estão em `build/coverage-sentence-before-action.json` e `build/coverage-sentence-after-action.json`.
 
 ## Antes e depois
 
@@ -44,6 +45,7 @@ Os valores da tabela abaixo são SAÍDAS CAPTURADAS no iPhone, arredondadas a du
 | `tomei um copo de café com leite` | Café com leite: ~75.46 kcal (estimated) | Café com leite: 75.46 kcal (exact) |
 | `100g de feijao e 2 ovoss` | Feijão: 76.00 kcal (exact); não reconhecido: ?0.00 kcal (unknown) | Feijão: 76.00 kcal (exact); Ovo: ~146.00 kcal (estimated) |
 | `hoje tomei 350ml de refri` | Refrigerante: ~119.00 kcal (estimated) | Refrigerante: 119.00 kcal (exact) |
+| `eu gostaria muito de ter um` | Mostarda: ~6.30 kcal (estimated) | não reconhecido: ?0.00 kcal (unknown) |
 
 ## O que mudou
 
@@ -51,6 +53,7 @@ Os valores da tabela abaixo são SAÍDAS CAPTURADAS no iPhone, arredondadas a du
 - Uma lista fechada de palavras introdutórias de ditado é removida antes de ler contagens e medidas.
 - Medidas caseiras sem peso específico no alimento continuam calculadas com o fallback existente, mas recebem `estimated`.
 - `ovoss` é corrigido para `ovo` somente se a forma resultante existir no vocabulário, mantendo `estimated`.
+- A correção de digitação só é aceita quando a frase corrigida é entendida inteira; isso impede interpretar palavras de frases sem comida como alimentos parecidos.
 - Apelidos `pão francês com manteiga`, `milkshake` e `buchada` usam linhas IBGE já incluídas. `buchada` permanece estimado por escolher bode como preparo de referência.
 - `cheeseburger` usa a estimativa genérica de hambúrguer que já existia.
 - `whopper jr` e `whopper junior` apontam ao item `WHOPPER® Jr.` da tabela original do Burger King.
@@ -77,4 +80,4 @@ Os valores da tabela abaixo são SAÍDAS CAPTURADAS no iPhone, arredondadas a du
 | `burrito` | `unknown`, 0 kcal | Recheio, porção e fonte da receita. |
 | `churros do bk` | Churro genérico do IBGE, `estimated`, 236,98 kcal | Tabela nutricional específica do BK. O nome é entendido parcialmente; não é tratado como item exato da rede. |
 
-O caso de `churros do bk` não recebeu correção de produto: a expectativa inicial de desconhecido foi ajustada para o comportamento de nome parcialmente entendido previsto na issue. A tabela de antes/depois contém as outras 18 frases com alteração real. As entradas sem dados não foram apagadas nem ignoradas: permanecem testadas. IA pode ajudar a identificar uma receita ou pedir detalhes, mas não substitui uma fonte nutricional.
+O caso de `churros do bk` não recebeu correção de produto: a expectativa inicial de desconhecido foi ajustada para o comportamento de nome parcialmente entendido previsto na issue. A tabela de antes/depois contém 19 frases com alteração real, incluindo a regressão adicional. As entradas sem dados não foram apagadas nem ignoradas: permanecem testadas. IA pode ajudar a identificar uma receita ou pedir detalhes, mas não substitui uma fonte nutricional.

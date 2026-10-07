@@ -198,11 +198,15 @@ struct FoodParser: Sendable {
         guard !tokens.isEmpty else { return [] }
 
         var (matches, complete) = matchFoods(in: tokens)
-        // Nada bateu: pode ser erro de digitação ("whoper", "picanah").
+        // Nada bateu: pode ser erro de digitação ("whoper", "picanah"). Só vale se a correção
+        // explicar a frase inteira; senão "eu gostaria muito" vira "mostarda".
         var typo = false
         if matches.isEmpty, let fixed = corrected(tokens) {
-            (matches, complete) = matchFoods(in: fixed)
-            typo = true
+            let retry = matchFoods(in: fixed)
+            if retry.complete {
+                (matches, complete) = retry
+                typo = true
+            }
         }
         guard !matches.isEmpty else {
             return [ItemEstimate(text: item, foodName: nil, grams: 0, nutrition: .zero, confidence: .unknown)]
