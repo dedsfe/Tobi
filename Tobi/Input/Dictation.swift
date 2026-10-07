@@ -19,8 +19,17 @@ final class Dictation {
     private var sessionID = 0
 
     func start() async {
-        guard !isRecording, await Self.requestPermissions(),
-              let recognizer, recognizer.isAvailable else { return }
+        guard !isRecording else { return }
+        // A tela responde no toque; permissão e áudio sobem por trás. Se não der, volta.
+        isRecording = true
+        sessionID += 1
+        let id = sessionID
+        guard await Self.requestPermissions(), let recognizer, recognizer.isAvailable else {
+            if sessionID == id { stop() }
+            return
+        }
+        // Parou enquanto pedia permissão.
+        guard isRecording, sessionID == id else { return }
 
         do {
             let session = AVAudioSession.sharedInstance()
@@ -31,8 +40,6 @@ final class Dictation {
             request.shouldReportPartialResults = true
             request.addsPunctuation = false
             transcript = ""
-            sessionID += 1
-            let id = sessionID
             Self.installTap(on: engine.inputNode, feeding: request) { [weak self] levels in
                 guard let self, self.sessionID == id, self.isRecording else { return }
                 self.levels = levels
@@ -46,7 +53,6 @@ final class Dictation {
                 if let text { transcript = text }
                 if isDone { stop() }
             }
-            isRecording = true
         } catch {
             stop()
         }
