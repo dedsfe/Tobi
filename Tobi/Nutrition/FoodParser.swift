@@ -33,13 +33,32 @@ struct FoodParser: Sendable {
 
     /// Apelidos agrupados pela primeira palavra; dentro de cada grupo, o mais longo primeiro
     /// e, empatando, quem veio antes em `foods` (a lista curada ganha da TACO automática).
-    private let entries: [String: [Entry]]
+    private var entries: [String: [Entry]]
     private let labels: Set<String>
     /// Apelidos que têm um separador dentro ("café com leite", "alho e óleo"), pela primeira palavra.
     /// Na hora de dividir a linha em itens, esses ficam inteiros.
     private let compounds: [String: [[String]]]
 
     static let shared = FoodParser(foods: FoodDatabase.foods)
+
+    /// A mesma base com produtos de marca salvos no aparelho por cima: eles ganham no empate.
+    func adding(_ foods: [Food]) -> FoodParser {
+        var copy = self
+        for (offset, food) in foods.enumerated() {
+            for alias in food.aliases {
+                let tokens = Self.tokenize(alias)
+                guard let first = tokens.first else { continue }
+                var group = copy.entries[first, default: []]
+                let entry = Entry(tokens: tokens, food: food, rank: offset - foods.count)
+                let position = group.firstIndex { other in
+                    other.tokens.count < tokens.count || (other.tokens.count == tokens.count && other.rank > entry.rank)
+                } ?? group.endIndex
+                group.insert(entry, at: position)
+                copy.entries[first] = group
+            }
+        }
+        return copy
+    }
 
     init(foods: [Food]) {
         var all: [Entry] = []

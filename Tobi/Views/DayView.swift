@@ -12,6 +12,7 @@ struct DayView: View {
     @Environment(\.modelContext) private var context
     @AppStorage("dailyGoal") private var goal = 2000
     @Query private var notes: [DayNote]
+    @Query private var brandProducts: [BrandProduct]
 
     @State private var day = Calendar.current.startOfDay(for: .now)
     @State private var lines: [NoteLine] = [NoteLine()]
@@ -30,7 +31,11 @@ struct DayView: View {
     /// Onde o cursor cai quando o foco muda por código (juntar/dividir linha). nil = fim.
     @State private var focusCursor: Int?
 
-    private let parser = FoodParser.shared
+    /// Base oficial + produtos de marca que a pessoa já usou (refeito quando um produto entra).
+    @State private var parser = FoodParser.shared
+    @State private var showingScanner = false
+    /// Linhas procurando produto de marca no Open Food Facts (mostram ✨).
+    @State private var searching: Set<NoteLine.ID> = []
 
     private var estimates: [LineEstimate] { lines.map { parser.estimate($0.text) } }
 
@@ -40,6 +45,7 @@ struct DayView: View {
                 LineRow(
                     text: text(of: line.id),
                     estimate: parser.estimate(line.text),
+                    isSearching: searching.contains(line.id),
                     placeholder: line.id == lines.first?.id ? "Comece a registrar suas refeições..." : "",
                     isFocused: focusedLine == line.id,
                     dismissKeyboard: focusedLine == nil,
@@ -78,6 +84,12 @@ struct DayView: View {
         // Ajustes pode apagar tudo: relê o dia ao voltar.
         .sheet(isPresented: $showingSettings, onDismiss: load) { SettingsView() }
         .sheet(isPresented: $showingCalendar) { calendar }
+        .sheet(isPresented: $showingScanner) {
+            ScanSheet { product in addScanned(product) }
+        }
+        .onChange(of: brandProducts.map(\.barcode), initial: true) {
+            parser = FoodParser.shared.adding(brandProducts.map(\.food))
+        }
         .task(id: day) { load() }
         .onChange(of: lines) { save() }
         .onChange(of: focusedLine) { previous, line in
@@ -107,6 +119,7 @@ struct DayView: View {
                         isDictating: dictation.isRecording,
                         glass: glass,
                         onMic: toggleDictation,
+                    onScan: { showingScanner = true },
                         onAdd: { insertLine(after: focusedLine ?? lines.last?.id ?? UUID()) },
                         onDismiss: { focusedLine = nil }
                     )
@@ -315,6 +328,44 @@ struct DayView: View {
         guard let index = lines.firstIndex(where: { $0.id == id }) else { return }
         let compact = LineRewriter.compact(lines[index].text)
         if compact != lines[index].text { lines[index].text = compact }
+        searchBrands(in: id)
+    }
+
+    // MARK: - Produtos de marca
+
+    /// O que a base não reconheceu, procura no Open Food Facts. Só aceita produto vendido no Brasil
+    /// com todas as palavras escritas no nome; senão a linha continua "não sei".
+    private func searchBrands(in id: NoteLine.ID) {
+        guard let line = lines.first(where: { $0.id == id }) else { return }
+        let unknown = parser.estimate(line.text).items.filter { !$0.isRecognized }.map(\.text)
+        guard !unknown.isEmpty else { return }
+        searching.insert(id)
+        Task {
+            for text in unknown {
+                if let info = try? await OpenFoodFacts.search(text, limit: 1).first { save(info) }
+            }
+            searching.remove(id)
+        }
+    }
+
+    private func save(_ info: BrandProductInfo) {
+        guard !brandProducts.contains(where: { $0.barcode == info.barcode }) else { return }
+        context.insert(BrandProduct(info))
+    }
+
+    /// Produto escaneado: vai pra linha em foco se estiver vazia, senão numa linha nova logo abaixo.
+    private func addScanned(_ info: BrandProductInfo) {
+        save(info)
+        if let id = focusedLine, let index = lines.firstIndex(where: { $0.id == id }),
+           lines[index].text.trimmingCharacters(in: .whitespaces).isEmpty {
+            lines[index].text = info.name
+        } else {
+            let line = NoteLine(text: info.name)
+            let index = focusedLine.flatMap { id in lines.firstIndex { $0.id == id } } ?? lines.count - 1
+            lines.insert(line, at: index + 1)
+            focusCursor = nil
+            focusedLine = line.id
+        }
     }
 
     private func focusLastLine() {
@@ -352,6 +403,7 @@ struct DayView: View {
 struct LineRow: View {
     @Binding var text: String
     let estimate: LineEstimate
+    var isSearching = false
     let placeholder: String
     let isFocused: Bool
     let dismissKeyboard: Bool
@@ -377,10 +429,23 @@ struct LineRow: View {
                     }
                 }
 
-            Text("\(kcalLabel)\(Text(kcalLabel.isEmpty || kcalLabel == "?" ? "" : " cal").font(.system(size: 13)))")
-                .font(.system(size: 16, weight: .medium, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(estimate.hasUnknown ? .tertiary : .secondary)
+            HStack(spacing: 4) {
+                // Procurando produto de marca no Open Food Facts.
+                if isSearching {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.blue)
+                        .symbolEffect(.pulse)
+                        .transition(.scale.combined(with: .opacity))
+                }
+                Text("\(kcalLabel)\(Text(kcalLabel.isEmpty || kcalLabel == "?" ? "" : " cal").font(.system(size: 13)))")
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(estimate.hasUnknown ? .tertiary : .secondary)
+                    .contentTransition(.numericText())
+            }
+            .animation(Motion.quick, value: isSearching)
+            .animation(Motion.quick, value: kcalLabel)
         }
     }
 

@@ -37,11 +37,19 @@ struct LineEditor: UIViewRepresentable {
         if view.text != text { view.text = text }
         if view.font != font { view.font = font }
 
+        // Só reage quando o foco *muda*. O toque do dedo já dá o foco pelo UIKit antes do estado
+        // chegar aqui; reagir ao estado velho fecharia o teclado (ou roubaria o foco de volta).
+        let coordinator = context.coordinator
+        let gainedFocus = isFocused && !coordinator.wasFocused
+        let lostAllFocus = dismissKeyboard && !coordinator.wasDismissed
+        coordinator.wasFocused = isFocused
+        coordinator.wasDismissed = dismissKeyboard
+
         view.wantsFocus = isFocused
-        if isFocused, !view.isFirstResponder {
+        if gainedFocus, !view.isFirstResponder {
             view.pendingCursor = cursor
             if view.window != nil { view.takeFocus() }
-        } else if dismissKeyboard, view.isFirstResponder {
+        } else if lostAllFocus, view.isFirstResponder {
             view.resignFirstResponder()
         }
     }
@@ -57,8 +65,13 @@ struct LineEditor: UIViewRepresentable {
     @MainActor
     final class Coordinator: NSObject, UITextViewDelegate {
         var parent: LineEditor
+        var wasFocused = false
+        var wasDismissed: Bool
 
-        init(parent: LineEditor) { self.parent = parent }
+        init(parent: LineEditor) {
+            self.parent = parent
+            wasDismissed = parent.dismissKeyboard
+        }
 
         func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText: String) -> Bool {
             // Só o enter digitado; texto colado com várias linhas passa e o DayView divide.

@@ -10,6 +10,6 @@ struct TobiApp: App {
         WindowGroup {
             DayView()
         }
-        .modelContainer(for: DayNote.self, inMemory: inMemory)
+        .modelContainer(for: [DayNote.self, BrandProduct.self], inMemory: inMemory)
     }
 }
