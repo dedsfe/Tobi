@@ -89,51 +89,85 @@ struct FoodParser: Sendable {
         if trimmed.isEmpty { return hasTitle ? .label : .empty }
         if labels.contains(Self.tokenize(trimmed).joined(separator: " ")) { return .label }
 
-        let items = self.items(in: trimmed).map(Self.clean).filter { !$0.isEmpty }.flatMap(estimateItem)
-        return LineEstimate(items: items, isLabel: false)
+        var pieces = items(in: trimmed).map(Self.clean).filter { !$0.isEmpty }
+
+        // "10 g de cada" / "2 colheres cada": a quantidade vale pra todos os itens da linha.
+        // Sem o "cada", vale só pro item onde foi escrita, como na fala.
+        let each = pieces.contains { $0.contains(/\bcada\b/) }
+        if each {
+            pieces = pieces.map { Self.clean($0.replacing(/\b(?:de\s+)?cada\b/, with: " ")) }.filter { !$0.isEmpty }
+        }
+
+        var shared: Quantity?
+        let estimates = pieces.flatMap { piece -> [ItemEstimate] in
+            var (quantity, tokens) = Self.parseQuantity(piece)
+            if each {
+                if quantity.isWritten {
+                    shared = shared ?? quantity
+                } else if let shared {
+                    quantity = shared
+                }
+            }
+            return estimateItem(piece, quantity: quantity, tokens: tokens)
+        }
+        return LineEstimate(items: estimates, isLabel: false)
     }
 
     // MARK: - Item
 
-    private func estimateItem(_ item: String) -> [ItemEstimate] {
+    /// O quanto a pessoa escreveu: "200g", "2", "meia", "3 colheres de sopa".
+    private struct Quantity {
+        var grams: Double?
+        var count: Double = 1
+        var measure: String?
+        var isWritten = false
+    }
+
+    /// Separa a quantidade do resto. Devolve os tokens que sobram (a comida).
+    private static func parseQuantity(_ item: String) -> (Quantity, [String]) {
+        var quantity = Quantity()
         var text = item
 
         // Quantidade absoluta em qualquer lugar: "200g", "350 ml", "1.5 kg".
-        var absoluteGrams: Double?
         if let match = text.firstMatch(of: /(\d+(?:\.\d+)?)\s*(kg|gramas?|gr|g|ml|litros?|l)\b/) {
             let value = Double(match.1) ?? 0
             let unit = String(match.2)
-            absoluteGrams = value * (["kg", "l", "litro", "litros"].contains(unit) ? 1000 : 1)
+            quantity.grams = value * (["kg", "l", "litro", "litros"].contains(unit) ? 1000 : 1)
+            quantity.isWritten = true
             text.removeSubrange(match.range)
         }
 
         var raw = text.split(separator: " ").map(String.init)
 
         // Contagem no começo: "2", "meio", "1/2", "duas", "3x".
-        var count: Double = 1
-        if let first = raw.first, let number = Self.parseNumber(first) {
-            count = number
+        if let first = raw.first, let number = parseNumber(first) {
+            quantity.count = number
+            quantity.isWritten = true
             raw.removeFirst()
         }
 
-        var tokens = raw.map(Self.singularize)
+        var tokens = raw.map(singularize)
 
         // Medida caseira: "colher", "fatia", "copo de"...
-        var measure: String?
         // Só é medida se vier comida depois: "2 posta" não, "2 postas de peixe" sim.
         if tokens.count > 1, let first = tokens.first,
            FoodDatabase.measures[first] != nil || FoodDatabase.portionWords.contains(first) {
-            measure = first
+            quantity.measure = first
+            quantity.isWritten = true
             tokens.removeFirst()
             if first == "colher", tokens.count >= 2, tokens[0] == "de",
                ["cha", "sopa", "sobremesa"].contains(tokens[1]) {
-                measure = "colher de \(tokens[1])"
+                quantity.measure = "colher de \(tokens[1])"
                 tokens.removeFirst(2)
             }
         }
-        while let first = tokens.first, Self.stopWords.contains(first) {
+        while let first = tokens.first, stopWords.contains(first) {
             tokens.removeFirst()
         }
+        return (quantity, tokens)
+    }
+
+    private func estimateItem(_ item: String, quantity: Quantity, tokens: [String]) -> [ItemEstimate] {
         guard !tokens.isEmpty else { return [] }
 
         let foods = matchFoods(in: tokens)
@@ -145,7 +179,7 @@ struct FoodParser: Sendable {
             // A quantidade escrita vale para o primeiro alimento do item.
             let grams: Double
             if index == 0 {
-                grams = absoluteGrams ?? count * self.grams(of: food, measure: measure)
+                grams = quantity.grams ?? quantity.count * self.grams(of: food, measure: quantity.measure)
             } else {
                 grams = food.portion
             }

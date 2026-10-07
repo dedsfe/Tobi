@@ -77,6 +77,17 @@ struct FoodParserTests {
         #expect(parser.estimate("feijão fradinho").items.first?.foodName == "Feijão, fradinho, cozido")
     }
 
+    @Test func quantityGoesToTheItemWhereItIsWritten() {
+        let items = parser.estimate("10 gramas de bacon, arroz e feijão").items
+        #expect(items.map(\.grams) == [10, 150, 140])
+    }
+
+    @Test func eachSpreadsTheQuantity() {
+        #expect(parser.estimate("10 gramas de bacon, arroz e feijão cada").items.map(\.grams) == [10, 10, 10])
+        #expect(parser.estimate("2 colheres de arroz e feijão cada").items.map(\.grams) == [50, 40])
+        #expect(parser.estimate("100g de cada, arroz e frango").items.map(\.grams) == [100, 100])
+    }
+
     @Test func keepsDishesTogether() {
         let names = parser.estimate("pão com manteiga e café com leite").items.map(\.foodName)
         #expect(names == ["Pão com manteiga", "Café com leite"])
