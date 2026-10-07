@@ -18,10 +18,15 @@ struct VoiceGlow: View {
 
     var body: some View {
         GeometryReader { proxy in
+            // O desfoque clareia perto da borda do desenho. Desenhando mais largo que a tela,
+            // essa borda clara fica fora dela e a luz encosta inteira nas laterais.
+            let overscan = proxy.size.width * 0.18
             glow
-                .frame(width: proxy.size.width / Self.downscale, height: proxy.size.height / Self.downscale)
+                .frame(width: (proxy.size.width + overscan * 2) / Self.downscale,
+                       height: proxy.size.height / Self.downscale)
                 .drawingGroup()
                 .scaleEffect(Self.downscale, anchor: .topLeading)
+                .offset(x: -overscan)
         }
         .mask {
             LinearGradient(colors: [.clear, .black.opacity(0.85), .black], startPoint: .top, endPoint: .bottom)

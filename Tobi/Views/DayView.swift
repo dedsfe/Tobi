@@ -108,6 +108,9 @@ struct DayView: View {
 
     // MARK: - Barra de baixo
 
+    /// Quanto da luz do ditado fica escondida atrás do teclado.
+    private static let glowUnderKeyboard: CGFloat = 120
+
     private var total: Nutrition { estimates.map(\.total).total }
 
     private var bottomBar: some View {
@@ -140,9 +143,11 @@ struct DayView: View {
             ZStack(alignment: .bottom) {
                 EdgeFade(edge: .bottom)
                 if dictation.isRecording {
-                    // A luz nasce atrás da barra e sobe por cima das linhas.
+                    // A luz nasce atrás do teclado e sobe por cima das linhas: continua por baixo
+                    // dele (aparece nos cantos arredondados), sem corte reto em lugar nenhum.
                     VoiceGlow(dictation: dictation)
-                        .frame(height: 260)
+                        .frame(height: 260 + Self.glowUnderKeyboard)
+                        .offset(y: Self.glowUnderKeyboard)
                         .transition(.emerge)
                 }
             }
