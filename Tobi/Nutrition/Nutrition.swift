@@ -44,6 +44,26 @@ struct Food: Sendable {
     let portion: Double
     /// Medidas caseiras específicas desse alimento (ex: fatia de pizza = 110 g).
     let measures: [String: Double]
+    /// Apelidos que chutam um sabor ou tamanho ("batata do mc" → média). Quem escreve assim
+    /// recebe o número como estimativa.
+    var guesses: Set<String> = []
+
+    /// O número em si é estimativa: prato que nenhuma tabela tem, ou tabela de fora do Brasil.
+    var isEstimate: Bool {
+        switch source {
+        case .estimate: true
+        case .chain(_, let estimated): estimated
+        case .taco, .ibge, .brand: false
+        }
+    }
+
+    /// Item de cardápio ou embalagem: "whopper" já é um whopper inteiro, não precisa de quantidade.
+    var countsByUnit: Bool {
+        switch source {
+        case .chain, .brand: true
+        case .taco, .ibge, .estimate: false
+        }
+    }
 
     /// Estimativa nossa (prato que nenhuma tabela oficial tem).
     init(_ name: String, _ aliases: [String], kcal: Double, p: Double, c: Double, f: Double,
@@ -84,6 +104,7 @@ struct Food: Sendable {
         self.source = source
         self.portion = food.portion
         self.measures = food.measures
+        self.guesses = Set(food.guesses ?? [])
     }
 
     func nutrition(grams: Double) -> Nutrition {

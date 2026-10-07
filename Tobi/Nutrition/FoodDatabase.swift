@@ -26,7 +26,7 @@ enum FoodDatabase {
     /// Ordem = prioridade quando dois apelidos empatam: a lista do dia a dia, as tabelas oficiais
     /// das redes de fast food, o IBGE (comida pronta do jeito brasileiro) e por fim a TACO (ingredientes).
     static let foods: [Food] = curated
-        + FoodTables.fastfood.map { Food(table: $0, source: .chain($0.id)) }
+        + FoodTables.fastfood.map { Food(table: $0, source: .chain($0.id, estimated: $0.estimated ?? false)) }
         + FoodTables.ibge.map { Food(table: $0, source: .ibge($0.id)) }
         + FoodTables.taco.map { Food(table: $0, source: .taco($0.id)) }
 

@@ -1,11 +1,25 @@
 import Foundation
 
+/// Quão certo é o número de um item.
+enum Confidence: Int, Comparable, Sendable {
+    /// Não reconheceu: não soma no total e a linha mostra "?".
+    case unknown
+    /// Porção chutada, prato genérico, sabor escolhido por padrão ou nome entendido pela metade:
+    /// o número aparece com "~".
+    case estimated
+    /// Tabela oficial com quantidade clara.
+    case exact
+
+    static func < (lhs: Self, rhs: Self) -> Bool { lhs.rawValue < rhs.rawValue }
+}
+
 /// Um pedaço reconhecido (ou não) de uma linha. "2 ovos" vira um item; "arroz e feijão" vira dois.
 struct ItemEstimate: Equatable, Sendable {
     let text: String
     let foodName: String?
     let grams: Double
     let nutrition: Nutrition
+    let confidence: Confidence
 
     var isRecognized: Bool { foodName != nil }
 }
@@ -20,6 +34,8 @@ struct LineEstimate: Equatable, Sendable {
 
     var total: Nutrition { items.map(\.nutrition).total }
     var hasUnknown: Bool { items.contains { !$0.isRecognized } }
+    /// O menos certo dos itens reconhecidos. O que não reconheceu já aparece à parte ("?", "+").
+    var confidence: Confidence { items.filter(\.isRecognized).map(\.confidence).min() ?? .unknown }
 }
 
 /// Lê texto livre em português ("2 ovos, 200g de frango e meio pão") e estima calorias
@@ -29,6 +45,8 @@ struct FoodParser: Sendable {
         let tokens: [String]
         let food: Food
         let rank: Int
+        /// Apelido que escolhe sabor ou tamanho por padrão ("mcflurry").
+        let isGuess: Bool
     }
 
     /// Apelidos agrupados pela primeira palavra; dentro de cada grupo, o mais longo primeiro
@@ -38,6 +56,9 @@ struct FoodParser: Sendable {
     /// Apelidos que têm um separador dentro ("café com leite", "alho e óleo"), pela primeira palavra.
     /// Na hora de dividir a linha em itens, esses ficam inteiros.
     private let compounds: [String: [[String]]]
+    /// Toda palavra que aparece em algum apelido, pelo tamanho. Serve pra consertar erro de digitação.
+    private var vocabulary: [Int: [String]]
+    private var knownWords: Set<String>
 
     static let shared = FoodParser(foods: FoodDatabase.foods)
 
@@ -49,7 +70,10 @@ struct FoodParser: Sendable {
                 let tokens = Self.tokenize(alias)
                 guard let first = tokens.first else { continue }
                 var group = copy.entries[first, default: []]
-                let entry = Entry(tokens: tokens, food: food, rank: offset - foods.count)
+                let entry = Entry(tokens: tokens, food: food, rank: offset - foods.count, isGuess: false)
+                for word in tokens where copy.knownWords.insert(word).inserted {
+                    copy.vocabulary[word.count, default: []].append(word)
+                }
                 let position = group.firstIndex { other in
                     other.tokens.count < tokens.count || (other.tokens.count == tokens.count && other.rank > entry.rank)
                 } ?? group.endIndex
@@ -65,7 +89,9 @@ struct FoodParser: Sendable {
         for (rank, food) in foods.enumerated() {
             for alias in food.aliases {
                 let tokens = Self.tokenize(alias)
-                if !tokens.isEmpty { all.append(Entry(tokens: tokens, food: food, rank: rank)) }
+                if !tokens.isEmpty {
+                    all.append(Entry(tokens: tokens, food: food, rank: rank, isGuess: food.guesses.contains(alias)))
+                }
             }
         }
         all.sort { a, b in
@@ -75,6 +101,8 @@ struct FoodParser: Sendable {
         let joined = all.map(\.tokens).filter { $0.contains(where: Self.separatorWords.contains) }
         compounds = Dictionary(grouping: joined) { (tokens: [String]) in tokens[0] }
         labels = Set(FoodDatabase.labels.map { Self.tokenize($0).joined(separator: " ") })
+        knownWords = Set(all.flatMap(\.tokens))
+        vocabulary = Dictionary(grouping: knownWords.sorted(), by: \.count)
     }
 
     func estimate(_ line: String) -> LineEstimate {
@@ -170,12 +198,19 @@ struct FoodParser: Sendable {
     private func estimateItem(_ item: String, quantity: Quantity, tokens: [String]) -> [ItemEstimate] {
         guard !tokens.isEmpty else { return [] }
 
-        let foods = matchFoods(in: tokens)
-        guard !foods.isEmpty else {
-            return [ItemEstimate(text: item, foodName: nil, grams: 0, nutrition: .zero)]
+        var (matches, complete) = matchFoods(in: tokens)
+        // Nada bateu: pode ser erro de digitação ("whoper", "picanah").
+        var typo = false
+        if matches.isEmpty, let fixed = corrected(tokens) {
+            (matches, complete) = matchFoods(in: fixed)
+            typo = true
+        }
+        guard !matches.isEmpty else {
+            return [ItemEstimate(text: item, foodName: nil, grams: 0, nutrition: .zero, confidence: .unknown)]
         }
 
-        return foods.enumerated().map { index, food in
+        return matches.enumerated().map { index, match in
+            let food = match.food
             // A quantidade escrita vale para o primeiro alimento do item.
             let grams: Double
             if index == 0 {
@@ -183,7 +218,12 @@ struct FoodParser: Sendable {
             } else {
                 grams = food.portion
             }
-            return ItemEstimate(text: item, foodName: food.name, grams: grams, nutrition: food.nutrition(grams: grams))
+            // Certo = tabela oficial, nome entendido inteiro e quantidade dita (ou item de cardápio,
+            // que já é uma unidade). Qualquer chute no caminho vira "~".
+            let sure = complete && !typo && !match.isGuess && !food.isEstimate && index == 0
+                && (quantity.isWritten || food.countsByUnit)
+            return ItemEstimate(text: item, foodName: food.name, grams: grams, nutrition: food.nutrition(grams: grams),
+                                confidence: sure ? .exact : .estimated)
         }
     }
 
@@ -195,26 +235,82 @@ struct FoodParser: Sendable {
         return FoodDatabase.measures[measure] ?? food.portion
     }
 
-    /// Da esquerda pra direita, sempre pegando o nome mais longo que encaixa.
-    private func matchFoods(in tokens: [String]) -> [Food] {
-        var found: [Food] = []
+    private struct Match {
+        let food: Food
+        let isGuess: Bool
+    }
+
+    /// Da esquerda pra direita, sempre pegando o nome mais longo que encaixa. `complete` diz se
+    /// toda palavra que importa entrou em algum nome: "costela do madero" acha a costela, mas
+    /// sobra "madero", então o número é estimativa.
+    private func matchFoods(in tokens: [String]) -> (matches: [Match], complete: Bool) {
+        var found: [Match] = []
+        var complete = true
         var i = 0
         while i < tokens.count {
             if let entry = entries[tokens[i], default: []].first(where: { entry in
                 i + entry.tokens.count <= tokens.count && Array(tokens[i..<i + entry.tokens.count]) == entry.tokens
             }) {
-                found.append(entry.food)
+                found.append(Match(food: entry.food, isGuess: entry.isGuess))
                 i += entry.tokens.count
             } else {
+                if !Self.fillerWords.contains(tokens[i]) { complete = false }
                 i += 1
             }
         }
-        return found
+        return (found, complete)
+    }
+
+    /// Troca cada palavra que a base não conhece pela mais parecida: até 1 letra de diferença,
+    /// 2 em palavra longa. Nil se não mudou nada.
+    private func corrected(_ tokens: [String]) -> [String]? {
+        var changed = false
+        let fixed = tokens.map { token -> String in
+            guard token.count >= 4, !knownWords.contains(token), Self.parseNumber(token) == nil,
+                  let closest = closestWord(to: token) else { return token }
+            changed = true
+            return closest
+        }
+        return changed ? fixed : nil
+    }
+
+    private func closestWord(to token: String) -> String? {
+        let limit = token.count >= 8 ? 2 : 1
+        let word = Array(token.utf8)
+        var best: (word: String, distance: Int)?
+        for length in (token.count - limit)...(token.count + limit) {
+            for candidate in vocabulary[length, default: []] {
+                let distance = Self.editDistance(word, Array(candidate.utf8), limit: best?.distance ?? limit)
+                if distance <= limit, distance < (best?.distance ?? .max) { best = (candidate, distance) }
+            }
+        }
+        return best?.word
+    }
+
+    /// Levenshtein com saída antecipada: passou do limite, devolve limit + 1.
+    static func editDistance(_ a: [UInt8], _ b: [UInt8], limit: Int) -> Int {
+        guard abs(a.count - b.count) <= limit else { return limit + 1 }
+        guard !a.isEmpty, !b.isEmpty else { return max(a.count, b.count) }
+        var previous = Array(0...b.count)
+        for i in 1...a.count {
+            var current = [i] + Array(repeating: 0, count: b.count)
+            var rowMin = i
+            for j in 1...b.count {
+                let cost = a[i - 1] == b[j - 1] ? 0 : 1
+                current[j] = min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + cost)
+                rowMin = min(rowMin, current[j])
+            }
+            if rowMin > limit { return limit + 1 }
+            previous = current
+        }
+        return previous[b.count]
     }
 
     // MARK: - Texto
 
     private static let stopWords: Set<String> = ["de", "da", "do", "dos", "das", "o", "a", "os", "as"]
+    /// Palavras que podem sobrar sem mudar o que a pessoa comeu.
+    private static let fillerWords: Set<String> = stopWords.union(["no", "na", "nos", "nas", "em", "um", "uma", "pra", "para", "e", "com", "mais"])
 
     private static let numberWords: [String: Double] = [
         "um": 1, "uma": 1, "dois": 2, "duas": 2, "tres": 3, "quatro": 4, "cinco": 5,

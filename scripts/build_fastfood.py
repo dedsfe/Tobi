@@ -1,5 +1,5 @@
 """Gera Tobi/Resources/fastfood.json a partir das tabelas nutricionais OFICIAIS das redes de
-fast food (McDonald's, Burger King, KFC, Subway e Habib's).
+fast food (McDonald's, Burger King, KFC, Subway, Bob's e Habib's), mais o Outback como estimativa.
 
 Os números vêm de data/fastfood/<rede>.json, transcritos das fontes oficiais de cada rede pelo
 projeto Refeição Livre (github.com/FernandoGarciaRangel/Refeicao-Livre, commit 50068ff). A
@@ -9,9 +9,11 @@ Unidade = 1 sanduíche/porção. Onde a rede publica o peso, os valores viram "p
 porção real; o McDonald's não publica peso, então a porção vira 100 "gramas" simbólicas e os
 valores por 100 são os da porção inteira ("2 big mac" = 2 × a tabela).
 
-Ficaram de fora: bebidas (o refrigerante genérico da base já cobre), Bob's (só publica por
-100 g, sem o peso do sanduíche) e os itens do Habib's publicados só por 100 g (beirute, pizza,
-pratos), pelo mesmo motivo.
+Bob's e parte do Habib's (beirute, pizza, pratos) só publicam "por 100 g". O peso da unidade
+sai do próprio rótulo oficial, que diz que fração da unidade são esses 100 g (data/fastfood/
+porcoes.json). O Outback Brasil não publica tabela: entram os valores oficiais do Outback dos
+EUA, marcados como estimativa ("estimated": true), porque a porção daqui pode ser outra.
+Bebidas ficam de fora (o refrigerante genérico da base já cobre).
 
 Uso: python3 -I scripts/build_fastfood.py data/fastfood Tobi/Resources/fastfood.json \
          Tobi/Resources/taco.json Tobi/Resources/ibge.json Tobi/Nutrition/FoodDatabase.swift
@@ -30,6 +32,8 @@ CHAINS = {
     "kfc": ("KFC", ["do kfc", "kfc"]),
     "subway": ("Subway", ["do subway", "subway"]),
     "habibs": ("Habib's", ["do habibs", "do habib", "habibs"]),
+    "bobs": ("Bob's", ["do bobs", "do bob s", "bobs", "bob s"]),
+    "outback": ("Outback", ["do outback", "outback"]),
 }
 SKIP_CATEGORIES = {"bebidas"}
 
@@ -46,7 +50,9 @@ GENERIC = {
     "misto", "do", "de", "da", "com", "e", "sabor", "tipo", "zero", "acucar", "light",
 }
 
-# Apelido do dia a dia → item da tabela (nome exatamente como na tabela da rede).
+# Apelido do dia a dia → item da tabela (nome exatamente como na tabela da rede). A maioria
+# escolhe um sabor ou tamanho por padrão ("mcflurry" → Ovomaltine, "batata do mc" → média), então
+# vira estimativa no app; os de NICKNAMES são só outro nome pro mesmo item e contam como certos.
 EXTRA_ALIASES = {
     "mcdonalds": {
         "McFritas Média": ["mcfritas", "batata do mc", "fritas do mc", "batata media do mc",
@@ -77,7 +83,7 @@ EXTRA_ALIASES = {
         "Batata Média": ["batata do kfc", "fritas do kfc", "batata media do kfc"],
         "Batata Grande": ["batata grande do kfc"],
         "Batata Pequena": ["batata pequena do kfc"],
-        "Coxa Crocante": ["coxa do kfc", "coxinha da asa do kfc"],
+        "Coxa Crocante": ["coxa do kfc"],
         "Asa Crocante": ["asa do kfc", "asinha do kfc"],
         "Sobrecoxa Crocante": ["sobrecoxa do kfc"],
         "Peito Central Crocante": ["peito do kfc"],
@@ -91,8 +97,45 @@ EXTRA_ALIASES = {
         "Bib'sfiha de Frango": ["esfiha de frango do habibs", "esfirra de frango do habibs"],
         "Kibe": ["kibe do habibs", "quibe do habibs"],
         "Batata Frita (100 g)": ["batata do habibs", "fritas do habibs"],
+        "Beirute Tradicional Rosbife": ["beirute", "beirute do habibs", "beirute de rosbife"],
+        "Pizza de Mussarela": ["pizza do habibs"],
+    },
+    "bobs": {
+        "Batata Palito": ["batata do bobs", "fritas do bobs", "batata do bob s", "fritas do bob s"],
+        "Milk Shake Chocolate": ["milk shake do bobs", "milkshake do bobs", "shake do bobs",
+                                 "milk shake do bob s", "milkshake do bob s", "shake do bob s"],
+        "Casquinha Baunilha": ["casquinha do bobs", "casquinha do bob s"],
+        "Sundae Chocolate": ["sundae do bobs", "sundae do bob s"],
+    },
+    "outback": {
+        "Bloomin' Onion": ["blooming onion", "cebola do outback", "cebola australiana", "bloomin"],
+        "Aussie Cheese Fries": ["cheese fries do outback", "cheese fries"],
+        "Aussie Fries": ["batata do outback", "fritas do outback"],
+        "Kookaburra Wings": ["kookaburra", "asinha do outback", "asa do outback"],
+        "Coconut Shrimp": ["camarao do outback"],
+        "Pão Australiano com manteiga": ["pao australiano", "pao do outback"],
+        "Ribs on the Barbie": ["ribs", "costela do outback", "ribs do outback", "costelinha do outback"],
+        "Grilled Chicken on the Barbie": ["frango do outback"],
+        "Victoria's Filet Mignon": ["file mignon do outback", "filet mignon do outback"],
+        "Chocolate Thunder from Down Under": ["chocolate thunder", "thunder"],
     },
 }
+
+NICKNAMES = {
+    "mcfritas", "quarterao", "blooming onion", "cebola do outback", "cebola australiana", "bloomin",
+    "kookaburra", "camarao do outback", "pao australiano", "pao do outback", "chocolate thunder",
+    "thunder", "cheese fries do outback", "cheese fries", "frango do outback",
+    "file mignon do outback", "filet mignon do outback", "bibsfiha", "esfiha do habibs",
+    "esfirra do habibs", "esfiha de carne do habibs", "esfirra de carne do habibs",
+    "esfiha de queijo do habibs", "esfirra de queijo do habibs", "esfiha de frango do habibs",
+    "esfirra de frango do habibs", "kibe do habibs", "quibe do habibs", "mcflurry m m",
+    "mcflurry de m m", "mcflurry mms", "mcflurry de mms", "onion rings do bk", "onion ring do bk",
+    "coxa do kfc", "asa do kfc", "asinha do kfc", "sobrecoxa do kfc", "tirinha do kfc",
+    "tirinhas do kfc", "beirute de rosbife", "asinha do outback", "asa do outback",
+}
+
+# Apelido que já diz o tamanho ("batata grande do mc") não é chute.
+SIZES = {"p", "pequena", "media", "grande", "individual"}
 
 # Itens que a pessoa conta por unidade, tirados de uma caixa da tabela: "10 mcnuggets".
 PER_UNIT = {
@@ -160,12 +203,15 @@ def base_vocabulary(taco, ibge, curated):
 
 def main(src, out, taco, ibge, curated):
     base_aliases, base_words = base_vocabulary(taco, ibge, curated)
+    units = json.loads((Path(src) / "porcoes.json").read_text())
     brand_words = lambda alias: [w for w in alias if w not in base_words and w not in GENERIC
                                  and not w.replace(".", "").isdigit()]
 
     foods = []
     for slug, (chain, tags) in CHAINS.items():
         data = json.loads((Path(src) / f"{slug}.json").read_text())
+        estimated = data.get("estimado", False)
+        chain_units = units.get(slug, {})
         items = {item["nome"]: item for category in data["categorias"]
                  if category["slug"] not in SKIP_CATEGORIES for item in category["itens"]}
         extras = EXTRA_ALIASES.get(slug, {})
@@ -177,22 +223,34 @@ def main(src, out, taco, ibge, curated):
             weight = grams(item.get("porcao"))
             if item.get("kcal") is None:
                 return
-            # Habib's publica beirute, pizza e pratos só por 100 g: sem o peso da unidade, fica de fora.
-            if slug == "habibs" and weight == 100:
-                return
-            portion = (weight or 100) / divide
-            factor = 100 / weight if weight else 1
+            measures = {}
+            # Tabela só "por 100 g": o peso da unidade vem do rótulo (porcoes.json); sem ele, fica de fora.
+            per100_only = slug == "bobs" or (slug == "habibs" and weight == 100 and "(100 g)" not in name)
+            if per100_only:
+                unit = chain_units.get(name)
+                if not unit:
+                    return
+                portion, factor = unit["grams"] / divide, 1
+                if unit["unit"] != "unidade":
+                    measures[unit["unit"]] = unit["grams"]
+            else:
+                portion = (weight or 100) / divide
+                factor = 100 / weight if weight else 1
             names = spellings(name)
             aliases = [f"{n} {tag}" for n in names for tag in tags]
             aliases += [n for n in names if brand_words(tokens(n))]
             aliases += list(extra) + extras.get(name, [])
+            guesses = [normalize(a) for a in extras.get(name, [])
+                       if normalize(a) not in NICKNAMES and not SIZES & set(normalize(a).split())]
             foods.append({
                 "id": f"{slug}-{len(foods)}",
                 "name": f"{re.sub(r'[®™]', '', name).replace('WHOPPER', 'Whopper').strip()} ({chain})",
                 "category": chain,
                 "aliases": aliases,
                 "portion": round(portion, 2),
-                "measures": {},
+                "measures": measures,
+                "estimated": estimated,
+                "guesses": guesses,
                 "kcal": round(number(item["kcal"]) * factor, 2),
                 "protein": round(number(item.get("prot")) * factor, 2),
                 "fat": round(number(item.get("gord")) * factor, 2),
@@ -223,6 +281,7 @@ def main(src, out, taco, ibge, curated):
             seen.add(key)
             kept.append(normalize(alias))
         food["aliases"] = kept
+        food["guesses"] = [alias for alias in food["guesses"] if alias in kept]
 
     Path(out).write_text(json.dumps(foods, ensure_ascii=False, separators=(",", ":")))
     by_chain = defaultdict(int)

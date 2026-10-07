@@ -335,6 +335,8 @@ struct DayView: View {
 
     /// O que a base não reconheceu, procura no Open Food Facts. Só aceita produto vendido no Brasil
     /// com todas as palavras escritas no nome; senão a linha continua "não sei".
+    /// Ordem de quem responde: base local (redes, TACO, IBGE) → Open Food Facts → IA (quando entrar).
+    /// A IA só interpreta a frase e aponta itens da base; número inventado nunca entra.
     private func searchBrands(in id: NoteLine.ID) {
         guard let line = lines.first(where: { $0.id == id }) else { return }
         let unknown = parser.estimate(line.text).items.filter { !$0.isRecognized }.map(\.text)
@@ -441,7 +443,7 @@ struct LineRow: View {
                 Text("\(kcalLabel)\(Text(kcalLabel.isEmpty || kcalLabel == "?" ? "" : " cal").font(.system(size: 13)))")
                     .font(.system(size: 16, weight: .medium, design: .rounded))
                     .monospacedDigit()
-                    .foregroundStyle(estimate.hasUnknown ? .tertiary : .secondary)
+                    .foregroundStyle(estimate.hasUnknown || estimate.confidence == .estimated ? .tertiary : .secondary)
                     .contentTransition(.numericText())
             }
             .animation(Motion.quick, value: isSearching)
@@ -453,7 +455,9 @@ struct LineRow: View {
         if estimate.isLabel || estimate.items.isEmpty { return "" }
         let kcal = Int(estimate.total.kcal.rounded())
         if estimate.items.allSatisfy({ !$0.isRecognized }) { return "?" }
-        return estimate.hasUnknown ? "\(kcal.formatted())+" : kcal.formatted()
+        // "~" = tem chute no número (porção, prato genérico, sabor padrão); "+" = tem item sem número.
+        let approximate = estimate.confidence == .estimated ? "~" : ""
+        return "\(approximate)\(kcal.formatted())\(estimate.hasUnknown ? "+" : "")"
     }
 }
 

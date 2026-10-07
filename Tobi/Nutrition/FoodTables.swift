@@ -6,8 +6,9 @@ enum FoodSource: Equatable, Sendable {
     case taco(String)
     /// POF 2008-2009 (IBGE): comida como o brasileiro come, com açúcar e medidas caseiras.
     case ibge(String)
-    /// Tabela nutricional oficial de rede de fast food (McDonald's, Burger King...).
-    case chain(String)
+    /// Tabela nutricional oficial de rede de fast food (McDonald's, Burger King...). `estimated` quando
+    /// a rede não publica tabela no Brasil e o número vem da tabela oficial de fora (Outback).
+    case chain(String, estimated: Bool)
     /// Rótulo do produto, via Open Food Facts (código de barras).
     case brand(String)
     /// Estimativa nossa, pra prato pronto que nenhuma tabela tem.
@@ -24,6 +25,10 @@ struct TableFood: Decodable, Sendable {
     let measures: [String: Double]
     let kcal, protein, fat, carbs, fiber, sodium: Double
     let sugar: Double?
+    /// Só nas redes: número que não é da porção brasileira, e apelidos que escolhem um sabor ou
+    /// tamanho por padrão ("mcflurry" → Ovomaltine).
+    let estimated: Bool?
+    let guesses: [String]?
 
     var per100: Nutrition {
         Nutrition(kcal: kcal, protein: protein, carbs: carbs, fat: fat,

@@ -133,6 +133,49 @@ struct FoodParserTests {
         #expect(Int(parser.estimate("10 mcnuggets").total.kcal.rounded()) == 387)
     }
 
+    @Test func recoversChainsPublishedPer100Grams() {
+        // Bob's e Habib's: o peso da unidade sai do rótulo ("100 g = 3/7 do Big Bob").
+        #expect(Int(parser.estimate("big bob").total.kcal.rounded()) == 602)
+        #expect(parser.estimate("beirute de kafta do habibs").items.first?.foodName == "Beirute de Kafta (Habib's)")
+        #expect(parser.estimate("2 fatias de pizza de mussarela do habibs").items.first?.grams == 172)
+    }
+
+    // MARK: - Confiança
+
+    @Test func officialTableWithClearQuantityIsExact() {
+        #expect(parser.estimate("2 big mac").confidence == .exact)
+        #expect(parser.estimate("whopper").confidence == .exact)
+        #expect(parser.estimate("200g de arroz").confidence == .exact)
+        #expect(parser.estimate("2 ovos").confidence == .exact)
+    }
+
+    @Test func guessesAreEstimated() {
+        #expect(parser.estimate("arroz").confidence == .estimated)       // porção chutada
+        #expect(parser.estimate("1 pizza").confidence == .estimated)     // prato genérico
+        #expect(parser.estimate("mcflurry").confidence == .estimated)    // sabor padrão
+        #expect(parser.estimate("bloomin onion").confidence == .estimated) // tabela dos EUA
+    }
+
+    @Test func halfUnderstoodNameIsEstimated() {
+        let estimate = parser.estimate("2 costelas do madero")
+        #expect(estimate.items.first?.isRecognized == true)
+        #expect(estimate.confidence == .estimated)
+    }
+
+    @Test func fixesTypos() {
+        let estimate = parser.estimate("whoper")
+        #expect(estimate.items.first?.foodName == "Whopper (Burger King)")
+        #expect(estimate.confidence == .estimated)
+        #expect(parser.estimate("2 bananaz").items.first?.foodName == "Banana")
+    }
+
+    @Test func unknownStaysUnknown() {
+        let estimate = parser.estimate("xablau")
+        #expect(estimate.hasUnknown)
+        #expect(estimate.confidence == .unknown)
+        #expect(estimate.total.kcal == 0)
+    }
+
     @Test func chainsDoNotStealCommonFood() {
         #expect(parser.estimate("batata frita").items.first?.foodName == "Batata frita")
         #expect(parser.estimate("pão de queijo").items.first?.foodName == "Pão de queijo")

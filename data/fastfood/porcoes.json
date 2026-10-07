@@ -1,0 +1,372 @@
+{
+ "_leia": "Peso da unidade de itens que a rede só publica por 100 g. Sai da própria tabela oficial: o rótulo diz que fração da unidade a porção representa (Big Bob: '100 g (3/7 unidade)' → 233 g). Bob's: rótulos PNG de bobs.com.br lidos por OCR e conferidos; Habib's: PDF tb_nutri.pdf de agosto/2026. 'Filé de Frango Grelhado com Arroz e Fritas' ficou de fora: o rótulo diz '100/39 unidade' (39 g por prato), o que é impossível.",
+ "habibs": {
+  "Beirute de Frango Crocante": {
+   "grams": 500.0,
+   "unit": "unidade",
+   "label": "100 g (1/5 unidade)"
+  },
+  "Beirute de Kafta": {
+   "grams": 530.0,
+   "unit": "unidade",
+   "label": "100 g (10/53 unidade)"
+  },
+  "Beirute Super Burger": {
+   "grams": 560.0,
+   "unit": "unidade",
+   "label": "100 g (5/28 unidade)"
+  },
+  "Beirute Tradicional Rosbife": {
+   "grams": 490.0,
+   "unit": "unidade",
+   "label": "100 g (10/49 unidade)"
+  },
+  "Estrogonofe de Frango com Arroz e Fritas": {
+   "grams": 480.0,
+   "unit": "unidade",
+   "label": "100 g (5/24 unidade)"
+  },
+  "Filé de Frango à Milanesa com Arroz e Fritas": {
+   "grams": 470.0,
+   "unit": "unidade",
+   "label": "100 g (10/47 unidade)"
+  },
+  "Filé de Frango à Parmegiana com Arroz e Fritas": {
+   "grams": 750.0,
+   "unit": "unidade",
+   "label": "100 g (2/15 unidade)"
+  },
+  "Carne de Panela": {
+   "grams": 615.0,
+   "unit": "unidade",
+   "label": "100 g (20/123 unidade)"
+  },
+  "Feijoada": {
+   "grams": 600.0,
+   "unit": "unidade",
+   "label": "100 g (1/6 unidade)"
+  },
+  "Kafta": {
+   "grams": 530.0,
+   "unit": "unidade",
+   "label": "100 g (10/53 unidade)"
+  },
+  "Kafta com Vinagrete com Arroz, Batata e Molho de Alho": {
+   "grams": 500.0,
+   "unit": "unidade",
+   "label": "100 g (1/5 unidade)"
+  },
+  "Prato Verão": {
+   "grams": 338.0,
+   "unit": "unidade",
+   "label": "100 g (50/169 unidade)"
+  },
+  "Pizza à Moda": {
+   "grams": 88.0,
+   "unit": "fatia",
+   "label": "100 g (1 + 3/22 fatia)"
+  },
+  "Pizza de Calabresa": {
+   "grams": 94.0,
+   "unit": "fatia",
+   "label": "100 g (1 + 3/47 fatia)"
+  },
+  "Pizza de Frango com Cremely": {
+   "grams": 100.0,
+   "unit": "fatia",
+   "label": "100 g (1 fatia)"
+  },
+  "Pizza de Mussarela": {
+   "grams": 86.0,
+   "unit": "fatia",
+   "label": "100 g (1 + 7/43 fatia)"
+  },
+  "Pizza de Quatro Queijos": {
+   "grams": 94.0,
+   "unit": "fatia",
+   "label": "100 g (1 + 3/47 fatia)"
+  },
+  "Milk-shake de Chocolate 500 ml": {
+   "grams": 500.0,
+   "unit": "unidade",
+   "label": "100 g (1/5 unidade)"
+  },
+  "Milk-shake de Chocolate Monster": {
+   "grams": 300.0,
+   "unit": "unidade",
+   "label": "100 g (1/3 unidade)"
+  },
+  "Milk-shake de Flocos 300 ml": {
+   "grams": 300.0,
+   "unit": "unidade",
+   "label": "100 g (1/3 unidade)"
+  },
+  "Milk-shake de Flocos 500 ml": {
+   "grams": 500.0,
+   "unit": "unidade",
+   "label": "100 g (1/5 unidade)"
+  },
+  "Milk-shake de Flocos Maltados": {
+   "grams": 300.0,
+   "unit": "unidade",
+   "label": "100 g (1/3 unidade)"
+  },
+  "Milk-shake de Morango 500 ml": {
+   "grams": 500.0,
+   "unit": "unidade",
+   "label": "100 g (1/5 unidade)"
+  },
+  "Milk-shake de Morango Monster": {
+   "grams": 300.0,
+   "unit": "unidade",
+   "label": "100 g (1/3 unidade)"
+  },
+  "Caipirinha de Limão com Cachaça": {
+   "grams": 300.0,
+   "unit": "unidade",
+   "label": "100 g (1/3 unidade)"
+  },
+  "Caipirinha de Limão com Vodka": {
+   "grams": 300.0,
+   "unit": "unidade",
+   "label": "100 g (1/3 unidade)"
+  },
+  "Caipirinha de Maracujá com Cachaça": {
+   "grams": 200.0,
+   "unit": "unidade",
+   "label": "100 g (1/2 unidade)"
+  },
+  "Caipirinha de Maracujá com Vodka": {
+   "grams": 200.0,
+   "unit": "unidade",
+   "label": "100 g (1/2 unidade)"
+  },
+  "Caipirinha de Morango com Cachaça": {
+   "grams": 200.0,
+   "unit": "unidade",
+   "label": "100 g (1/2 unidade)"
+  },
+  "Caipirinha de Morango com Vodka": {
+   "grams": 200.0,
+   "unit": "unidade",
+   "label": "100 g (1/2 unidade)"
+  },
+  "Chá Mate": {
+   "grams": 500.0,
+   "unit": "caneca",
+   "label": "100 g (1/5 caneca)"
+  },
+  "Chá Mate com Limão": {
+   "grams": 500.0,
+   "unit": "caneca",
+   "label": "100 g (1/5 caneca)"
+  },
+  "Taça Habib's": {
+   "grams": 300.0,
+   "unit": "unidade",
+   "label": "100 g (1/3 de unidade)"
+  }
+ },
+ "bobs": {
+  "Big Bob Picanha e Costela": {
+   "grams": 350.0,
+   "unit": "unidade",
+   "label": "100 g (2/7 unidade)"
+  },
+  "Double Cheese Picanha e Costela": {
+   "grams": 300.0,
+   "unit": "unidade",
+   "label": "100 g (1/3 unidade)"
+  },
+  "Cheddar Australiano Picanha e Costela": {
+   "grams": 300.0,
+   "unit": "unidade",
+   "label": "100 g (1/3 unidade)"
+  },
+  "Chicken Filé Jr.": {
+   "grams": 150.0,
+   "unit": "unidade",
+   "label": "100 g (2/3 unidade)"
+  },
+  "Big Bob": {
+   "grams": 233.3,
+   "unit": "unidade",
+   "label": "100 g (3/7 unidade)"
+  },
+  "Chicken Filé": {
+   "grams": 200.0,
+   "unit": "unidade",
+   "label": "100 g (1/2 unidade)"
+  },
+  "Chicken Bacon de Responsa": {
+   "grams": 266.7,
+   "unit": "unidade",
+   "label": "100 g (3/8 unidade)"
+  },
+  "Tiras de Frango": {
+   "grams": 97.5,
+   "unit": "unidade",
+   "label": "130 g (1 1/3 unidade)"
+  },
+  "Batata Palito": {
+   "grams": 148.8,
+   "unit": "unidade",
+   "label": "85 g (4/7 unidade)"
+  },
+  "Colherudo Max Pistache": {
+   "grams": 270.0,
+   "unit": "unidade",
+   "label": "60 g (2/9 unidade)"
+  },
+  "Colherudo Shake Pistache": {
+   "grams": 240.0,
+   "unit": "unidade",
+   "label": "60 g (1/4 unidade)"
+  },
+  "Shake Duplo Chocolate": {
+   "grams": 240.0,
+   "unit": "unidade",
+   "label": "60 g (1/4 unidade)"
+  },
+  "Shake Triplo Crocante": {
+   "grams": 240.0,
+   "unit": "unidade",
+   "label": "60 g (1/4 unidade)"
+  },
+  "Colherudo Max Choco Nuts": {
+   "grams": 300.0,
+   "unit": "unidade",
+   "label": "60 g (1/5 unidade)"
+  },
+  "Colherudo Shake Choco Nuts": {
+   "grams": 270.0,
+   "unit": "unidade",
+   "label": "60 g (2/9 unidade)"
+  },
+  "Colherudo Shake Morango": {
+   "grams": 300.0,
+   "unit": "unidade",
+   "label": "60 g (1/5 unidade)"
+  },
+  "Colherudo Max Morango": {
+   "grams": 300.0,
+   "unit": "unidade",
+   "label": "60 g (1/5 unidade)"
+  },
+  "Colherudo Max Nuts": {
+   "grams": 300.0,
+   "unit": "unidade",
+   "label": "60 g (1/5 unidade)"
+  },
+  "Milk Shake de Paçoca": {
+   "grams": 210.0,
+   "unit": "unidade",
+   "label": "60 g (2/7 unidade)"
+  },
+  "Milk Café Shake": {
+   "grams": 210.0,
+   "unit": "unidade",
+   "label": "60 g (2/7 unidade)"
+  },
+  "Milk Shake Crocante": {
+   "grams": 210.0,
+   "unit": "unidade",
+   "label": "60 g (2/7 unidade)"
+  },
+  "Milk Shake Morango": {
+   "grams": 240.0,
+   "unit": "unidade",
+   "label": "60 g (1/4 unidade)"
+  },
+  "Milk Shake Nuts": {
+   "grams": 240.0,
+   "unit": "unidade",
+   "label": "60 g (1/4 unidade)"
+  },
+  "Milk Shake Chocolate": {
+   "grams": 240.0,
+   "unit": "unidade",
+   "label": "60 g (1/4 unidade)"
+  },
+  "Bob's Max Ovomaltine": {
+   "grams": 300.0,
+   "unit": "unidade",
+   "label": "60 g (1/5 unidade)"
+  },
+  "Sundae Ovomaltine": {
+   "grams": 150.0,
+   "unit": "unidade",
+   "label": "60 g (2/5 unidade)"
+  },
+  "Sundae Morango": {
+   "grams": 150.0,
+   "unit": "unidade",
+   "label": "60 g (2/5 unidade)"
+  },
+  "Sundae Chocolate": {
+   "grams": 150.0,
+   "unit": "unidade",
+   "label": "60 g (2/5 unidade)"
+  },
+  "Big Cascão Ovomaltine": {
+   "grams": 135.0,
+   "unit": "unidade",
+   "label": "60 g (4/9 unidade)"
+  },
+  "Big Cascão Morango": {
+   "grams": 120.0,
+   "unit": "unidade",
+   "label": "60 g (1/2 unidade)"
+  },
+  "Big Cascão Chocolate": {
+   "grams": 120.0,
+   "unit": "unidade",
+   "label": "60 g (1/2 unidade)"
+  },
+  "Casquinha Baunilha": {
+   "grams": 120.0,
+   "unit": "unidade",
+   "label": "60 g (1/2 unidade)"
+  },
+  "Casquinha Chocolate": {
+   "grams": 120.0,
+   "unit": "unidade",
+   "label": "60 g (1/2 unidade)"
+  },
+  "Casquinha Mista": {
+   "grams": 120.0,
+   "unit": "unidade",
+   "label": "60 g (1/2 unidade)"
+  },
+  "Casquinha Recheada": {
+   "grams": 150.0,
+   "unit": "unidade",
+   "label": "60 g (2/5 unidade)"
+  },
+  "Casquinha de Açaí": {
+   "grams": 108.0,
+   "unit": "unidade",
+   "label": "108 g (1 unidade)"
+  },
+  "Top Açaí": {
+   "grams": 300.0,
+   "unit": "unidade",
+   "label": "60 g (1/5 unidade)"
+  },
+  "Bob's Max Morango": {
+   "grams": 270.0,
+   "unit": "unidade",
+   "label": "60 g (2/9 unidade)"
+  },
+  "Bob's Max Chocolate": {
+   "grams": 270.0,
+   "unit": "unidade",
+   "label": "60 g (2/9 unidade)"
+  },
+  "Milk Shake Baunilha": {
+   "grams": 180.0,
+   "unit": "unidade",
+   "label": "60 g (1/3 unidade)"
+  }
+ }
+}

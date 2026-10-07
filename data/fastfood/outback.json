@@ -1,0 +1,254 @@
+{
+ "slug": "outback",
+ "nome": "Outback",
+ "estimado": true,
+ "fonte": {
+  "url": "https://edge.sitecorecloud.io/osirestaurantpartners-piq24hos/media/Project/BBI/outback/files/obs-full-nutrition-information.pdf",
+  "tipo": "Tabela oficial do Outback dos EUA",
+  "atualizadoEm": "2026-10"
+ },
+ "observacoes": "O Outback Brasil não publica tabela nutricional. Estes são os valores oficiais do Outback dos EUA para os pratos que existem nos dois cardápios; a porção brasileira pode ser diferente, por isso o app trata como estimativa (~). 'linhaOriginal' é o nome do item no PDF americano.",
+ "categorias": [
+  {
+   "slug": "entradas",
+   "itens": [
+    {
+     "nome": "Bloomin' Onion",
+     "porcao": "1 porção",
+     "kcal": 1920.0,
+     "carb": 131.0,
+     "acucar": 24.0,
+     "prot": 17.0,
+     "gord": 152.0,
+     "gordSat": 55.0,
+     "fibra": 17.0,
+     "sodio": 4870.0,
+     "linhaOriginal": "Bloomin' Onion"
+    },
+    {
+     "nome": "Aussie Cheese Fries",
+     "porcao": "1 porção",
+     "kcal": 2860.0,
+     "carb": 208.0,
+     "acucar": 3.0,
+     "prot": 80.0,
+     "gord": 200.0,
+     "gordSat": 78.0,
+     "fibra": 22.0,
+     "sodio": 9330.0,
+     "linhaOriginal": "Aussie Cheese Fries"
+    },
+    {
+     "nome": "Kookaburra Wings",
+     "porcao": "1 porção",
+     "kcal": 1980.0,
+     "carb": 73.0,
+     "acucar": 5.0,
+     "prot": 89.0,
+     "gord": 152.0,
+     "gordSat": 45.0,
+     "fibra": 7.0,
+     "sodio": 4080.0,
+     "linhaOriginal": "Kookaburra Wings Mild--10 count"
+    },
+    {
+     "nome": "Coconut Shrimp",
+     "porcao": "1 porção",
+     "kcal": 970.0,
+     "carb": 59.0,
+     "acucar": 41.0,
+     "prot": 34.0,
+     "gord": 66.0,
+     "gordSat": 35.0,
+     "fibra": 1.0,
+     "sodio": 570.0,
+     "linhaOriginal": "6 Gold Coast Coconut Shrimp"
+    },
+    {
+     "nome": "Pão Australiano com manteiga",
+     "porcao": "1 porção",
+     "kcal": 370.0,
+     "carb": 51.0,
+     "acucar": 10.0,
+     "prot": 10.0,
+     "gord": 15.0,
+     "gordSat": 7.0,
+     "fibra": 4.0,
+     "sodio": 420.0,
+     "linhaOriginal": "Table Bread with Butter"
+    }
+   ]
+  },
+  {
+   "slug": "pratos",
+   "itens": [
+    {
+     "nome": "Ribs on the Barbie",
+     "porcao": "1 porção",
+     "kcal": 1440.0,
+     "carb": 60.0,
+     "acucar": 39.0,
+     "prot": 94.0,
+     "gord": 119.0,
+     "gordSat": 32.0,
+     "fibra": 3.0,
+     "sodio": 2000.0,
+     "linhaOriginal": "Outback Ribs Full Rack"
+    },
+    {
+     "nome": "Junior Ribs",
+     "porcao": "1 porção",
+     "kcal": 720.0,
+     "carb": 30.0,
+     "acucar": 20.0,
+     "prot": 47.0,
+     "gord": 60.0,
+     "gordSat": 16.0,
+     "fibra": 2.0,
+     "sodio": 1000.0,
+     "linhaOriginal": "Outback Ribs Half  Rack"
+    },
+    {
+     "nome": "Alice Springs Chicken",
+     "porcao": "1 porção",
+     "kcal": 900.0,
+     "carb": 18.0,
+     "acucar": 12.0,
+     "prot": 79.0,
+     "gord": 61.0,
+     "gordSat": 23.0,
+     "fibra": 1.0,
+     "sodio": 1580.0,
+     "linhaOriginal": "Alice Springs Chicken Entree"
+    },
+    {
+     "nome": "Grilled Chicken on the Barbie",
+     "porcao": "1 porção",
+     "kcal": 500.0,
+     "carb": 22.0,
+     "acucar": 17.0,
+     "prot": 62.0,
+     "gord": 18.0,
+     "gordSat": 8.0,
+     "fibra": 1.0,
+     "sodio": 860.0,
+     "linhaOriginal": "Grilled Chicken on the Barbie 8 oz"
+    },
+    {
+     "nome": "Victoria's Filet Mignon",
+     "porcao": "1 porção",
+     "kcal": 470.0,
+     "carb": 1.0,
+     "acucar": 0.0,
+     "prot": 47.0,
+     "gord": 29.0,
+     "gordSat": 14.0,
+     "fibra": 0.0,
+     "sodio": 550.0,
+     "linhaOriginal": "Victoria's Filet Mignon 6 oz"
+    },
+    {
+     "nome": "Ribeye",
+     "porcao": "1 porção",
+     "kcal": 1030.0,
+     "carb": 3.0,
+     "acucar": 0.0,
+     "prot": 63.0,
+     "gord": 83.0,
+     "gordSat": 36.0,
+     "fibra": 1.0,
+     "sodio": 1970.0,
+     "linhaOriginal": "Ribeye 13 oz"
+    },
+    {
+     "nome": "Top Sirloin",
+     "porcao": "1 porção",
+     "kcal": 330.0,
+     "carb": 2.0,
+     "acucar": 0.0,
+     "prot": 35.0,
+     "gord": 20.0,
+     "gordSat": 11.0,
+     "fibra": 2.0,
+     "sodio": 590.0,
+     "linhaOriginal": "Outback Center-Cut Sirloin 6 oz"
+    },
+    {
+     "nome": "Toowoomba Pasta",
+     "porcao": "1 porção",
+     "kcal": 1690.0,
+     "carb": 142.0,
+     "acucar": 19.0,
+     "prot": 63.0,
+     "gord": 98.0,
+     "gordSat": 41.0,
+     "fibra": 8.0,
+     "sodio": 3480.0,
+     "linhaOriginal": "Toowoomba Pasta (Regional)"
+    }
+   ]
+  },
+  {
+   "slug": "acompanhamentos",
+   "itens": [
+    {
+     "nome": "Aussie Fries",
+     "porcao": "1 porção",
+     "kcal": 500.0,
+     "carb": 67.0,
+     "acucar": 0.0,
+     "prot": 7.0,
+     "gord": 23.0,
+     "gordSat": 10.0,
+     "fibra": 7.0,
+     "sodio": 1940.0,
+     "linhaOriginal": "Aussie Fries"
+    },
+    {
+     "nome": "Mac & Cheese",
+     "porcao": "1 porção",
+     "kcal": 870.0,
+     "carb": 74.0,
+     "acucar": 10.0,
+     "prot": 30.0,
+     "gord": 51.0,
+     "gordSat": 28.0,
+     "fibra": 3.0,
+     "sodio": 1450.0,
+     "linhaOriginal": "Bacon Mac & Cheese"
+    }
+   ]
+  },
+  {
+   "slug": "sobremesas",
+   "itens": [
+    {
+     "nome": "Chocolate Thunder from Down Under",
+     "porcao": "1 porção",
+     "kcal": 870.0,
+     "carb": 82.0,
+     "acucar": 71.0,
+     "prot": 9.0,
+     "gord": 60.0,
+     "gordSat": 34.0,
+     "fibra": 4.0,
+     "sodio": 220.0,
+     "linhaOriginal": "Chocolate Thunder from Down Under"
+    },
+    {
+     "nome": "Brownie",
+     "porcao": "1 porção",
+     "kcal": 290.0,
+     "carb": 27.0,
+     "acucar": 23.0,
+     "prot": 4.0,
+     "gord": 21.0,
+     "gordSat": 9.0,
+     "fibra": 2.0,
+     "sodio": 85.0,
+     "linhaOriginal": "Brownie"
+    }
+   ]
+  }
+ ]
+}
