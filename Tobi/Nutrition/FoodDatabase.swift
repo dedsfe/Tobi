@@ -30,9 +30,21 @@ enum FoodDatabase {
         + FoodTables.ibge.map { Food(table: $0, source: .ibge($0.id)) }
         + FoodTables.taco.map { Food(table: $0, source: .taco($0.id)) }
 
+    /// Só acrescenta grafias aos preparos existentes do IBGE; preserva nutrientes e medidas.
+    private static func ibge(_ id: String, aliases: [String], guesses: Set<String> = []) -> Food {
+        guard let food = FoodTables.ibge.first(where: { $0.id == id }) else {
+            preconditionFailure("IBGE \(id) não existe")
+        }
+        return Food(table: food, source: .ibge(id), additionalAliases: aliases, guessedAliases: guesses)
+    }
+
     /// Os que a gente fala todo dia, com apelido e porção caseira. Sem `taco:` = estimativa nossa
     /// (prato pronto que a TACO não tem). Ganham da TACO automática quando o apelido empata.
     static let curated: [Food] = [
+        // IBGE POF 2008–2009: mesmos preparos e porções, sem novos números nutricionais.
+        ibge("8570328-99", aliases: ["pao frances com manteiga"]),
+        ibge("6907501-99", aliases: ["milkshake"]),
+        ibge("7107204-99", aliases: ["buchada"], guesses: ["buchada"]),
         // Arroz, feijão e acompanhamentos
         Food("Arroz branco", ["arroz", "arroz branco"], taco: 3, portion: 150, measures: ["colher": 25]),
         Food("Arroz integral", ["arroz integral"], taco: 1, portion: 150, measures: ["colher": 25]),
@@ -103,7 +115,7 @@ enum FoodDatabase {
 
         // Lanches e salgados
         Food("Sanduíche", ["sanduiche", "sanduiche natural", "misto", "misto quente"], kcal: 250, p: 12, c: 28, f: 10, portion: 150),
-        Food("Hambúrguer", ["hamburguer", "burger", "x burguer", "x salada", "x bacon", "x tudo", "x egg"], kcal: 250, p: 13, c: 24, f: 11, portion: 200),
+        Food("Hambúrguer", ["hamburguer", "burger", "cheeseburger", "cheese burger", "x burguer", "x salada", "x bacon", "x tudo", "x egg"], kcal: 250, p: 13, c: 24, f: 11, portion: 200),
         Food("Cachorro-quente", ["cachorro quente", "hot dog", "dogao"], kcal: 240, p: 9, c: 26, f: 11, portion: 180),
         Food("Pizza", ["pizza"], kcal: 270, p: 11, c: 30, f: 11, portion: 220, measures: ["fatia": 110, "pedaco": 110]),
         Food("Coxinha", ["coxinha"], taco: 386, portion: 110),

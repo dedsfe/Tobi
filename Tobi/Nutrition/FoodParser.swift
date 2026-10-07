@@ -126,15 +126,12 @@ struct FoodParser: Sendable {
             pieces = pieces.map { Self.clean($0.replacing(/\b(?:de\s+)?cada\b/, with: " ")) }.filter { !$0.isEmpty }
         }
 
-        var shared: Quantity?
+        // A quantidade de "cada" pode estar depois das comidas: "arroz e feijão, 10g de cada".
+        let shared = each ? pieces.map { Self.parseQuantity($0).0 }.first(where: \.isWritten) : nil
         let estimates = pieces.flatMap { piece -> [ItemEstimate] in
             var (quantity, tokens) = Self.parseQuantity(piece)
-            if each {
-                if quantity.isWritten {
-                    shared = shared ?? quantity
-                } else if let shared {
-                    quantity = shared
-                }
+            if each, !quantity.isWritten, let shared {
+                quantity = shared
             }
             return estimateItem(piece, quantity: quantity, tokens: tokens)
         }
@@ -154,7 +151,9 @@ struct FoodParser: Sendable {
     /// Separa a quantidade do resto. Devolve os tokens que sobram (a comida).
     private static func parseQuantity(_ item: String) -> (Quantity, [String]) {
         var quantity = Quantity()
-        var text = item
+        // Ditado: não deixar "eu comi" esconder a contagem de "eu comi 2 ovos".
+        // Só remove uma lista fechada de palavras introdutórias, nunca nomes de comida.
+        var text = item.replacing(/^(?:(?:eu|hoje|comi|tomei|bebi|almocei|jantei|quero|registrar)\s+)+/, with: "")
 
         // Quantidade absoluta em qualquer lugar: "200g", "350 ml", "1.5 kg".
         if let match = text.firstMatch(of: /(\d+(?:\.\d+)?)\s*(kg|gramas?|gr|g|ml|litros?|l)\b/) {
@@ -222,6 +221,7 @@ struct FoodParser: Sendable {
             // que já é uma unidade). Qualquer chute no caminho vira "~".
             let sure = complete && !typo && !match.isGuess && !food.isEstimate && index == 0
                 && (quantity.isWritten || food.countsByUnit)
+                && hasKnownMeasure(food, measure: quantity.measure)
             return ItemEstimate(text: item, foodName: food.name, grams: grams, nutrition: food.nutrition(grams: grams),
                                 confidence: sure ? .exact : .estimated)
         }
@@ -233,6 +233,13 @@ struct FoodParser: Sendable {
         if FoodDatabase.portionWords.contains(measure) { return food.portion }
         if measure == "colher de sopa", let grams = food.measures["colher"] { return grams }
         return FoodDatabase.measures[measure] ?? food.portion
+    }
+
+    /// Medida genérica (ex: colher de açúcar sem peso específico) continua sendo um chute.
+    private func hasKnownMeasure(_ food: Food, measure: String?) -> Bool {
+        guard let measure else { return true }
+        return food.measures[measure] != nil || FoodDatabase.portionWords.contains(measure)
+            || (measure == "colher de sopa" && food.measures["colher"] != nil)
     }
 
     private struct Match {
@@ -266,6 +273,14 @@ struct FoodParser: Sendable {
     private func corrected(_ tokens: [String]) -> [String]? {
         var changed = false
         let fixed = tokens.map { token -> String in
+            // Letra repetida no plural: "ovoss" → "ovos" → "ovo". Só aceita se a base conhece.
+            if token.hasSuffix("ss") {
+                let singular = Self.singularize(String(token.dropLast()))
+                if knownWords.contains(singular) {
+                    changed = true
+                    return singular
+                }
+            }
             guard token.count >= 4, !knownWords.contains(token), Self.parseNumber(token) == nil,
                   let closest = closestWord(to: token) else { return token }
             changed = true

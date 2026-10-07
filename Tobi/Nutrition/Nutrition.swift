@@ -97,14 +97,15 @@ struct Food: Sendable {
         self.measures = [:]
     }
 
-    init(table food: TableFood, source: FoodSource) {
+    init(table food: TableFood, source: FoodSource, additionalAliases: [String] = [],
+         guessedAliases: Set<String> = []) {
         self.name = food.name
-        self.aliases = food.aliases
+        self.aliases = food.aliases + additionalAliases
         self.per100 = food.per100
         self.source = source
         self.portion = food.portion
         self.measures = food.measures
-        self.guesses = Set(food.guesses ?? [])
+        self.guesses = Set(food.guesses ?? []).union(guessedAliases)
     }
 
     func nutrition(grams: Double) -> Nutrition {

@@ -47,6 +47,7 @@ GENERIC = {
     "rings", "crocante", "grande", "media", "pequena", "individual", "unidade", "fatia",
     "chipotle", "ranch", "barbecue", "bbq", "teriyaki", "pepperoni", "molho", "chantilly",
     "premium", "curto", "simples", "quente", "gelado", "recheado", "recheada", "soft", "mista",
+    "brownie", "donut", "donuts", "burrito", "milkshake",
     "misto", "do", "de", "da", "com", "e", "sabor", "tipo", "zero", "acucar", "light",
 }
 
@@ -70,6 +71,7 @@ EXTRA_ALIASES = {
         "Quarterão com Queijo": ["quarterao"],
     },
     "burger-king": {
+        "WHOPPER® Jr.": ["whopper jr", "whopper junior"],
         "Batata Frita – média": ["batata do bk", "fritas do bk", "batata media do bk",
                                  "fritas media do bk", "batata do burger king"],
         "Batata Frita – grande": ["batata grande do bk", "fritas grande do bk"],
@@ -122,6 +124,7 @@ EXTRA_ALIASES = {
 }
 
 NICKNAMES = {
+    "whopper jr", "whopper junior",
     "mcfritas", "quarterao", "blooming onion", "cebola do outback", "cebola australiana", "bloomin",
     "kookaburra", "camarao do outback", "pao australiano", "pao do outback", "chocolate thunder",
     "thunder", "cheese fries do outback", "cheese fries", "frango do outback",
