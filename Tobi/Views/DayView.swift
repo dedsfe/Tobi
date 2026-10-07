@@ -37,14 +37,18 @@ struct DayView: View {
     /// Linhas procurando produto de marca no Open Food Facts (mostram ✨).
     @State private var searching: Set<NoteLine.ID> = []
 
-    private var estimates: [LineEstimate] { lines.map { parser.estimate($0.text) } }
+    /// Cada texto passa pelo parser uma vez só. Sem isso, cada palavra ditada recalculava todas as
+    /// linhas duas ou três vezes por redesenho (linha, total, barra) e a fala longa engasgava.
+    @State private var estimateCache = EstimateCache()
+    private func estimate(_ text: String) -> LineEstimate { estimateCache.estimate(text, with: parser) }
+    private var estimates: [LineEstimate] { lines.map { estimate($0.text) } }
 
     var body: some View {
         List {
             ForEach(lines) { line in
                 LineRow(
                     text: text(of: line.id),
-                    estimate: parser.estimate(line.text),
+                    estimate: estimate(line.text),
                     isSearching: searching.contains(line.id),
                     placeholder: line.id == lines.first?.id ? "Comece a registrar suas refeições..." : "",
                     isFocused: focusedLine == line.id,
@@ -89,6 +93,7 @@ struct DayView: View {
         }
         .onChange(of: brandProducts.map(\.barcode), initial: true) {
             parser = FoodParser.shared.adding(brandProducts.map(\.food))
+            estimateCache.removeAll()
         }
         .task(id: day) { load() }
         .onChange(of: lines) { save() }
@@ -351,7 +356,7 @@ struct DayView: View {
     /// A IA só interpreta a frase e aponta itens da base; número inventado nunca entra.
     private func searchBrands(in id: NoteLine.ID) {
         guard let line = lines.first(where: { $0.id == id }) else { return }
-        let unknown = parser.estimate(line.text).items.filter { !$0.isRecognized }.map(\.text)
+        let unknown = estimate(line.text).items.filter { !$0.isRecognized }.map(\.text)
         guard !unknown.isEmpty else { return }
         searching.insert(id)
         Task {
@@ -471,6 +476,23 @@ struct LineRow: View {
         let approximate = estimate.confidence == .estimated ? "~" : ""
         return "\(approximate)\(kcal.formatted())\(estimate.hasUnknown ? "+" : "")"
     }
+}
+
+/// Memória do parser por texto. Esvazia quando a base muda (produto de marca novo) e quando
+/// passa de 500 textos, pra não crescer sem fim durante o ditado.
+@MainActor
+final class EstimateCache {
+    private var results: [String: LineEstimate] = [:]
+
+    func estimate(_ text: String, with parser: FoodParser) -> LineEstimate {
+        if let cached = results[text] { return cached }
+        if results.count > 500 { results.removeAll(keepingCapacity: true) }
+        let result = parser.estimate(text)
+        results[text] = result
+        return result
+    }
+
+    func removeAll() { results.removeAll() }
 }
 
 #Preview {
