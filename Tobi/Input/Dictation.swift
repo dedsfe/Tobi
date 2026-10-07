@@ -7,6 +7,9 @@ final class Dictation {
     private(set) var isRecording = false
     /// Tudo que foi falado desde o último `start`.
     private(set) var transcript = ""
+    /// Energia da voz por faixa de frequência (0 a 1), atualizada ~40 vezes por segundo.
+    /// Só a animação lê isso: quem não desenha não deve observar, pra não redesenhar a tela toda.
+    private(set) var levels = [Float](repeating: 0, count: VoiceSpectrum.bandCount)
 
     private let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "pt-BR"))
     private let engine = AVAudioEngine()
@@ -27,14 +30,17 @@ final class Dictation {
             let request = SFSpeechAudioBufferRecognitionRequest()
             request.shouldReportPartialResults = true
             request.addsPunctuation = false
-            Self.installTap(on: engine.inputNode, feeding: request)
+            transcript = ""
+            sessionID += 1
+            let id = sessionID
+            Self.installTap(on: engine.inputNode, feeding: request) { [weak self] levels in
+                guard let self, self.sessionID == id, self.isRecording else { return }
+                self.levels = levels
+            }
             engine.prepare()
             try engine.start()
 
             self.request = request
-            transcript = ""
-            sessionID += 1
-            let id = sessionID
             task = Self.recognize(request, with: recognizer) { [weak self] text, isDone in
                 guard let self, self.sessionID == id else { return }
                 if let text { transcript = text }
@@ -54,6 +60,7 @@ final class Dictation {
         request = nil
         task = nil
         isRecording = false
+        levels = levels.map { _ in 0 }
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
@@ -68,10 +75,15 @@ final class Dictation {
     }
 
     private nonisolated static func installTap(on node: AVAudioInputNode,
-                                               feeding request: SFSpeechAudioBufferRecognitionRequest) {
+                                               feeding request: SFSpeechAudioBufferRecognitionRequest,
+                                               levels update: @escaping @MainActor @Sendable ([Float]) -> Void) {
         let format = node.outputFormat(forBus: 0)
+        let spectrum = VoiceSpectrum()
         node.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
             request.append(buffer)
+            if let levels = spectrum?.levels(of: buffer) {
+                Task { @MainActor in update(levels) }
+            }
         }
     }
 

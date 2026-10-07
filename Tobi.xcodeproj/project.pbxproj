@@ -7,11 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00E8D8A43016F993A8DBB259 /* VoiceGlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2872FA24B522D05EF587CF3E /* VoiceGlow.swift */; };
+		033CCA7C68D736FE7D53D869 /* VoiceSpectrum.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50C8DB4618CA48C83CE1C987 /* VoiceSpectrum.swift */; };
 		19A4554982F37800C4D916AB /* LineEditingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E951F4742B5EFD8897822E6E /* LineEditingUITests.swift */; };
 		2DF31213B46DDD75D81E3D75 /* OpenFoodFacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693E1062F5E9612595AAFAE8 /* OpenFoodFacts.swift */; };
 		31AD92836C08C9713CE4457E /* DayNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2D449DF7D2B65CDE6700E42 /* DayNote.swift */; };
 		3A40FCE8DCFB7B67BC1DEB6E /* LineRewriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28C85519ACF4096B51BC3535 /* LineRewriterTests.swift */; };
 		3B667804ECE8C9FF530CE847 /* LineEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D62362ADE564D645E875216 /* LineEditor.swift */; };
+		5B79DA8DC5FB679ABA3BD35E /* VoiceSpectrumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F15F5DFF3D1C5DFB4747B1 /* VoiceSpectrumTests.swift */; };
 		5CF651F012F4A1CCD3A49B2E /* Dictation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C304B2749615A9C8558D00 /* Dictation.swift */; };
 		62734DD3F35E21CA38AFACD5 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 849BBE740074FABF951F498A /* Theme.swift */; };
 		6E31F7E803495BBDD87B2FAD /* BarcodeScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6BC12515FB31BEA5AA5C7D /* BarcodeScanner.swift */; };
@@ -59,6 +62,7 @@
 		12F7B90D9D89B6E13A30F181 /* BrandProduct.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandProduct.swift; sourceTree = "<group>"; };
 		1C87CE0B25D3C707E51A6DBA /* LineRewriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineRewriter.swift; sourceTree = "<group>"; };
 		2751B53BA08C6765765F0715 /* KeyboardBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardBar.swift; sourceTree = "<group>"; };
+		2872FA24B522D05EF587CF3E /* VoiceGlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceGlow.swift; sourceTree = "<group>"; };
 		28C85519ACF4096B51BC3535 /* LineRewriterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineRewriterTests.swift; sourceTree = "<group>"; };
 		30CA4C9B21F8C3BEFF79C118 /* DayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayView.swift; sourceTree = "<group>"; };
 		330296912C2E99B26C68D398 /* FoodDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodDatabase.swift; sourceTree = "<group>"; };
@@ -68,6 +72,7 @@
 		41C304B2749615A9C8558D00 /* Dictation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictation.swift; sourceTree = "<group>"; };
 		445349C7B857AF907783D17F /* fastfood.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = fastfood.json; sourceTree = "<group>"; };
 		45A6CD938A64353750C04F9A /* TobiTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TobiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		50C8DB4618CA48C83CE1C987 /* VoiceSpectrum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSpectrum.swift; sourceTree = "<group>"; };
 		5EF17015117CAFBD333185A7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		693E1062F5E9612595AAFAE8 /* OpenFoodFacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenFoodFacts.swift; sourceTree = "<group>"; };
 		6DDD333EB71EFBF77A7476E6 /* Tobi.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tobi.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -77,6 +82,7 @@
 		A46A98F03E2CF68A0D4D7978 /* FoodParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodParser.swift; sourceTree = "<group>"; };
 		A61D93B4C4C2B1562F8CBA23 /* FoodParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodParserTests.swift; sourceTree = "<group>"; };
 		C0047EB4EB0B56B8E2ED251B /* TotalsBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TotalsBar.swift; sourceTree = "<group>"; };
+		D5F15F5DFF3D1C5DFB4747B1 /* VoiceSpectrumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSpectrumTests.swift; sourceTree = "<group>"; };
 		DA5FA395EEC1B1F95F8911D0 /* BrandProductTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandProductTests.swift; sourceTree = "<group>"; };
 		E1994A7BED207538543F656B /* Motion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion.swift; sourceTree = "<group>"; };
 		E951F4742B5EFD8897822E6E /* LineEditingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineEditingUITests.swift; sourceTree = "<group>"; };
@@ -123,6 +129,7 @@
 				DA5FA395EEC1B1F95F8911D0 /* BrandProductTests.swift */,
 				A61D93B4C4C2B1562F8CBA23 /* FoodParserTests.swift */,
 				28C85519ACF4096B51BC3535 /* LineRewriterTests.swift */,
+				D5F15F5DFF3D1C5DFB4747B1 /* VoiceSpectrumTests.swift */,
 			);
 			path = TobiTests;
 			sourceTree = "<group>";
@@ -141,6 +148,7 @@
 			isa = PBXGroup;
 			children = (
 				41C304B2749615A9C8558D00 /* Dictation.swift */,
+				50C8DB4618CA48C83CE1C987 /* VoiceSpectrum.swift */,
 			);
 			path = Input;
 			sourceTree = "<group>";
@@ -167,6 +175,7 @@
 				5EF17015117CAFBD333185A7 /* SettingsView.swift */,
 				849BBE740074FABF951F498A /* Theme.swift */,
 				C0047EB4EB0B56B8E2ED251B /* TotalsBar.swift */,
+				2872FA24B522D05EF587CF3E /* VoiceGlow.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -332,6 +341,7 @@
 				6E5E54034CB4F717440BAA2E /* BrandProductTests.swift in Sources */,
 				F10047776139D6EE95053CB9 /* FoodParserTests.swift in Sources */,
 				3A40FCE8DCFB7B67BC1DEB6E /* LineRewriterTests.swift in Sources */,
+				5B79DA8DC5FB679ABA3BD35E /* VoiceSpectrumTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -367,6 +377,8 @@
 				62734DD3F35E21CA38AFACD5 /* Theme.swift in Sources */,
 				85A03EFDDA3D7B24646FC2DD /* TobiApp.swift in Sources */,
 				73A29CA35A4D4B571090FE1A /* TotalsBar.swift in Sources */,
+				00E8D8A43016F993A8DBB259 /* VoiceGlow.swift in Sources */,
+				033CCA7C68D736FE7D53D869 /* VoiceSpectrum.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

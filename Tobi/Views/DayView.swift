@@ -116,7 +116,7 @@ struct DayView: View {
                 if isEditing {
                     KeyboardBar(
                         kcal: Int(total.kcal.rounded()),
-                        isDictating: dictation.isRecording,
+                        dictation: dictation,
                         glass: glass,
                         onMic: toggleDictation,
                     onScan: { showingScanner = true },
@@ -131,8 +131,20 @@ struct DayView: View {
         .padding(.horizontal, isEditing ? 20 : 32)
         .padding(.bottom, isEditing ? 12 : 4)
         .padding(.top, 12)
-        .background { EdgeFade(edge: .bottom) }
+        .background(alignment: .bottom) {
+            ZStack(alignment: .bottom) {
+                EdgeFade(edge: .bottom)
+                if dictation.isRecording {
+                    // A luz nasce atrás da barra e sobe por cima das linhas.
+                    VoiceGlow(dictation: dictation)
+                        .frame(height: 260)
+                        .transition(.emerge)
+                }
+            }
+        }
+        .animation(Motion.surface, value: dictation.isRecording)
         .sensoryFeedback(.impact(weight: .light), trigger: showingGoals)
+        .sensoryFeedback(trigger: dictation.isRecording) { _, recording in recording ? .start : .stop }
     }
 
     private func toggleGoals() {
