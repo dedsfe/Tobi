@@ -12,12 +12,31 @@ struct VoiceGlow: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    /// A luz é toda desfocada, então desenhar em 1/4 da resolução e ampliar dá a mesma imagem
+    /// com 16 vezes menos pixel pra borrar a cada quadro.
+    private static let downscale: CGFloat = 4
+
     var body: some View {
-        TimelineView(.animation(paused: reduceMotion)) { timeline in
+        GeometryReader { proxy in
+            glow
+                .frame(width: proxy.size.width / Self.downscale, height: proxy.size.height / Self.downscale)
+                .drawingGroup()
+                .scaleEffect(Self.downscale, anchor: .topLeading)
+        }
+        .mask {
+            LinearGradient(colors: [.clear, .black.opacity(0.85), .black], startPoint: .top, endPoint: .bottom)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private var glow: some View {
+        // 60 quadros bastam pra luz desfocada; 120 só gastava bateria e engasgava o vidro por cima.
+        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: reduceMotion)) { timeline in
             let time = timeline.date.timeIntervalSinceReferenceDate
             let levels = display.step(toward: dictation.levels, at: time)
             Canvas { context, size in
-                context.addFilter(.blur(radius: 26))
+                context.addFilter(.blur(radius: 26 / Self.downscale))
                 if colorScheme == .dark { context.blendMode = .plusLighter }
                 let count = levels.count
                 for (band, level) in levels.enumerated() {
@@ -41,12 +60,6 @@ struct VoiceGlow: View {
                 context.fill(Ellipse().path(in: core), with: .color(.white))
             }
         }
-        .mask {
-            LinearGradient(colors: [.clear, .black.opacity(0.85), .black], startPoint: .top, endPoint: .bottom)
-        }
-        .drawingGroup()
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
     }
 }
 
@@ -57,7 +70,7 @@ struct VoiceBars: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        TimelineView(.animation(paused: reduceMotion)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: reduceMotion)) { timeline in
             let levels = display.step(toward: dictation.levels, at: timeline.date.timeIntervalSinceReferenceDate)
             HStack(spacing: 3) {
                 ForEach(levels.indices, id: \.self) { band in
