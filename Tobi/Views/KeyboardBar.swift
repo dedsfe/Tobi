@@ -12,6 +12,8 @@ struct KeyboardBar: View {
     /// Tocou nos totais: fecha o teclado e abre as metas.
     let onTotals: () -> Void
 
+    @AppStorage("proteinShare") private var proteinShare = 0.2
+
     private var kcal: Int { Int(total.kcal.rounded()) }
 
     var body: some View {
@@ -33,46 +35,61 @@ struct KeyboardBar: View {
             .buttonStyle(.plain)
             .glassEffect(.regular.interactive(), in: .capsule)
             .glassEffectID("totals", in: glass)
+            // Ditando, a pílula fica do tamanho dos números e o microfone leva o resto: nada corta.
+            .layoutPriority(1)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(kcal) calorias, \(grams(total.carbs)) de carboidrato, \(grams(total.protein)) de proteína, \(grams(total.fat)) de gordura. Ver metas")
+            .accessibilityLabel("\(kcal) calorias, \(grams(total.carbs)) de carboidrato, \(grams(total.protein)) de \(proteinGoal) de proteína, \(grams(total.fat)) de gordura. Ver metas")
     }
+
+    /// Meta de proteína em gramas: a mesma conta do cartão de metas.
+    private var proteinGoal: Int { Int((Double(goal) * proteinShare / 4).rounded()) }
 
     private var totalsContent: some View {
         VStack(spacing: 1) {
-            HStack(spacing: 4) {
-                Text("🔥").font(.system(size: 13))
-                Text(kcal.formatted())
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .foregroundStyle(kcal > goal ? Color.orange : Color.primary)
-                    .contentTransition(.numericText(value: Double(kcal)))
-            }
-            HStack(spacing: 7) {
-                macro("C", total.carbs, Theme.carbs)
-                macro("P", total.protein, Theme.protein)
-                macro("G", total.fat, Theme.fat)
-            }
+            Text("\(Text("🔥 ").font(.system(size: 13)))\(calories)")
+            macros
         }
         .monospacedDigit()
         .lineLimit(1)
-        // Número grande encolhe um pouco em vez de cortar ou quebrar.
+        // Cada linha é um texto só: número grande encolhe a linha inteira, nunca corta com reticências.
         .minimumScaleFactor(0.6)
+        .contentTransition(.numericText())
         .padding(.horizontal, 14)
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: dictation.isRecording ? nil : .infinity)
         .frame(height: 44)
         .contentShape(.capsule)
         .animation(Motion.quick, value: total)
     }
 
-    private func macro(_ letter: String, _ value: Double, _ color: Color) -> some View {
-        HStack(spacing: 3) {
-            Text(letter)
-                .font(.system(size: 12, weight: .bold, design: .rounded))
-                .foregroundStyle(color)
-            Text(Int(value.rounded()).formatted())
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(.secondary)
-                .contentTransition(.numericText(value: value.rounded()))
-        }
+    /// "C 250  P 45/120  G 70": a proteína mostra quanto falta pra meta e ganha cor quando chega lá.
+    private var macros: Text {
+        let protein = number(total.protein, color: total.protein.rounded() >= Double(proteinGoal) ? Theme.protein : nil)
+        let proteinGoalText = Text("/\(proteinGoal.formatted())")
+            .font(.system(size: 12, weight: .medium, design: .rounded))
+            .foregroundStyle(.tertiary)
+        return Text("""
+            \(letter("C", Theme.carbs))\(number(total.carbs))\
+            \(letter("  P", Theme.protein))\(protein)\(proteinGoalText)\
+            \(letter("  G", Theme.fat))\(number(total.fat))
+            """)
+    }
+
+    private var calories: Text {
+        Text(kcal.formatted())
+            .font(.system(size: 16, weight: .semibold, design: .rounded))
+            .foregroundStyle(kcal > goal ? Color.orange : Color.primary)
+    }
+
+    private func letter(_ letter: String, _ color: Color) -> Text {
+        Text(letter + " ")
+            .font(.system(size: 12, weight: .bold, design: .rounded))
+            .foregroundStyle(color)
+    }
+
+    private func number(_ value: Double, color: Color? = nil) -> Text {
+        Text(Int(value.rounded()).formatted())
+            .font(.system(size: 12, weight: .semibold, design: .rounded))
+            .foregroundStyle(color.map { AnyShapeStyle($0) } ?? AnyShapeStyle(.secondary))
     }
 
     private func grams(_ value: Double) -> String { "\(Int(value.rounded())) gramas" }
