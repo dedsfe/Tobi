@@ -25,3 +25,28 @@ final class LineEditingUITests: XCTestCase {
         XCTAssertEqual(app.textViews.count, 1)
     }
 }
+
+/// Estilo Notas: o dia é um texto só, então dá pra selecionar tudo de uma vez e apagar.
+final class NoteSelectionUITests: XCTestCase {
+    @MainActor
+    func testSelectAllAndDeleteClearsEveryLine() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting"]
+        app.launch()
+
+        let note = app.textViews.firstMatch
+        XCTAssertTrue(note.waitForExistence(timeout: 5))
+        note.tap()
+        note.typeText("2 big mac\narroz\nfeijão")
+        XCTAssertEqual(note.value as? String, "2 big mac\narroz\nfeijão")
+
+        // Como no Notas: toca segurando, "Selecionar Tudo" no menu e apaga uma vez só.
+        note.press(forDuration: 0.8)
+        let selectAll = app.menuItems.matching(NSPredicate(format: "label IN %@", ["Selecionar Tudo", "Select All"])).firstMatch
+        XCTAssertTrue(selectAll.waitForExistence(timeout: 3), "menu sem Selecionar Tudo")
+        selectAll.tap()
+        app.typeText(XCUIKeyboardKey.delete.rawValue)
+        XCTAssertEqual((note.value as? String) ?? "", "")
+        XCTAssertEqual(app.state, .runningForeground)
+    }
+}

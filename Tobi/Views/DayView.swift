@@ -1,12 +1,6 @@
 import SwiftUI
 import SwiftData
 
-/// Uma linha da nota. O id estável deixa o foco sobreviver a inserções e remoções.
-struct NoteLine: Identifiable, Equatable {
-    let id = UUID()
-    var text: String = ""
-}
-
 /// A tela principal: um bloco de notas do dia, com as calorias de cada linha do lado.
 struct DayView: View {
     @Environment(\.modelContext) private var context
@@ -15,7 +9,9 @@ struct DayView: View {
     @Query private var brandProducts: [BrandProduct]
 
     @State private var day = Calendar.current.startOfDay(for: .now)
-    @State private var lines: [NoteLine] = [NoteLine()]
+    /// O dia inteiro, uma linha por "\n" (é assim que fica salvo).
+    @State private var text = ""
+    private var lines: [String] { text.components(separatedBy: "\n") }
     @State private var showingSettings = false
     @State private var showingCalendar = false
     @State private var showingGoals = false
@@ -26,60 +22,36 @@ struct DayView: View {
     @Namespace private var glass
     @State private var dictation = Dictation()
     /// Linha que recebe o ditado e o texto que ela tinha antes de começar a falar.
-    @State private var dictationTarget: (id: NoteLine.ID, base: String)?
-    @State private var focusedLine: NoteLine.ID?
-    /// Onde o cursor cai quando o foco muda por código (juntar/dividir linha). nil = fim.
-    @State private var focusCursor: Int?
+    @State private var dictationTarget: (line: Int, base: String)?
+    @State private var editor = NoteEditorController()
+    /// Linha do cursor (nil = sem teclado) e quantas linhas havia nesse momento.
+    @State private var caretLine: Int?
+    @State private var lineCountAtCaret = 0
 
     /// Base oficial + produtos de marca que a pessoa já usou (refeito quando um produto entra).
     @State private var parser = FoodParser.shared
     @State private var showingScanner = false
     /// Linhas procurando produto de marca no Open Food Facts (mostram ✨).
-    @State private var searching: Set<NoteLine.ID> = []
+    @State private var searching: Set<Int> = []
 
     /// Cada texto passa pelo parser uma vez só. Sem isso, cada palavra ditada recalculava todas as
     /// linhas duas ou três vezes por redesenho (linha, total, barra) e a fala longa engasgava.
     @State private var estimateCache = EstimateCache()
     private func estimate(_ text: String) -> LineEstimate { estimateCache.estimate(text, with: parser) }
-    private var estimates: [LineEstimate] { lines.map { estimate($0.text) } }
+    private var estimates: [LineEstimate] { lines.map(estimate) }
 
     var body: some View {
-        List {
-            ForEach(lines) { line in
-                LineRow(
-                    text: text(of: line.id),
-                    estimate: estimate(line.text),
-                    isSearching: searching.contains(line.id),
-                    placeholder: line.id == lines.first?.id ? "Comece a registrar suas refeições..." : "",
-                    isFocused: focusedLine == line.id,
-                    dismissKeyboard: focusedLine == nil,
-                    cursor: focusCursor,
-                    onFocusChange: { lineFocusChanged(line.id, focused: $0) },
-                    onReturn: { splitLine(line.id, before: $0, after: $1) },
-                    onDeleteAtStart: { mergeWithPrevious(line.id) }
-                )
-                // Texto colado com várias linhas chega com "\n": vira várias linhas.
-                .onChange(of: line.text) { _, text in
-                    if text.contains("\n") { breakLine(line.id) }
-                }
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets(top: 4, leading: 24, bottom: 4, trailing: 24))
-            }
-            .onDelete { lines.remove(atOffsets: $0) }
-
-            // Área vazia embaixo: tocar continua escrevendo na última linha.
-            Color.clear
-                .frame(height: 240)
-                .contentShape(Rectangle())
-                .onTapGesture { focusLastLine() }
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
-        }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-        .scrollDismissesKeyboard(.interactively)
-        .contentMargins(.top, 16, for: .scrollContent)
+        NoteEditor(
+            text: $text,
+            marks: lines.enumerated().map { index, line in
+                LineMark(estimate: estimate(line), isSearching: searching.contains(index))
+            },
+            controller: editor,
+            placeholder: "Comece a registrar suas refeições...",
+            onCaretLine: { caretMoved(from: $0, to: $1) }
+        )
+        // O texto passa por baixo das barras; o UITextView recebe a altura delas como margem.
+        .ignoresSafeArea(.container, edges: .vertical)
         .background { Theme.background }
         // Barras que o sistema reconhece: o texto que passa por baixo some num desfoque progressivo.
         .safeAreaBar(edge: .top) { topBar }
@@ -96,13 +68,7 @@ struct DayView: View {
             estimateCache.removeAll()
         }
         .task(id: day) { load() }
-        .onChange(of: lines) { save() }
-        .onChange(of: focusedLine) { previous, line in
-            if let previous, previous != line { compactLine(previous) }
-            if line != nil, showingGoals { toggleGoals() }
-            withAnimation(Motion.surface) { isEditing = line != nil }
-            if line == nil, dictation.isRecording { stopDictation() }
-        }
+        .onChange(of: text) { save() }
         .onChange(of: dictation.transcript) { _, spoken in applyDictation(spoken) }
     }
 
@@ -128,8 +94,8 @@ struct DayView: View {
                         glass: glass,
                         onMic: toggleDictation,
                     onScan: { showingScanner = true },
-                        onAdd: { insertLine(after: focusedLine ?? lines.last?.id ?? UUID()) },
-                        onDismiss: { focusedLine = nil }
+                        onAdd: { editor.insertLine(after: caretLine ?? lines.count - 1) },
+                        onDismiss: { editor.dismissKeyboard() }
                     )
                 } else {
                     TotalsBar(total: total, goal: goal, glass: glass, onTap: toggleGoals)
@@ -173,8 +139,8 @@ struct DayView: View {
             stopDictation()
             return
         }
-        guard let id = focusedLine, let line = lines.first(where: { $0.id == id }) else { return }
-        dictationTarget = (id, line.text)
+        guard let line = caretLine, lines.indices.contains(line) else { return }
+        dictationTarget = (line, lines[line])
         Task { await dictation.start() }
     }
 
@@ -184,10 +150,10 @@ struct DayView: View {
     }
 
     private func applyDictation(_ spoken: String) {
-        guard let target = dictationTarget, !spoken.isEmpty,
-              let index = lines.firstIndex(where: { $0.id == target.id }) else { return }
+        guard let target = dictationTarget, !spoken.isEmpty, lines.indices.contains(target.line) else { return }
         let base = target.base.trimmingCharacters(in: .whitespaces)
-        lines[index].text = base.isEmpty ? spoken.lowercased() : "\(base) \(spoken.lowercased())"
+        editor.replaceLine(target.line, with: base.isEmpty ? spoken.lowercased() : "\(base) \(spoken.lowercased())",
+                           caretAtEnd: true)
     }
 
     // MARK: - Topo
@@ -235,7 +201,7 @@ struct DayView: View {
         DatePicker("Dia", selection: Binding(
             get: { day },
             set: { picked in
-                focusedLine = nil
+                editor.dismissKeyboard()
                 day = Calendar.current.startOfDay(for: picked)
                 showingCalendar = false
             }
@@ -270,87 +236,26 @@ struct DayView: View {
 
     // MARK: - Edição
 
-    /// Binding pelo id, não pela posição: a linha pode sumir (apagar/juntar) com a tela ainda lendo.
-    private func text(of id: NoteLine.ID) -> Binding<String> {
-        Binding(
-            get: { lines.first { $0.id == id }?.text ?? "" },
-            set: { text in
-                if let index = lines.firstIndex(where: { $0.id == id }), lines[index].text != text {
-                    lines[index].text = text
-                }
-            }
-        )
-    }
-
-    private func lineFocusChanged(_ id: NoteLine.ID, focused: Bool) {
-        if focused {
-            if focusedLine != id { focusedLine = id }
-            focusCursor = nil
-        } else {
-            // Ao tocar outra linha, esta sai antes da outra entrar: espera pra não piscar "sem foco".
-            Task { @MainActor in
-                if focusedLine == id { focusedLine = nil }
-            }
+    private func caretMoved(from previous: Int?, to current: Int?) {
+        // Ao sair de uma linha, enxuga ela. Só quando dá pra ter certeza de que o número ainda é
+        // a mesma linha: nada mudou de tamanho, ou foi um enter logo abaixo dela.
+        let count = lines.count
+        if let previous, previous != current, lines.indices.contains(previous),
+           count == lineCountAtCaret || (count == lineCountAtCaret + 1 && current == previous + 1) {
+            compactLine(previous)
         }
-    }
-
-    /// Enter no meio da linha: o que vem depois do cursor desce pra uma linha nova.
-    private func splitLine(_ id: NoteLine.ID, before: String, after: String) {
-        guard let index = lines.firstIndex(where: { $0.id == id }) else { return }
-        let line = NoteLine(text: after)
-        lines[index].text = before
-        lines.insert(line, at: index + 1)
-        focusCursor = 0
-        focusedLine = line.id
-    }
-
-    /// Apagar no começo da linha: junta com a de cima (linha vazia simplesmente some).
-    private func mergeWithPrevious(_ id: NoteLine.ID) {
-        guard let index = lines.firstIndex(where: { $0.id == id }), index > 0 else { return }
-        let previous = lines[index - 1]
-        let joint = previous.text.utf16.count
-        lines[index - 1].text += lines[index].text
-        lines[index].text = ""
-        focusCursor = joint
-        focusedLine = previous.id
-        // Tira a linha só depois que a de cima pegou o foco, senão o teclado fecha no meio.
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(60))
-            lines.removeAll { $0.id == id }
-        }
-    }
-
-    private func insertLine(after id: NoteLine.ID) {
-        let index = (lines.firstIndex { $0.id == id } ?? lines.count - 1) + 1
-        let line = NoteLine()
-        lines.insert(line, at: index)
-        // Espera a linha nova existir antes de mover o foco.
-        focusCursor = nil
-        focusedLine = line.id
-    }
-
-    /// Enter vira linha nova; texto colado com várias linhas vira várias linhas.
-    private func breakLine(_ id: NoteLine.ID) {
-        guard let index = lines.firstIndex(where: { $0.id == id }) else { return }
-        let parts = lines[index].text.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
-        lines[index].text = parts[0]
-        let pasted = parts.dropFirst().filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
-        guard !pasted.isEmpty else {
-            insertLine(after: id)
-            return
-        }
-        let newLines = pasted.map { NoteLine(text: $0) }
-        lines.insert(contentsOf: newLines, at: index + 1)
-        focusCursor = nil
-        focusedLine = newLines[newLines.count - 1].id
+        caretLine = current
+        lineCountAtCaret = count
+        if current != nil, showingGoals { toggleGoals() }
+        if (current != nil) != isEditing { withAnimation(Motion.surface) { isEditing = current != nil } }
+        if current == nil, dictation.isRecording { stopDictation() }
     }
 
     /// Ao sair da linha, enxuga o texto (ver `LineRewriter`).
-    private func compactLine(_ id: NoteLine.ID) {
-        guard let index = lines.firstIndex(where: { $0.id == id }) else { return }
-        let compact = LineRewriter.compact(lines[index].text)
-        if compact != lines[index].text { lines[index].text = compact }
-        searchBrands(in: id)
+    private func compactLine(_ index: Int) {
+        let compact = LineRewriter.compact(lines[index])
+        if compact != lines[index] { editor.replaceLine(index, with: compact) }
+        searchBrands(in: index)
     }
 
     // MARK: - Produtos de marca
@@ -359,16 +264,16 @@ struct DayView: View {
     /// com todas as palavras escritas no nome; senão a linha continua "não sei".
     /// Ordem de quem responde: base local (redes, TACO, IBGE) → Open Food Facts → IA (quando entrar).
     /// A IA só interpreta a frase e aponta itens da base; número inventado nunca entra.
-    private func searchBrands(in id: NoteLine.ID) {
-        guard let line = lines.first(where: { $0.id == id }) else { return }
-        let unknown = estimate(line.text).items.filter { !$0.isRecognized }.map(\.text)
+    private func searchBrands(in index: Int) {
+        guard lines.indices.contains(index) else { return }
+        let unknown = estimate(lines[index]).items.filter { !$0.isRecognized }.map(\.text)
         guard !unknown.isEmpty else { return }
-        searching.insert(id)
+        searching.insert(index)
         Task {
             for text in unknown {
                 if let info = try? await OpenFoodFacts.search(text, limit: 1).first { save(info) }
             }
-            searching.remove(id)
+            searching.remove(index)
         }
     }
 
@@ -380,23 +285,11 @@ struct DayView: View {
     /// Produto escaneado: vai pra linha em foco se estiver vazia, senão numa linha nova logo abaixo.
     private func addScanned(_ info: BrandProductInfo) {
         save(info)
-        if let id = focusedLine, let index = lines.firstIndex(where: { $0.id == id }),
-           lines[index].text.trimmingCharacters(in: .whitespaces).isEmpty {
-            lines[index].text = info.name
+        if let line = caretLine, lines.indices.contains(line),
+           lines[line].trimmingCharacters(in: .whitespaces).isEmpty {
+            editor.replaceLine(line, with: info.name, caretAtEnd: true)
         } else {
-            let line = NoteLine(text: info.name)
-            let index = focusedLine.flatMap { id in lines.firstIndex { $0.id == id } } ?? lines.count - 1
-            lines.insert(line, at: index + 1)
-            focusCursor = nil
-            focusedLine = line.id
-        }
-    }
-
-    private func focusLastLine() {
-        if let last = lines.last, last.text.isEmpty {
-            focusedLine = last.id
-        } else {
-            insertLine(after: lines.last?.id ?? UUID())
+            editor.insertLine(after: caretLine ?? lines.count - 1, text: info.name)
         }
     }
 
@@ -408,78 +301,15 @@ struct DayView: View {
     }
 
     private func load() {
-        let text = note(for: day)?.text ?? ""
-        let loaded = text.split(separator: "\n", omittingEmptySubsequences: false).map { NoteLine(text: String($0)) }
-        lines = loaded.isEmpty ? [NoteLine()] : loaded
+        text = note(for: day)?.text ?? ""
     }
 
     private func save() {
-        let text = lines.map(\.text).joined(separator: "\n")
         if let note = note(for: day) {
             if note.text != text { note.text = text }
         } else if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             context.insert(DayNote(day: day, text: text))
         }
-    }
-}
-
-/// Uma linha: o texto à esquerda e as calorias à direita, como no app Notas.
-struct LineRow: View {
-    @Binding var text: String
-    let estimate: LineEstimate
-    var isSearching = false
-    let placeholder: String
-    let isFocused: Bool
-    let dismissKeyboard: Bool
-    let cursor: Int?
-    var onFocusChange: (Bool) -> Void
-    var onReturn: (String, String) -> Void
-    var onDeleteAtStart: () -> Void
-
-    private var font: UIFont { .systemFont(ofSize: 17, weight: estimate.isLabel ? .semibold : .regular) }
-
-    var body: some View {
-        let ascender = font.ascender
-        return HStack(alignment: .firstTextBaseline, spacing: 12) {
-            LineEditor(text: $text, font: font, isFocused: isFocused, dismissKeyboard: dismissKeyboard, cursor: cursor,
-                       onFocusChange: onFocusChange, onReturn: onReturn, onDeleteAtStart: onDeleteAtStart)
-                .alignmentGuide(.firstTextBaseline) { _ in ascender }
-                .overlay(alignment: .topLeading) {
-                    if text.isEmpty {
-                        Text(placeholder)
-                            .font(Font(font))
-                            .foregroundStyle(Color(.placeholderText))
-                            .allowsHitTesting(false)
-                    }
-                }
-
-            HStack(spacing: 4) {
-                // Procurando produto de marca no Open Food Facts.
-                if isSearching {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.blue)
-                        .symbolEffect(.pulse)
-                        .transition(.scale.combined(with: .opacity))
-                }
-                Text("\(kcalLabel)\(Text(kcalLabel.isEmpty || kcalLabel == "?" ? "" : " cal").font(.system(size: 13)))")
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(estimate.hasUnknown || estimate.confidence == .estimated ? .tertiary : .secondary)
-                    .contentTransition(.numericText())
-            }
-            .animation(Motion.quick, value: isSearching)
-            .animation(Motion.quick, value: kcalLabel)
-        }
-    }
-
-    private var kcalLabel: String {
-        if estimate.isLabel || estimate.items.isEmpty { return "" }
-        let kcal = Int(estimate.total.kcal.rounded())
-        if estimate.items.allSatisfy({ !$0.isRecognized }) { return "?" }
-        // "~" = tem chute no número (porção, prato genérico, sabor padrão); "+" = tem item sem número.
-        let approximate = estimate.confidence == .estimated ? "~" : ""
-        return "\(approximate)\(kcal.formatted())\(estimate.hasUnknown ? "+" : "")"
     }
 }
 
