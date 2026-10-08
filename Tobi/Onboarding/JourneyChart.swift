@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// A jornada até a meta, sem moldura nem sombra: a curva do peso de hoje até o peso-meta e o Tobi
-/// andando na ponta dela, mês a mês, até a bandeira. Ocupa a largura toda da tela.
+/// A jornada até a meta, sem moldura nem sombra: as patinhas do Tobi de hoje até o peso-meta, com ele
+/// andando na frente e um vidro mostrando quanto já foi, mês a mês, até a bandeira. Ocupa a largura toda da tela.
 /// `progress` vai de 0 a 1 e `time` é o relógio da caminhada (o passinho); quem anima é a tela.
 struct JourneyChart: View {
     let startKg: Double
@@ -58,11 +58,10 @@ struct JourneyChart: View {
                     .stroke(Color(uiColor: .label).opacity(0.08),
                             style: StrokeStyle(lineWidth: 4, lineCap: .round, dash: [1, 9]))
 
-                // O caminho andado.
-                curve
-                    .trim(from: 0, to: progress)
-                    .stroke(LinearGradient(colors: [.indigo, .purple, .pink], startPoint: .leading, endPoint: .trailing),
-                            style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
+                // O caminho andado: as patinhas do Tobi, uma a uma, alternando esquerda e direita.
+                ForEach(0..<Self.pawCount, id: \.self) { index in
+                    paw(index, in: plot)
+                }
 
                 // Viradas de mês: o ponto e o mês embaixo acendem quando o Tobi passa.
                 ForEach(Array(milestones.enumerated()), id: \.offset) { _, milestone in
@@ -96,9 +95,61 @@ struct JourneyChart: View {
                     ConfettiBurst(origin: end)
                 }
 
+                // O vidro que anda com o Tobi: quanto já foi, com a trilha passando por trás.
+                Text(walked)
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+                    .foregroundStyle(.indigo)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .glassEffect(.regular, in: .capsule)
+                    .fixedSize()
+                    .position(x: min(max(tip.x, plot.minX + 20), plot.maxX - 20), y: tip.y - Self.headSize - 16)
+                    .opacity(pillHidden ? 0 : 1)
+                    .scaleEffect(pillHidden ? 0.6 : 1)
+                    .animation(Motion.quick, value: pillHidden)
+                    .accessibilityHidden(true)
+
                 head(at: tip, walking: progress > 0 && progress < 1)
             }
         }
+    }
+
+    // MARK: - Patinhas
+
+    static let pawCount = 18
+
+    /// Uma pegada no caminho: virada pra onde o Tobi anda, um pouco pro lado, e só aparece depois que ele passa.
+    private func paw(_ index: Int, in plot: CGRect) -> some View {
+        let fraction = CGFloat(index) / CGFloat(Self.pawCount - 1) * 0.96
+        let here = point(at: fraction, in: plot)
+        let ahead = point(at: min(1, fraction + 0.01), in: plot)
+        let heading = atan2(ahead.y - here.y, ahead.x - here.x)
+        let side: CGFloat = index.isMultiple(of: 2) ? -5 : 5
+        let spot = CGPoint(x: here.x - sin(heading) * side, y: here.y + cos(heading) * side)
+        let shown = progress >= fraction + 0.02 || reached
+        let tint = Color(hue: 0.70 + 0.22 * Double(fraction), saturation: 0.62, brightness: 0.86)
+        return Image(systemName: "pawprint.fill")
+            .font(.system(size: 12, weight: .bold))
+            .foregroundStyle(tint)
+            .rotationEffect(.radians(Double(heading) + .pi / 2))
+            .scaleEffect(shown ? 1 : 0.2)
+            .opacity(shown ? 1 : 0)
+            .animation(Motion.quick, value: shown)
+            .position(spot)
+            .accessibilityHidden(true)
+    }
+
+    /// O vidro some antes da chegada pra não cobrir a bandeira; a promessa lá em cima assume.
+    private var pillHidden: Bool { reached || progress == 0 || progress > 0.88 }
+
+    /// O que já foi no caminho, pro vidro: "hoje" no começo, depois "−4 kg" / "+2 kg".
+    private var walked: String {
+        let delta = Self.weight(from: startKg, to: goalKg, at: progress) - startKg
+        guard abs(delta) >= 0.5 else { return isFlat ? "mantendo" : "hoje" }
+        let amount = abs(delta).rounded().formatted()
+        return (delta < 0 ? "−" : "+") + amount + " kg"
     }
 
     // MARK: - O Tobi

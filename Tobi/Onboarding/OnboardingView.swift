@@ -1296,14 +1296,15 @@ private struct CelebrationStep: View {
                 .contentTransition(.opacity)
                 .animation(Motion.quick, value: eyebrow(progress: progress))
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(shown.formatted(.number.precision(.fractionLength(0...1))))
-                    .font(.system(size: 76, weight: .heavy, design: .rounded))
+                let number = Text(shown.formatted(.number.precision(.fractionLength(0...1))))
+                    .font(.system(size: 76, weight: Self.heft(progress), design: .rounded))
                     .monospacedDigit()
                     .contentTransition(.numericText(value: shown))
-                    .foregroundStyle(reached
-                        ? AnyShapeStyle(LinearGradient(colors: [.indigo, .purple, .pink],
-                                                       startPoint: .leading, endPoint: .trailing))
-                        : AnyShapeStyle(Color(uiColor: .label)))
+                if reached {
+                    LiveGradient { number.foregroundStyle($0) }
+                } else {
+                    number.foregroundStyle(Color(uiColor: .label))
+                }
                 Text("kg")
                     .font(.system(size: 30, weight: .bold, design: .rounded))
                     .foregroundStyle(.secondary)
@@ -1313,6 +1314,16 @@ private struct CelebrationStep: View {
         .lineLimit(1)
         .minimumScaleFactor(0.7)
         .accessibilityElement(children: .combine)
+    }
+
+    /// O número engorda conforme o Tobi chega perto da meta.
+    private static func heft(_ progress: CGFloat) -> Font.Weight {
+        switch progress {
+        case ..<0.34: .semibold
+        case ..<0.67: .bold
+        case ..<0.98: .heavy
+        default: .black
+        }
     }
 
     /// Antes de andar é "Hoje"; andando, o mês em que o Tobi está; chegando, a promessa.
@@ -1369,6 +1380,30 @@ private struct CelebrationStep: View {
             if ease(mid) < Double(target) { low = mid } else { high = mid }
         }
         return (low + high) / 2
+    }
+}
+
+/// Degradê índigo, roxo e rosa que se mexe devagar, como tinta viva. Só roda depois da chegada.
+private struct LiveGradient<Content: View>: View {
+    @ViewBuilder let content: (MeshGradient) -> Content
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
+            let time = context.date.timeIntervalSinceReferenceDate
+            let drift = Float(sin(time * 0.9)) * 0.18
+            let sway = Float(cos(time * 0.7)) * 0.18
+            content(MeshGradient(
+                width: 3, height: 3,
+                points: [
+                    [0, 0], [0.5 + sway, 0], [1, 0],
+                    [0, 0.5 + drift], [0.5 - sway, 0.5 + drift], [1, 0.5 - drift],
+                    [0, 1], [0.5 + drift, 1], [1, 1]
+                ],
+                colors: [.indigo, .purple, .pink,
+                         .purple, .indigo, .pink,
+                         .pink, .purple, .indigo]))
+        }
     }
 }
 
