@@ -23,9 +23,9 @@ struct GoalsCard: View {
             Target(name: "Carboidratos", value: total.carbs, goal: kcalGoal * carbsShare / 4, unit: "g", color: Theme.carbs),
             Target(name: "Proteína", value: total.protein, goal: kcalGoal * proteinShare / 4, unit: "g", color: Theme.protein),
             Target(name: "Gordura", value: total.fat, goal: kcalGoal * fatShare / 9, unit: "g", color: Theme.fat),
-            Target(name: "Açúcar", value: total.sugar, goal: 50, unit: "g", color: Theme.sugar),
+            Target(name: "Açúcar", value: total.sugar, goal: 50, unit: "g", color: Theme.sugar, isLimit: true),
             Target(name: "Fibras", value: total.fiber, goal: 30, unit: "g", color: Theme.fiber),
-            Target(name: "Sódio", value: total.sodium, goal: 2300, unit: "mg", color: Theme.sodium),
+            Target(name: "Sódio", value: total.sodium, goal: 2300, unit: "mg", color: Theme.sodium, isLimit: true),
         ]
     }
 
@@ -85,8 +85,12 @@ struct Target: Identifiable {
     let goal: Double
     let unit: String
     let color: Color
+    /// Teto (açúcar, sódio): o bom é ficar abaixo. O resto é meta pra chegar.
+    var isLimit = false
 
     var id: String { name }
+    /// "de 120" ou "até 2.300". A unidade já está dentro do anel.
+    var goalLabel: String { "\(isLimit ? "até" : "de") \(Int(goal.rounded()).formatted())" }
     var progress: Double { goal > 0 ? value / goal : 0 }
 }
 
@@ -111,19 +115,30 @@ private struct NutrientRing: View {
                     Text(Int(value.rounded()).formatted())
                         .font(.system(size: 14, weight: .semibold, design: .rounded))
                         .monospacedDigit()
+                        // 2.345 mg de sódio já não cabe no anel: encolhe em vez de vazar.
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
                         .contentTransition(.numericText(value: value))
                     Text(target.unit)
                         .font(.system(size: 9, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
+                // Por dentro do traço do anel.
+                .frame(maxWidth: 40)
             }
             .frame(width: 50, height: 50)
 
-            Text(target.name)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
+            VStack(spacing: 1) {
+                Text(target.name)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                Text(target.goalLabel)
+                    .font(.system(size: 11, weight: .medium))
+                    .monospacedDigit()
+                    .foregroundStyle(.tertiary)
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
         }
         .animation(revealed ? Motion.cascade(order) : Motion.exit, value: revealed)
         .reveal(revealed, order: order)
