@@ -11,11 +11,14 @@ struct TobiLetter: View {
     /// Envelope e cartão na mesma proporção: o cartão fechado (metade da altura) cabe com folga.
     private static let envelope = CGSize(width: 324, height: 204)
     private static let cardHeight: CGFloat = 380
-    private static let foldedScale: CGFloat = 0.82
-    /// Posições a partir do centro: o envelope um pouco abaixo; o cartão dentro dele, saindo e aberto.
+    /// Fechado, o cartão ocupa o envelope quase de borda a borda (4 pt de folga de cada lado),
+    /// pra não sobrar fundo escuro aparecendo nos cantos.
+    private static let foldedScale: CGFloat = 0.875
+    /// Posições a partir do centro: o envelope um pouco abaixo; o cartão dentro dele (com a dobra
+    /// 6 pt abaixo da boca), saindo e aberto.
     private static let envelopeY: CGFloat = 40
-    private static let insideY: CGFloat = -28
-    private static let pulledY: CGFloat = -176
+    private static let insideY: CGFloat = -56
+    private static let pulledY: CGFloat = -186
 
     static let paper = Color(light: .white, dark: Color(white: 0.15))
     static let ink = Color(light: Color(red: 0.12, green: 0.12, blue: 0.22), dark: Color(white: 0.94))
