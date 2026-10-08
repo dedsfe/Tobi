@@ -93,7 +93,8 @@ async function askJev(key: string, text: string, candidates: Candidate[]): Promi
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "use POST" }, 405);
 
-  const key = Deno.env.get("TYPESAFE_API_KEY");
+  // "resolve-line" é o nome com que a chave foi salva no painel.
+  const key = Deno.env.get("TYPESAFE_API_KEY") ?? Deno.env.get("resolve-line");
   if (!key) return json({ error: "TYPESAFE_API_KEY não configurada" }, 500);
 
   let input: unknown;
