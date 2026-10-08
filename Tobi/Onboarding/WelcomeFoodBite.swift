@@ -39,3 +39,24 @@ enum WelcomeFoodBite {
         return 3.52 + 0.53 * ease((after - 0.68) / (finish - 0.68))
     }
 }
+
+/// Uma saída antiga não pode encerrar uma nova abertura das boas-vindas.
+struct WelcomeFoodSession {
+    private(set) var generation = 0
+    private(set) var active = false
+
+    mutating func begin() -> Int {
+        generation += 1
+        active = true
+        return generation
+    }
+
+    func contains(_ token: Int) -> Bool { active && generation == token }
+
+    @discardableResult
+    mutating func end(_ token: Int? = nil) -> Bool {
+        guard token == nil || token == generation else { return false }
+        active = false
+        return true
+    }
+}

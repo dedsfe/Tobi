@@ -9,10 +9,11 @@ struct WelcomeFood: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.tobiReactions) private var tobi
     @State private var shown = false
+    @State private var appearance: Int?
     /// Quantas vezes cada comida foi tocada; cada toque toca a reação de novo.
     @State private var taps = Array(repeating: 0, count: WelcomeFood.items.count)
     /// A comida que está indo pra boca do Tobi agora, e quando saiu.
-    @State private var trip: (index: Int, start: TimeInterval, origin: CGPoint)?
+    @State private var trip: (index: Int, start: TimeInterval, origin: CGPoint, token: Int)?
     @State private var chomps = 0
     @State private var lastFood = -1
 
@@ -42,9 +43,14 @@ struct WelcomeFood: View {
         Item(emoji: "☕️", spot: UnitPoint(x: 0.90, y: 0.88), size: 36, tilt: -4),
     ]
 
+    private var ownsSession: Bool {
+        guard let appearance else { return false }
+        return scene.session.contains(appearance)
+    }
+
     var body: some View {
         GeometryReader { proxy in
-            TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion || !shown || scenePhase != .active)) { context in
+            TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion || !shown || !ownsSession || scenePhase != .active)) { context in
                 let time = context.date.timeIntervalSinceReferenceDate
                 ZStack {
                     ForEach(Self.items.indices, id: \.self) { index in
@@ -77,9 +83,9 @@ struct WelcomeFood: View {
                                       tilt: item.tilt + sin(trip.start * 0.8 + Double(trip.index) * 1.3) * 4,
                                       origin: CGPoint(x: trip.origin.x - frame.minX,
                                                       y: trip.origin.y - frame.minY),
-                                      started: trip.start, duration: Self.flight,
-                                      enabled: !reduceMotion && scenePhase == .active) {
-                        guard !reduceMotion, scenePhase == .active else { return }
+                                      token: trip.token, started: trip.start, duration: Self.flight,
+                                      enabled: !reduceMotion && scene.session.contains(trip.token) && scenePhase == .active) {
+                        guard !reduceMotion, scene.session.contains(trip.token), scenePhase == .active else { return }
                         chomps += 1
                         tobi.acknowledge()
                     }
@@ -87,9 +93,15 @@ struct WelcomeFood: View {
                 }
             }
         }
-        .onAppear { shown = true }
-        .onDisappear { shown = false; trip = nil; scene.bite = nil }
-        .task(id: reduceMotion || scenePhase != .active) { await feed() }
+        .opacity(shown && !ownsSession ? 0 : 1)
+        .allowsHitTesting(ownsSession)
+        .onAppear { appearance = scene.begin(); shown = true }
+        .onDisappear {
+            shown = false
+            trip = nil
+            if let appearance { scene.end(appearance) }
+        }
+        .task(id: reduceMotion || !ownsSession || scenePhase != .active) { await feed() }
         .sensoryFeedback(.impact(weight: .medium), trigger: taps)
         .sensoryFeedback(.impact(weight: .light), trigger: chomps)
         .accessibilityHidden(true)
@@ -98,24 +110,29 @@ struct WelcomeFood: View {
     /// Para sempre: uma comida por vez, sorteada (nunca a mesma de antes), vai pra boca do Tobi.
     private func feed() async {
         trip = nil
+        guard let token = appearance, scene.session.contains(token) else { return }
         scene.bite = nil
-        defer { scene.bite = nil }
+        defer { if scene.session.contains(token) { scene.bite = nil } }
         guard !reduceMotion, scenePhase == .active else { return }
         do {
             try await Task.sleep(for: .seconds(1.6))
-            while !Task.isCancelled {
+            while !Task.isCancelled && scene.session.contains(token) {
                 // Espera o rosto carregar, sem inventar uma boca pro fallback.
                 while !scene.isReady || scene.foodCenters.count < Self.items.count {
                     try await Task.sleep(for: .milliseconds(100))
+                    guard scene.session.contains(token) else { return }
                 }
+                try Task.checkCancellation()
+                guard scene.session.contains(token) else { return }
                 let choices = Self.items.indices.filter { $0 != lastFood }
                 guard let next = choices.randomElement() else { return }
                 guard let origin = scene.foodCenters[next] else { continue }
                 lastFood = next
                 let start = Date.now.timeIntervalSinceReferenceDate
                 scene.bite = (start, Self.flight)
-                trip = (next, start, origin)
+                trip = (next, start, origin, token)
                 try await Task.sleep(for: .seconds(Self.flight + WelcomeFoodBite.finish))
+                guard scene.session.contains(token) else { return }
                 scene.bite = nil
                 try await Task.sleep(for: .seconds(Self.away + Self.pop + 1.1 - WelcomeFoodBite.finish))
             }
@@ -174,10 +191,13 @@ struct WelcomeFood: View {
                     let frame = proxy.frame(in: .global)
                     return CGPoint(x: frame.midX, y: frame.midY)
                 } action: { center in
-                    scene.foodCenters[index] = center
+                    if let appearance, scene.session.contains(appearance) {
+                        scene.foodCenters[index] = center
+                    }
                 }
                 .contentShape(.rect)
                 .onTapGesture {
+                    guard ownsSession else { return }
                     guard !reduceMotion else { tobi.acknowledge(); return }
                     taps[index] += 1
                     tobi.acknowledge()

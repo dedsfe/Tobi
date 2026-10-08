@@ -283,6 +283,10 @@ struct OnboardingView: View {
             }
         }
         .animation(Motion.surface, value: step == .firstMeal)
+        .onChange(of: step) { old, next in
+            if old == .welcome, next != .welcome { welcomeScene.end() }
+        }
+        .onDisappear { welcomeScene.end() }
     }
 
     @State private var welcomeScene = WelcomeFoodScene()
@@ -383,6 +387,8 @@ struct OnboardingView: View {
     }
 
     private func advance() {
+        // Limpa as camadas antes de a transição manter a tela antiga viva.
+        if step == .welcome { welcomeScene.end() }
         guard let next = neighbor(of: step, by: 1) else { return onFinish() }
         withAnimation(Motion.surface) { step = next }
         stage(next, entering: true)

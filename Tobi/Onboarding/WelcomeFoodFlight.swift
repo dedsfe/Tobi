@@ -9,9 +9,28 @@ final class WelcomeFoodScene {
     @ObservationIgnored weak var view: ARView?
     @ObservationIgnored var foodCenters: [Int: CGPoint] = [:]
     var bite: (start: TimeInterval, flight: Double)?
+    private(set) var session = WelcomeFoodSession()
+    @ObservationIgnored private weak var flightView: WelcomeFoodFlight.FlightView?
+
+    @discardableResult
+    func begin() -> Int { session.begin() }
+
+    func end(_ token: Int? = nil) {
+        guard session.end(token) else { return }
+        flightView?.stop()
+        flightView = nil
+        bite = nil
+        view = nil
+        foodCenters.removeAll()
+    }
+
+    func register(_ flight: WelcomeFoodFlight.FlightView, token: Int) {
+        guard session.contains(token) else { flight.stop(); return }
+        flightView = flight
+    }
 
     var isReady: Bool {
-        guard let view, view.window != nil, view.bounds.height > 0 else { return false }
+        guard session.active, let view, view.window != nil, view.bounds.height > 0 else { return false }
         return view.scene.findEntity(named: "Mouth") != nil
     }
 
@@ -69,7 +88,7 @@ struct WelcomeFoodStageCapture: UIViewRepresentable {
         }
 
         func capture() {
-            guard window != nil else { return }
+            guard window != nil, scene?.session.active == true else { return }
             func find(in root: UIView) -> ARView? {
                 if let view = root as? ARView { return view }
                 for child in root.subviews {
@@ -95,6 +114,7 @@ struct WelcomeFoodFlight: UIViewRepresentable {
     let size: CGFloat
     let tilt: Double
     let origin: CGPoint
+    let token: Int
     let started: TimeInterval
     let duration: Double
     let enabled: Bool
@@ -121,7 +141,8 @@ struct WelcomeFoodFlight: UIViewRepresentable {
 
         func configure(_ flight: WelcomeFoodFlight) {
             self.flight = flight
-            guard flight.enabled, completed != flight.started else { stop(); return }
+            guard flight.enabled, flight.scene.session.contains(flight.token), completed != flight.started else { stop(); return }
+            flight.scene.register(self, token: flight.token)
             emoji.text = flight.emoji
             emoji.font = .systemFont(ofSize: flight.size)
             emoji.textAlignment = .center
@@ -164,7 +185,7 @@ struct WelcomeFoodFlight: UIViewRepresentable {
         }
 
         @objc private func tick() {
-            guard let flight, flight.enabled, window != nil,
+            guard let flight, flight.enabled, flight.scene.session.contains(flight.token), window != nil,
                   let arView = flight.scene.view, arView.window === window,
                   let landmarks = flight.scene.landmarks(in: self) else { stop(); return }
             let t = min(1, max(0, (Date.now.timeIntervalSinceReferenceDate - flight.started) / flight.duration))

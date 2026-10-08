@@ -132,3 +132,37 @@ struct WelcomeFoodEatingPoseTests {
     }
 }
 #endif
+
+struct WelcomeFoodSessionTests {
+    @Test func cancelsImmediatelyOnExit() {
+        var session = WelcomeFoodSession()
+        let token = session.begin()
+        #expect(session.contains(token))
+        session.end()
+        #expect(!session.active)
+        #expect(!session.contains(token))
+    }
+
+    @Test func oldCallbacksCannotLeakIntoFollowingScreens() {
+        var session = WelcomeFoodSession()
+        let old = session.begin()
+        session.end()
+        let current = session.begin()
+        #expect(!session.contains(old))
+        #expect(session.contains(current))
+        let ended = session.end(old)
+        #expect(!ended)
+        #expect(session.contains(current))
+    }
+
+    @Test func repeatedCleanupIsSafe() {
+        var session = WelcomeFoodSession()
+        let token = session.begin()
+        session.end(token)
+        session.end(token)
+        #expect(!session.active)
+        let newToken = session.begin()
+        #expect(newToken != token)
+        #expect(session.contains(newToken))
+    }
+}
