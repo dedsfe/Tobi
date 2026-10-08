@@ -20,7 +20,11 @@ Código em `Tobi/Onboarding/OnboardingView.swift`. Toda tela tem o palco do Tobi
 - [x] 14. Paywall: anual (destacado, com a economia) e semanal, os dois com 3 dias grátis; linha do tempo do teste com as datas de verdade; StoreKit 2 em `TobiStore` (IDs e preços de reserva num lugar só, `Tobi.storekit` pra testar rodando pelo Xcode). O X abre a carta do Tobi com 24 horas de cortesia; a compra solta canhões de confete. Sem plano e sem as 24 horas, o app trava no paywall (Ajustes → Debug → "Travar o app"): em cima, o resumo das 24 horas (calorias subindo, barra da meta a partir de 50%, anéis de C/P/G); sem nada anotado, um cartão onde a pessoa testa o Tobi escrevendo o que comeu (`PaywallGate.swift`)
 - [ ] Paywall: preços definitivos e os dois planos criados no App Store Connect (hoje R$ 99,90/ano e R$ 12,90/semana de reserva)
 - [ ] Paywall: link de Privacidade em `PaywallLinks.privacy` (site em construção); a Apple exige antes da revisão. Texto pronto em `docs/privacidade.md`, revisão completa em `docs/revisao-apple.md`
-- [ ] Paywall: cumprir o "Te aviso antes" pra quem negou notificação, depois testar 7 dias de teste e plano mensal (`docs/paywall-conversao.md`)
+- [x] Tela de alegria depois da compra (`PaywallJoy.swift`): datas reais do teste e botão "Ativar" o aviso pra quem negou notificação
+- [x] Ajustes: "Gerenciar assinatura" e "Restaurar compras"
+- [x] Ícone do Icon Composer (`Asset-Icon/TobiIcon.icon`) e build 0.1.0 (1) enviado pro App Store Connect em 08/10/2026
+- [ ] App Store: página do app (prints, descrição, rótulos de privacidade iguais ao `PrivacyInfo.xcprivacy`, nota pro revisor sobre as 24 horas). Próximo build sobe o número (`CURRENT_PROJECT_VERSION` no project.yml)
+- [ ] Paywall: testar 7 dias de teste e plano mensal (`docs/paywall-conversao.md`)
 - [ ] Anúncios: conectar TikTok Ads e Meta Ads (SDKs + eventos de teste grátis e compra); falta criar os apps nos painéis e decidir sobre o pedido de rastreamento (`docs/anuncios.md`)
 - [ ] RevenueCat: compras e assinaturas passam por ele (receita, renovações, cancelamentos e testes de paywall), mandando os eventos de compra pras redes de anúncio
 - [ ] PostHog: eventos do app e funil do onboarding com painel pronto (hoje o funil está no Supabase, `onboarding_funnel`)
