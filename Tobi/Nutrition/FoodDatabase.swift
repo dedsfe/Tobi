@@ -12,6 +12,22 @@ enum FoodDatabase {
         "posta": 120, "rodela": 15, "gomo": 10, "barra": 25, "dose": 50, "escumadeira": 70,
         "pegador": 60, "garfada": 20, "cumbuca": 250, "caneca": 300, "pires": 80,
         "espetinho": 60, "espeto": 100, "folha": 10,
+        // Medianas da Tabela de Medidas Referidas da POF 2008-2009 (IBGE), quando o alimento não tem a dele.
+        // Fora as que também são nome de comida ("bife", "colher de arroz"), que o parser confundiria.
+        "colher de servir": 50, "colher de cafe": 2.5, "ponta de faca": 12.5,
+        "copo americano": 150, "copo de requeijao": 240, "copo grande": 300, "copo medio": 240,
+        "xicara de cha": 200, "xicara de cafe": 50, "prato fundo": 300,
+        "prato raso": 140, "prato de sobremesa": 120, "caneco": 300,
+    ]
+
+    /// Jeitos de falar a mesma medida: diminutivo e aumentativo viram a medida mais parecida.
+    static let measureSynonyms: [String: String] = [
+        "colherzinha": "colher de cha", "colherinha": "colher de cha", "colher de chazinho": "colher de cha",
+        "colherada": "colher de sopa", "copinho": "copo americano", "copao": "copo grande",
+        "xicrinha": "xicara de cafe", "xicarazinha": "xicara de cafe", "latinha": "lata", "latao": "lata",
+        "pedacinho": "pedaco", "fatiazinha": "fatia", "fatinha": "fatia", "conchinha": "concha",
+        "potinho": "pote", "garrafinha": "garrafa", "pacotinho": "pacote", "pratinho": "prato raso",
+        "pratao": "prato fundo", "unid": "unidade", "porcoe": "porcao",
     ]
 
     /// Palavras que significam "uma porção do próprio alimento".

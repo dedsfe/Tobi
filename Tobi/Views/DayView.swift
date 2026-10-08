@@ -276,13 +276,13 @@ struct DayView: View {
     }
 
     /// Produto escaneado: vai pra linha em foco se estiver vazia, senão numa linha nova logo abaixo.
-    private func addScanned(_ info: BrandProductInfo) {
+    private func addScanned(_ info: BrandProductInfo, line text: String) {
         save(info)
         if let line = caretLine, lines.indices.contains(line),
            lines[line].trimmingCharacters(in: .whitespaces).isEmpty {
-            editor.replaceLine(line, with: info.name, caretAtEnd: true)
+            editor.replaceLine(line, with: text, caretAtEnd: true)
         } else {
-            editor.insertLine(after: caretLine ?? lines.count - 1, text: info.name)
+            editor.insertLine(after: caretLine ?? lines.count - 1, text: text)
         }
     }
 

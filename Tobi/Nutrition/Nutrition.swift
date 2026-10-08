@@ -88,13 +88,14 @@ struct Food: Sendable {
     }
 
     /// Produto de marca salvo no aparelho (ver `BrandProduct`).
-    init(brand name: String, aliases: [String], per100: Nutrition, barcode: String, portion: Double) {
+    init(brand name: String, aliases: [String], per100: Nutrition, barcode: String, portion: Double,
+         measures: [String: Double] = [:]) {
         self.name = name
         self.aliases = aliases
         self.per100 = per100
         self.source = .brand(barcode)
         self.portion = portion
-        self.measures = [:]
+        self.measures = measures
     }
 
     init(table food: TableFood, source: FoodSource, additionalAliases: [String] = [],

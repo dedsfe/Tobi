@@ -182,3 +182,45 @@ struct FoodParserTests {
         #expect(parser.estimate("cheeseburger").items.first?.foodName?.contains("(") != true)
     }
 }
+
+/// Quantidade do jeito que o brasileiro escreve e fala (medidas da POF 2008-2009 do IBGE).
+struct BrazilianQuantityTests {
+    let parser = FoodParser.shared
+
+    private func grams(_ line: String) -> Double? { parser.estimate(line).items.first?.grams }
+
+    @Test func quantityAfterTheFood() {
+        #expect(grams("arroz 3 colheres") == grams("3 colheres de arroz"))
+        #expect(grams("leite condensado, 2 colheres de sopa") == grams("2 colheres de sopa de leite condensado"))
+        #expect(parser.estimate("leite condensado, 2 colheres de sopa").items.count == 1)
+        #expect(grams("ovo x2") == grams("2 ovos"))
+    }
+
+    @Test func spokenNumbersAndHalves() {
+        #expect(grams("uma colher e meia de açúcar") == 1.5 * grams("1 colher de açúcar")!)
+        #expect(grams("meia dúzia de ovos") == grams("6 ovos"))
+        #expect(grams("quinze morangos") == 15 * grams("1 morango")!)
+    }
+
+    @Test func householdMeasures() {
+        #expect(grams("1 colher de chá de açúcar") == 5)
+        #expect(grams("2 colheres de sobremesa de mel") != nil)
+        #expect(grams("um copo americano de suco") == 150)
+        #expect(grams("1 xícara de café de leite") == 50)
+        #expect(grams("ponta de faca de manteiga") != nil)
+        #expect(parser.estimate("ponta de faca de manteiga").items.first?.foodName == "Manteiga")
+    }
+
+    @Test func diminutivesAndRoughMeasuresAreEstimates() {
+        #expect(grams("2 colherzinhas de açúcar") == 10)
+        #expect(parser.estimate("1 colher cheia de açúcar").confidence == .estimated)
+        #expect(parser.estimate("um pedacinho de bolo").confidence == .estimated)
+    }
+
+    @Test func numbersInsideNamesStayInTheName() {
+        // "Tasty Turbo 1 carne" é um sanduíche, não 1 carne.
+        #expect(parser.estimate("tasty turbo 1 carne").items.first?.foodName == "Tasty Turbo 1 carne (McDonald's)")
+        // "postas" só é medida com comida junto.
+        #expect(grams("2 postas de peixe") == 240)
+    }
+}

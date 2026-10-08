@@ -46,7 +46,8 @@ final class BrandProduct {
             per100: Nutrition(kcal: kcal, protein: protein, carbs: carbs, fat: fat,
                               sugar: sugar, fiber: fiber, sodium: sodium),
             barcode: barcode,
-            portion: servingGrams ?? 100
+            portion: servingGrams ?? 100,
+            measures: FoodParser.shared.householdMeasures(for: name)
         )
     }
 }
