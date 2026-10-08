@@ -1060,9 +1060,12 @@ private struct CelebrationStep: View {
     @Environment(\.requestReview) private var requestReview
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    @State private var progress: CGFloat = 0
+    /// Quanto dura a caminhada do Tobi de hoje até a meta.
+    private static let walk = 2.6
+
+    @State private var visible = false
+    @State private var walkStart: Date?
     @State private var reached = false
-    @State private var tiles = false
     @State private var milestoneTicks = 0
 
     private var plan: NutritionPlan? {
@@ -1080,151 +1083,149 @@ private struct CelebrationStep: View {
 
     private var isMaintaining: Bool { plan?.objective == .maintain }
 
-    /// A promessa: "Em março, você chega nos 65 kg" (com o ano só se não for este).
-    private var title: String {
-        guard let plan else { return "Tá tudo pronto!" }
-        let goal = "\(plan.goalWeightKg.formatted(.number.precision(.fractionLength(0...1)))) kg"
-        if isMaintaining { return "Seu plano pra manter os \(goal)" }
-        let sameYear = Calendar.current.isDate(arrival, equalTo: .now, toGranularity: .year)
-        let month = arrival.formatted(sameYear ? .dateTime.month(.wide) : .dateTime.month(.wide).year())
-        return "Em \(month), você chega nos \(goal)"
-    }
-
     var body: some View {
-        QuestionStep(
-            title: title,
-            subtitle: "Tá tudo pronto. Esse é o seu caminho, comendo \(dailyGoal.formatted()) cal por dia.",
-            canContinue: true,
-            showsButton: tiles,
-            onContinue: onContinue
-        ) { visible in
-            VStack(spacing: 12) {
-                if let plan {
-                    JourneyChart(startKg: plan.weightKg, goalKg: plan.goalWeightKg, arrival: arrival,
-                                 progress: progress, reached: reached)
-                        .frame(height: 196)
-                        .padding(14)
-                        .glassEffect(.regular, in: .rect(cornerRadius: 26))
-                        .reveal(visible, order: 2)
-
-                    HStack(spacing: 10) {
-                        PlanTile(symbol: "flame.fill", color: .orange, value: dailyGoal,
-                                 unit: "cal por dia", shown: tiles, order: 0)
-                        PlanTile(symbol: "fish.fill", color: Theme.protein, value: plan.proteinGrams,
-                                 suffix: " g", unit: "proteína", shown: tiles, order: 1)
-                        if isMaintaining {
-                            PlanTile(symbol: "equal", color: .indigo, value: Int(plan.weightKg.rounded()),
-                                     suffix: " kg", unit: "mantendo", shown: tiles, order: 2)
-                        } else {
-                            PlanTile(symbol: plan.objective == .lose ? "arrow.down.right" : "arrow.up.right",
-                                     color: .indigo, value: Int((abs(plan.weeklyChangeKg) * 100).rounded()),
-                                     unit: "kg por semana", shown: tiles, order: 2, hundredths: true)
-                        }
+        VStack(alignment: .leading, spacing: 0) {
+            if let plan {
+                TimelineView(.animation(paused: walkStart == nil || reached)) { context in
+                    let elapsed = walkStart.map { context.date.timeIntervalSince($0) } ?? 0
+                    let progress = reached ? 1 : CGFloat(Self.ease(min(1, elapsed / Self.walk)))
+                    VStack(alignment: .leading, spacing: 0) {
+                        hero(plan: plan, progress: progress)
+                            .padding(.horizontal, 24)
+                            .reveal(visible, order: 0)
+                        JourneyChart(startKg: plan.weightKg, goalKg: plan.goalWeightKg, arrival: arrival,
+                                     progress: progress, time: elapsed, reached: reached)
+                            .frame(height: 250)
+                            .reveal(visible, order: 1)
                     }
                 }
+                Text("Comendo \(dailyGoal.formatted()) cal por dia. Tá tudo pronto.")
+                    .font(.system(size: 17))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 4)
+                    .reveal(reached, order: 1)
+            } else {
+                Text("Tá tudo pronto!")
+                    .font(.system(size: 30, weight: .heavy, design: .rounded))
+                    .padding(.horizontal, 24)
+                    .reveal(visible, order: 0)
             }
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(alignment: .center) { aurora }
+        .safeAreaBar(edge: .bottom) {
+            OnboardingButton(title: "Continuar", action: onContinue)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 12)
+                .reveal(reached || plan == nil, order: 3)
         }
         .sensoryFeedback(.selection, trigger: milestoneTicks)
         .sensoryFeedback(.success, trigger: reached)
         .task { await perform() }
     }
 
-    /// A coreografia: espera o título entrar, desenha a curva (vibrando em cada marco),
-    /// acende a meta, conta os números e só então mostra o botão e pede a avaliação.
+    /// Quando e quanto: "Hoje / 82 kg", depois cada mês com o peso do caminho, e no fim a promessa.
+    private func hero(plan: NutritionPlan, progress: CGFloat) -> some View {
+        let weight = reached ? plan.goalWeightKg
+            : JourneyChart.weight(from: plan.weightKg, to: plan.goalWeightKg, at: progress)
+        let shown = reached ? weight : weight.rounded()
+        return VStack(alignment: .leading, spacing: 0) {
+            Text(eyebrow(progress: progress))
+                .font(.system(size: 19, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+                .contentTransition(.opacity)
+                .animation(Motion.quick, value: eyebrow(progress: progress))
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(shown.formatted(.number.precision(.fractionLength(0...1))))
+                    .font(.system(size: 76, weight: .heavy, design: .rounded))
+                    .monospacedDigit()
+                    .contentTransition(.numericText(value: shown))
+                    .foregroundStyle(reached
+                        ? AnyShapeStyle(LinearGradient(colors: [.indigo, .purple, .pink],
+                                                       startPoint: .leading, endPoint: .trailing))
+                        : AnyShapeStyle(Color(uiColor: .label)))
+                Text("kg")
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+            .animation(Motion.quick, value: shown)
+        }
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
+        .accessibilityElement(children: .combine)
+    }
+
+    /// Antes de andar é "Hoje"; andando, o mês em que o Tobi está; chegando, a promessa.
+    private func eyebrow(progress: CGFloat) -> String {
+        if reached {
+            if isMaintaining { return "Seu plano pra manter os" }
+            let sameYear = Calendar.current.isDate(arrival, equalTo: .now, toGranularity: .year)
+            let month = arrival.formatted(sameYear ? .dateTime.month(.wide) : .dateTime.month(.wide).year())
+            return "Em \(month), você chega nos"
+        }
+        let days = Double(JourneyChart.days(until: arrival)) * Double(progress)
+        guard days >= 30.4 else { return "Hoje" }
+        let date = Calendar.current.date(byAdding: .day, value: Int(days), to: .now) ?? .now
+        return "Em " + date.formatted(.dateTime.month(.wide))
+    }
+
+    /// Luz de fundo que acompanha a caminhada e floresce na chegada. Fica parada, então o blur é barato.
+    private var aurora: some View {
+        Ellipse()
+            .fill(LinearGradient(colors: [.indigo, .purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing))
+            .frame(width: 420, height: 300)
+            .blur(radius: 90)
+            .opacity(reached ? 0.32 : (walkStart == nil ? 0 : 0.16))
+            .scaleEffect(reached ? 1.15 : 0.9)
+            .offset(y: 40)
+            .animation(.easeInOut(duration: reached ? 0.9 : Self.walk), value: walkStart == nil)
+            .animation(Motion.surface, value: reached)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+
+    /// A coreografia: o número entra, o Tobi anda até a meta (vibrando em cada virada de mês),
+    /// pula na bandeira, aparece a frase e o botão, e só então pede a avaliação.
     private func perform() async {
+        visible = true
         guard !reduceMotion else {
-            progress = 1; reached = true; tiles = true
+            reached = true
             return
         }
-        try? await Task.sleep(for: .milliseconds(650))
-        let drawing = 1.7
-        withAnimation(.timingCurve(0.45, 0, 0.25, 1, duration: drawing)) { progress = 1 }
-        // Os marcos acendem quando o traço passa por eles; aqui só a vibração acompanha.
+        try? await Task.sleep(for: .milliseconds(700))
+        walkStart = .now
         let marks = plan.map { JourneyChart(startKg: $0.weightKg, goalKg: $0.goalWeightKg, arrival: arrival,
-                                            progress: 0, reached: false).milestones } ?? []
+                                            progress: 0, time: 0, reached: false).milestones } ?? []
         var elapsed = 0.0
         for mark in marks {
-            let at = drawing * Self.timeFor(progress: mark.fraction)
+            let at = Self.walk * Self.timeFor(progress: mark.fraction)
             try? await Task.sleep(for: .seconds(max(0, at - elapsed)))
             elapsed = at
             milestoneTicks += 1
         }
-        try? await Task.sleep(for: .seconds(max(0, drawing - elapsed)))
+        try? await Task.sleep(for: .seconds(max(0, Self.walk - elapsed)))
+        guard !Task.isCancelled else { return }
         withAnimation(Motion.surface) { reached = true }
-        try? await Task.sleep(for: .milliseconds(450))
-        withAnimation(Motion.surface) { tiles = true }
-        try? await Task.sleep(for: .seconds(1.8))
+        try? await Task.sleep(for: .seconds(2.2))
         guard !Task.isCancelled else { return }
         requestReview()
     }
 
-    /// Inverso aproximado da curva de tempo (0.45, 0, 0.25, 1): em que fração do tempo o traço passa por `progress`.
+    /// Passo de caminhada: sai devagar, anda firme e chega freando.
+    private static func ease(_ time: Double) -> Double {
+        time < 0.5 ? 2 * time * time : 1 - pow(-2 * time + 2, 2) / 2
+    }
+
+    /// Inverso de `ease`: em que fração do tempo o Tobi passa por `progress`.
     private static func timeFor(progress target: CGFloat) -> Double {
         var low = 0.0, high = 1.0
         for _ in 0..<24 {
             let mid = (low + high) / 2
-            if bezier(mid) < Double(target) { low = mid } else { high = mid }
+            if ease(mid) < Double(target) { low = mid } else { high = mid }
         }
         return (low + high) / 2
-    }
-
-    /// y(t) da curva cúbica de tempo, achando o parâmetro pelo x (tempo).
-    private static func bezier(_ time: Double) -> Double {
-        func coordinate(_ t: Double, _ p1: Double, _ p2: Double) -> Double {
-            3 * pow(1 - t, 2) * t * p1 + 3 * (1 - t) * pow(t, 2) * p2 + pow(t, 3)
-        }
-        var low = 0.0, high = 1.0
-        for _ in 0..<24 {
-            let mid = (low + high) / 2
-            if coordinate(mid, 0.45, 0.25) < time { low = mid } else { high = mid }
-        }
-        return coordinate((low + high) / 2, 0, 1)
-    }
-}
-
-/// Número do plano num vidro: ícone, valor que conta do zero e a legenda.
-private struct PlanTile: View {
-    let symbol: String
-    let color: Color
-    let value: Int
-    var suffix = ""
-    let unit: String
-    let shown: Bool
-    let order: Int
-    /// O valor vem em centésimos (ex.: 50 = "0,5").
-    var hundredths = false
-
-    private var text: String {
-        let shownValue = shown ? value : 0
-        if hundredths {
-            return (Double(shownValue) / 100).formatted(.number.precision(.fractionLength(1...2)))
-        }
-        return shownValue.formatted() + suffix
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Image(systemName: symbol)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(color)
-            Text(text)
-                .font(.system(size: 22, weight: .heavy, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(Color(uiColor: .label))
-                .contentTransition(.numericText(value: Double(shown ? value : 0)))
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-            Text(unit)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(.regular, in: .rect(cornerRadius: 20))
-        .reveal(shown, order: order)
-        .animation(Motion.cascade(order + 1), value: shown)
     }
 }
 

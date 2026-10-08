@@ -1,120 +1,164 @@
 import SwiftUI
 
-/// A jornada até a meta: a curva do peso de hoje até o peso-meta, que se desenha sozinha,
-/// acende os marcos de cada mês pelo caminho e estoura no ponto final.
-/// `progress` vai de 0 a 1 (quanto da curva já foi desenhado); quem anima é a tela.
+/// A jornada até a meta, sem moldura: a curva do peso de hoje até o peso-meta e o Tobi
+/// andando na ponta dela, mês a mês, até a bandeira. Ocupa a largura toda da tela.
+/// `progress` vai de 0 a 1 e `time` é o relógio da caminhada (o passinho); quem anima é a tela.
 struct JourneyChart: View {
     let startKg: Double
     let goalKg: Double
     let arrival: Date
     let progress: CGFloat
-    /// Ponto final aceso (bandeira, pulso e confete).
+    let time: Double
+    /// Chegou: o Tobi pula, a bandeira acende e estoura o confete.
     let reached: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    static let headSize: CGFloat = 46
+    /// O rosto do Tobi renderizado, solto no bundle (o app não tem catálogo de assets).
+    private static let headImage = UIImage(named: "tobi-head") ?? UIImage()
+
     private var isFlat: Bool { abs(goalKg - startKg) < 0.5 }
 
-    /// Marcos de mês no caminho (no máximo 3), com a fração da curva onde cada um cai.
-    var milestones: [(fraction: CGFloat, label: String)] {
-        guard !isFlat else { return [] }
-        let days = max(1, Calendar.current.dateComponents([.day], from: .now, to: arrival).day ?? 1)
+    /// Viradas de mês no caminho (no máximo 3), com a fração da curva onde cada uma cai.
+    var milestones: [(fraction: CGFloat, date: Date)] {
+        let days = Self.days(until: arrival)
         let months = Int((Double(days) / 30.4).rounded(.down))
         guard months >= 2 else { return [] }
         let picks = months <= 4 ? Array(1..<months) : [months / 4, months / 2, months * 3 / 4]
         return picks.map { month in
             let fraction = CGFloat(Double(month) * 30.4 / Double(days))
-            let delta = (weight(at: fraction) - startKg)
-            let rounded = (abs(delta) * 2).rounded() / 2
-            let sign = delta < 0 ? "−" : "+"
-            return (fraction, "\(sign)\(rounded.formatted(.number.precision(.fractionLength(0...1)))) kg")
+            return (fraction, Calendar.current.date(byAdding: .day, value: Int(Double(month) * 30.4), to: .now) ?? .now)
         }
     }
 
+    static func days(until arrival: Date) -> Int {
+        max(1, Calendar.current.dateComponents([.day], from: .now, to: arrival).day ?? 1)
+    }
+
     /// Peso ao longo do caminho: muda mais no começo e assenta perto da meta, como na vida real.
-    private func weight(at fraction: CGFloat) -> Double {
+    static func weight(from start: Double, to goal: Double, at fraction: CGFloat) -> Double {
         let eased = 1 - pow(1 - Double(fraction), 1.6)
-        return startKg + (goalKg - startKg) * eased
+        return start + (goal - start) * eased
     }
 
     var body: some View {
         GeometryReader { proxy in
             let size = proxy.size
-            let plot = CGRect(x: 6, y: 34, width: size.width - 12, height: size.height - 62)
+            let inset = Self.headSize / 2 + 8
+            // Em cima cabe a bandeira por cima da cabeça; embaixo, os meses.
+            let top = Self.headSize + 26
+            let plot = CGRect(x: inset, y: top, width: size.width - inset * 2, height: size.height - top - 40)
             let curve = path(in: plot)
+            let tip = point(at: progress, in: plot)
 
             ZStack(alignment: .topLeading) {
-                // Área sob a curva, revelada junto com o traço.
+                // Sombra colorida sob a curva, que some no fundo da tela (sem card).
                 area(in: plot)
-                    .fill(LinearGradient(colors: [.indigo.opacity(0.28), .purple.opacity(0.04)],
+                    .fill(LinearGradient(colors: [.indigo.opacity(0.22), .purple.opacity(0.06), .clear],
                                          startPoint: .top, endPoint: .bottom))
                     .mask(alignment: .leading) {
-                        Rectangle().frame(width: plot.minX + plot.width * progress)
+                        Rectangle().frame(width: tip.x)
                     }
 
-                // Brilho por baixo do traço.
+                // A trilha inteira, apagada: o caminho que falta.
+                curve
+                    .stroke(Color(uiColor: .label).opacity(0.08),
+                            style: StrokeStyle(lineWidth: 4, lineCap: .round, dash: [1, 9]))
+
+                // O caminho andado, com brilho por baixo.
                 curve
                     .trim(from: 0, to: progress)
-                    .stroke(.indigo.opacity(0.45), style: StrokeStyle(lineWidth: 10, lineCap: .round))
-                    .blur(radius: 8)
+                    .stroke(.indigo.opacity(0.5), style: StrokeStyle(lineWidth: 12, lineCap: .round))
+                    .blur(radius: 10)
                 curve
                     .trim(from: 0, to: progress)
                     .stroke(LinearGradient(colors: [.indigo, .purple, .pink], startPoint: .leading, endPoint: .trailing),
-                            style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
+                            style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
 
-                // Começo: hoje.
-                dot(at: point(at: 0, in: plot), size: 10, filled: true)
-                label(title: "Hoje", value: kg(startKg), alignment: .leading)
-                    .position(x: plot.minX + 34, y: 14)
-
-                // Marcos pelo caminho.
+                // Viradas de mês: o ponto e o mês embaixo acendem quando o Tobi passa.
                 ForEach(Array(milestones.enumerated()), id: \.offset) { _, milestone in
                     let spot = point(at: milestone.fraction, in: plot)
-                    let shown = progress >= milestone.fraction
-                    ZStack {
-                        dot(at: spot, size: 8, filled: false)
-                        Text(milestone.label)
-                            .font(.system(size: 12, weight: .bold, design: .rounded))
-                            .foregroundStyle(.indigo)
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 3)
-                            .glassEffect(.regular, in: .capsule)
-                            .position(x: spot.x, y: spot.y + (goalKg < startKg ? 22 : -22))
-                    }
-                    .scaleEffect(shown ? 1 : 0.4)
-                    .opacity(shown ? 1 : 0)
-                    .animation(Motion.quick, value: shown)
+                    let passed = progress >= milestone.fraction
+                    Circle()
+                        .fill(passed ? Color.white : Color(uiColor: .label).opacity(0.12))
+                        .overlay { Circle().stroke(.indigo, lineWidth: passed ? 2.5 : 0) }
+                        .frame(width: 9, height: 9)
+                        .scaleEffect(passed ? 1 : 0.7)
+                        .position(spot)
+                        .animation(Motion.quick, value: passed)
+                    axisLabel(milestone.date.formatted(.dateTime.month(.abbreviated)), lit: passed)
+                        .position(x: spot.x, y: size.height - 14)
                 }
+                axisLabel("hoje", lit: true)
+                    .position(x: plot.minX, y: size.height - 14)
+                axisLabel(arrival.formatted(.dateTime.month(.abbreviated)), lit: reached)
+                    .position(x: plot.maxX, y: size.height - 14)
 
-                // Fim: a meta.
+                // A bandeira espera na meta desde o começo; acende quando o Tobi chega.
                 let end = point(at: 1, in: plot)
+                Image(systemName: "flag.checkered")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(reached ? AnyShapeStyle(.indigo) : AnyShapeStyle(.tertiary))
+                    .scaleEffect(reached ? 1.2 : 1, anchor: .bottomLeading)
+                    .position(x: end.x + 4, y: end.y - Self.headSize - 12)
+                    .animation(Motion.surface, value: reached)
+
                 if reached && !reduceMotion {
-                    PulseRing().position(end)
                     ConfettiBurst(origin: end)
                 }
-                dot(at: end, size: 14, filled: true)
-                    .scaleEffect(reached ? 1 : 0.01)
-                    .animation(Motion.surface, value: reached)
-                label(title: arrival.formatted(.dateTime.month(.abbreviated).year(.twoDigits)),
-                      value: kg(goalKg), alignment: .trailing, icon: "flag.checkered")
-                    .position(x: plot.maxX - 40, y: 14)
-                    .opacity(reached ? 1 : 0)
-                    .offset(y: reached ? 0 : 6)
-                    .animation(Motion.surface, value: reached)
+
+                head(at: tip, walking: progress > 0 && progress < 1)
             }
         }
+    }
+
+    // MARK: - O Tobi
+
+    /// A cabeça anda na ponta da linha: inclina com a subida/descida e balança a cada passinho.
+    private func head(at spot: CGPoint, walking: Bool) -> some View {
+        let step = walking && !reduceMotion ? time * 2 * .pi * 2.4 : 0
+        let tilt = isFlat ? 0 : (goalKg < startKg ? 8.0 : -8.0) * Double(1 - progress)
+        return Image(uiImage: Self.headImage)
+            .resizable()
+            .scaledToFit()
+            .frame(width: Self.headSize, height: Self.headSize)
+            .rotationEffect(.degrees(tilt + sin(step) * 7))
+            .offset(y: -abs(sin(step)) * 4)
+            .shadow(color: .indigo.opacity(0.35), radius: 8, y: 5)
+            .keyframeAnimator(initialValue: Hop(), trigger: reached) { content, hop in
+                content
+                    .scaleEffect(hop.scale, anchor: .bottom)
+                    .offset(y: hop.lift)
+            } keyframes: { _ in
+                KeyframeTrack(\.lift) {
+                    CubicKeyframe(-22, duration: 0.22)
+                    SpringKeyframe(0, duration: 0.5, spring: .bouncy)
+                }
+                KeyframeTrack(\.scale) {
+                    CubicKeyframe(1.22, duration: 0.22)
+                    SpringKeyframe(1, duration: 0.5, spring: .bouncy)
+                }
+            }
+            .position(x: spot.x, y: spot.y - Self.headSize * 0.32)
+            .accessibilityHidden(true)
+    }
+
+    private struct Hop {
+        var lift: CGFloat = 0
+        var scale: CGFloat = 1
     }
 
     // MARK: - Geometria
 
     private var range: ClosedRange<Double> {
         let low = min(startKg, goalKg), high = max(startKg, goalKg)
-        let pad = max((high - low) * 0.25, 1.5)
+        let pad = max((high - low) * 0.12, 1.5)
         return (low - pad)...(high + pad)
     }
 
     private func point(at fraction: CGFloat, in plot: CGRect) -> CGPoint {
-        let value = weight(at: fraction)
+        let value = Self.weight(from: startKg, to: goalKg, at: fraction)
         let y = (value - range.lowerBound) / (range.upperBound - range.lowerBound)
         return CGPoint(x: plot.minX + plot.width * fraction, y: plot.maxY - plot.height * CGFloat(y))
     }
@@ -131,54 +175,18 @@ struct JourneyChart: View {
 
     private func area(in plot: CGRect) -> Path {
         var area = path(in: plot)
-        area.addLine(to: CGPoint(x: plot.maxX, y: plot.maxY + 22))
-        area.addLine(to: CGPoint(x: plot.minX, y: plot.maxY + 22))
+        area.addLine(to: CGPoint(x: plot.maxX, y: plot.maxY + 30))
+        area.addLine(to: CGPoint(x: plot.minX, y: plot.maxY + 30))
         area.closeSubpath()
         return area
     }
 
-    // MARK: - Peças
-
-    private func dot(at spot: CGPoint, size: CGFloat, filled: Bool) -> some View {
-        Circle()
-            .fill(filled ? Color.white : Color.white.opacity(0.9))
-            .overlay { Circle().stroke(.indigo, lineWidth: filled ? 4 : 2.5) }
-            .frame(width: size, height: size)
-            .position(spot)
-    }
-
-    private func label(title: String, value: String, alignment: HorizontalAlignment, icon: String? = nil) -> some View {
-        VStack(alignment: alignment, spacing: 0) {
-            HStack(spacing: 4) {
-                if let icon { Image(systemName: icon) }
-                Text(title)
-            }
-            .font(.system(size: 12, weight: .medium))
-            .foregroundStyle(.secondary)
-            Text(value)
-                .font(.system(size: 17, weight: .bold, design: .rounded))
-                .foregroundStyle(Color(uiColor: .label))
-        }
-        .fixedSize()
-    }
-
-    private func kg(_ value: Double) -> String {
-        "\(value.formatted(.number.precision(.fractionLength(0...1)))) kg"
-    }
-}
-
-/// Anel que pulsa em volta da meta depois que a curva chega nela.
-private struct PulseRing: View {
-    @State private var pulsing = false
-
-    var body: some View {
-        Circle()
-            .stroke(.indigo.opacity(0.6), lineWidth: 2)
-            .frame(width: 14, height: 14)
-            .scaleEffect(pulsing ? 3.2 : 1)
-            .opacity(pulsing ? 0 : 0.9)
-            .animation(.easeOut(duration: 1.4).repeatForever(autoreverses: false), value: pulsing)
-            .onAppear { pulsing = true }
+    private func axisLabel(_ text: String, lit: Bool) -> some View {
+        Text(text)
+            .font(.system(size: 13, weight: .semibold, design: .rounded))
+            .foregroundStyle(lit ? AnyShapeStyle(.indigo) : AnyShapeStyle(.tertiary))
+            .fixedSize()
+            .animation(Motion.quick, value: lit)
     }
 }
 

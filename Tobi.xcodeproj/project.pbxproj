@@ -25,6 +25,7 @@
 		5B79DA8DC5FB679ABA3BD35E /* VoiceSpectrumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F15F5DFF3D1C5DFB4747B1 /* VoiceSpectrumTests.swift */; };
 		5CF651F012F4A1CCD3A49B2E /* Dictation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C304B2749615A9C8558D00 /* Dictation.swift */; };
 		62734DD3F35E21CA38AFACD5 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 849BBE740074FABF951F498A /* Theme.swift */; };
+		65C464813A2DDB0CB263616C /* tobi-head@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 733787F40680C2123994FCF0 /* tobi-head@3x.png */; };
 		6E31F7E803495BBDD87B2FAD /* BarcodeScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6BC12515FB31BEA5AA5C7D /* BarcodeScanner.swift */; };
 		6E5E54034CB4F717440BAA2E /* BrandProductTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5FA395EEC1B1F95F8911D0 /* BrandProductTests.swift */; };
 		7267903BFF169BAE53EB59A7 /* BrandProduct.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12F7B90D9D89B6E13A30F181 /* BrandProduct.swift */; };
@@ -100,6 +101,7 @@
 		65A29F5B27272F349425B6B0 /* JourneyChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyChart.swift; sourceTree = "<group>"; };
 		693E1062F5E9612595AAFAE8 /* OpenFoodFacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenFoodFacts.swift; sourceTree = "<group>"; };
 		6DDD333EB71EFBF77A7476E6 /* Tobi.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tobi.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		733787F40680C2123994FCF0 /* tobi-head@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "tobi-head@3x.png"; sourceTree = "<group>"; };
 		849BBE740074FABF951F498A /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		8734C3998A0F55F94AAD8688 /* NutritionPlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionPlanTests.swift; sourceTree = "<group>"; };
 		953F49314598C47639854B69 /* GoalsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsCard.swift; sourceTree = "<group>"; };
@@ -269,6 +271,7 @@
 				445349C7B857AF907783D17F /* fastfood.json */,
 				F114B1E25377701C98EEFCF0 /* ibge.json */,
 				3E46D592AB857DDE87A3E279 /* taco.json */,
+				733787F40680C2123994FCF0 /* tobi-head@3x.png */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -381,6 +384,7 @@
 				DFB03B6045CB81552DD4F5C4 /* fastfood.json in Resources */,
 				BEC070B5CD52869753A2C583 /* ibge.json in Resources */,
 				8E3E1AA54F455F6455A96B16 /* taco.json in Resources */,
+				65C464813A2DDB0CB263616C /* tobi-head@3x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
