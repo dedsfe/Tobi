@@ -3,7 +3,7 @@ import StoreKit
 
 /// Eventos anônimos pro Supabase (tabela `analytics_events`): mede onde as pessoas param no onboarding.
 /// Sem login e sem resposta da pessoa (peso, idade...), só qual tela apareceu e o que foi tocado.
-/// Fire-and-forget: nunca segura a tela nem reclama se a rede cair.
+/// Nunca segura a tela: sem rede, o evento espera no aparelho e vai junto com o próximo.
 enum Analytics {
     private static let endpoint = URL(string: "https://wluqzlfkclrjocdjlmeu.supabase.co/rest/v1/analytics_events")!
     /// Chave publicável: feita pra ir dentro do app, só consegue gravar evento (RLS).
@@ -28,6 +28,8 @@ enum Analytics {
             "event": event,
             "properties": properties,
             "app_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?",
+            // A hora em que aconteceu, não a hora em que a rede voltou.
+            "created_at": Date.now.formatted(.iso8601),
         ]
         if let step {
             body["step"] = step.analyticsName
@@ -36,14 +38,16 @@ enum Analytics {
         #if DEBUG
         print("[Analytics] \(event) \(step?.analyticsName ?? "") \(properties)")
         #endif
-        guard let base = try? JSONSerialization.data(withJSONObject: body) else { return }
+        guard let event = try? JSONSerialization.data(withJSONObject: body) else { return }
         Task.detached(priority: .utility) {
-            await send(base)
+            await AnalyticsOutbox.shared.add(event)
         }
     }
 
-    private static func send(_ base: Data) async {
-        guard var body = try? JSONSerialization.jsonObject(with: base) as? [String: Any] else { return }
+    enum Delivery { case sent, retryLater, dropped }
+
+    static func post(_ event: Data) async -> Delivery {
+        guard var body = try? JSONSerialization.jsonObject(with: event) as? [String: Any] else { return .dropped }
         body["build_env"] = await buildEnv()
         var request = URLRequest(url: endpoint, timeoutInterval: 15)
         request.httpMethod = "POST"
@@ -51,10 +55,18 @@ enum Analytics {
         request.setValue(publishableKey, forHTTPHeaderField: "apikey")
         request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-        let response = try? await URLSession.shared.data(for: request).1 as? HTTPURLResponse
+        guard let response = try? await URLSession.shared.data(for: request).1 as? HTTPURLResponse else {
+            return .retryLater
+        }
         #if DEBUG
-        if response?.statusCode != 201 { print("[Analytics] falhou: \(response?.statusCode ?? 0)") }
+        if response.statusCode != 201 { print("[Analytics] falhou: \(response.statusCode)") }
         #endif
+        switch response.statusCode {
+        case 200..<300: return .sent
+        // Evento torto nunca vai passar: descarta pra não travar a fila.
+        case 400, 409, 413, 422: return .dropped
+        default: return .retryLater
+        }
     }
 
     /// Separa teste de gente de verdade: "debug" (Xcode), "testflight" ou "appstore".
@@ -69,6 +81,40 @@ enum Analytics {
         default: return "appstore"
         }
         #endif
+    }
+}
+
+/// Fila dos eventos que ainda não chegaram no Supabase, guardada num arquivo.
+/// Todo evento novo tenta mandar a fila inteira, na ordem.
+private actor AnalyticsOutbox {
+    static let shared = AnalyticsOutbox()
+    /// Teto pra um aparelho sem rede por semanas não encher o disco.
+    private static let limit = 500
+    private let file = URL.applicationSupportDirectory.appending(path: "analytics-outbox.json")
+    private lazy var pending: [Data] = (try? JSONDecoder().decode([Data].self, from: Data(contentsOf: file))) ?? []
+    private var flushing = false
+
+    func add(_ event: Data) async {
+        pending.append(event)
+        if pending.count > Self.limit { pending.removeFirst(pending.count - Self.limit) }
+        save()
+        await flush()
+    }
+
+    private func flush() async {
+        guard !flushing else { return }
+        flushing = true
+        defer { flushing = false }
+        while let next = pending.first {
+            if await Analytics.post(next) == .retryLater { return }
+            if let index = pending.firstIndex(of: next) { pending.remove(at: index) }
+            save()
+        }
+    }
+
+    private func save() {
+        try? FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? JSONEncoder().encode(pending).write(to: file, options: .atomic)
     }
 }
 
