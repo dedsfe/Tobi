@@ -60,28 +60,16 @@ struct LockedPaywall: View {
 
 // MARK: - Resumo das 24 horas
 
-/// Um alimento que a pessoa anotou, do jeito que ela escreveu, com as calorias que o Tobi deu.
-struct RecapFood: Equatable, Identifiable {
-    let id: Int
-    let text: String
-    let kcal: Int
-}
-
-/// O que a pessoa anotou desde que as 24 horas começaram: cada alimento na ordem, a proteína
-/// e em quantos dias, pra comparar com a meta diária.
+/// O que a pessoa anotou desde que as 24 horas começaram: calorias e macros,
+/// e em quantos dias, pra comparar com as metas diárias.
 struct PaywallRecap: Equatable {
-    var items: [RecapFood]
+    var kcal: Int
+    var carbsGrams: Int
     var proteinGrams: Int
+    var fatGrams: Int
     var days: Int
 
-    var kcal: Int { items.reduce(0) { $0 + $1.kcal } }
-    var foods: Int { items.count }
-
-    static let sample = PaywallRecap(
-        items: [("pão francês", 135), ("2 ovos mexidos", 182), ("café com leite", 68), ("arroz", 156),
-                ("feijão", 108), ("frango grelhado", 248), ("salada", 24), ("pão de queijo", 152)]
-            .enumerated().map { RecapFood(id: $0.offset, text: $0.element.0, kcal: $0.element.1) },
-        proteinGrams: 84, days: 1)
+    static let sample = PaywallRecap(kcal: 2140, carbsGrams: 236, proteinGrams: 112, fatGrams: 74, days: 1)
 
     /// Quanto da meta de calorias foi, na média dos dias anotados (1 = bateu a meta).
     func share(of goal: Int) -> Double {
@@ -92,63 +80,55 @@ struct PaywallRecap: Equatable {
     /// nil se não tem nenhum alimento reconhecido no período.
     init?(notes: [DayNote], since: Date, parser: FoodParser = .shared) {
         let start = Calendar.current.startOfDay(for: since)
-        var items: [RecapFood] = []
-        var protein = 0.0
+        var total = [Nutrition]()
         var days = 0
         for note in notes where note.day >= start {
-            let before = items.count
-            for line in note.text.split(separator: "\n").map(String.init) {
-                let estimate = parser.estimate(line)
-                for item in estimate.items where item.isRecognized {
-                    items.append(RecapFood(id: items.count, text: Self.written(item, in: line),
-                                           kcal: Int(item.nutrition.kcal.rounded())))
-                }
-                protein += estimate.total.protein
-            }
-            if items.count > before { days += 1 }
+            let estimates = note.text.split(separator: "\n").map { parser.estimate(String($0)) }
+            guard estimates.contains(where: { $0.items.contains(where: \.isRecognized) }) else { continue }
+            total += estimates.map(\.total)
+            days += 1
         }
-        guard !items.isEmpty else { return nil }
-        self.init(items: items, proteinGrams: Int(protein.rounded()), days: days)
+        guard days > 0 else { return nil }
+        let sum = total.total
+        self.init(kcal: Int(sum.kcal.rounded()), carbsGrams: Int(sum.carbs.rounded()),
+                  proteinGrams: Int(sum.protein.rounded()), fatGrams: Int(sum.fat.rounded()), days: days)
     }
 
-    /// O pedaço da linha como a pessoa escreveu, com acento ("feijão"); o parser devolve sem.
-    private static func written(_ item: ItemEstimate, in line: String) -> String {
-        let piece = item.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !piece.isEmpty, let range = line.range(of: piece, options: [.caseInsensitive, .diacriticInsensitive]) {
-            return String(line[range])
-        }
-        return item.foodName ?? piece
-    }
-
-    init(items: [RecapFood], proteinGrams: Int, days: Int) {
-        self.items = items
+    init(kcal: Int, carbsGrams: Int, proteinGrams: Int, fatGrams: Int, days: Int) {
+        self.kcal = kcal
+        self.carbsGrams = carbsGrams
         self.proteinGrams = proteinGrams
+        self.fatGrams = fatGrams
         self.days = days
     }
 }
 
-/// A prova em cima dos planos: o que a pessoa comeu cai, um alimento por vez, e cada um soma
-/// no número gigante com um toque e o Tobi acenando. Quando assenta, o número pula e fica índigo.
-/// A barra da meta só aparece se a pessoa anotou pelo menos metade do dia (menos que isso parece falha).
+/// A prova em cima dos planos: as calorias que o Tobi contou sobem num número gigante, com um toque
+/// a cada degrau, e os anéis de carboidratos, proteína e gordura enchem junto, no desenho das metas do app.
+/// Quando assenta, o número pula e fica índigo. A barra da meta só aparece a partir de metade do dia
+/// (menos que isso parece falha, quando a pessoa só anotou um pedaço).
 struct RecapHero: View {
     let recap: PaywallRecap
     let isShown: Bool
 
-    /// A meta salva em "Suas metas".
+    // A meta e as fatias dos macros salvas em "Suas metas" (sem elas, as mesmas da tela de metas).
     @AppStorage("dailyGoal") private var goal = 2000
+    @AppStorage("carbsShare") private var carbsShare = 0.5
+    @AppStorage("proteinShare") private var proteinShare = 0.2
+    @AppStorage("fatShare") private var fatShare = 0.3
 
     @State private var counted = 0
-    @State private var dropped = 0
+    @State private var tiles = 0
+    @State private var ticks = 0
     @State private var landed = false
     @Environment(\.tobiReactions) private var tobi
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var showsGoal: Bool { recap.share(of: goal) >= 0.5 }
 
-    /// Quantas pílulas cabem: duas fileiras, ou uma quando a barra da meta também aparece.
-    /// O que não couber não aparece, mas entra na conta do número.
-    private var visibleFoods: [RecapFood] {
-        FoodPills.fitting(recap.items, rows: showsGoal ? 1 : 2)
+    /// O quanto do número já subiu (0 a 1): os anéis andam junto.
+    private var progress: Double {
+        recap.kcal > 0 ? Double(counted) / Double(recap.kcal) : (landed ? 1 : 0)
     }
 
     var body: some View {
@@ -167,11 +147,6 @@ struct RecapHero: View {
                 Text("cal")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundStyle(.secondary)
-                Spacer(minLength: 0)
-                Text("\(recap.proteinGrams) g de proteína")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                    .opacity(landed ? 1 : 0)
             }
             .keyframeAnimator(initialValue: 1.0, trigger: landed) { number, scale in
                 number.scaleEffect(scale, anchor: .bottomLeading)
@@ -183,166 +158,111 @@ struct RecapHero: View {
             .reveal(isShown, order: 1)
 
             if showsGoal {
-                GoalBar(share: shareSoFar, days: recap.days)
+                GoalBar(share: recap.share(of: goal) * progress, days: recap.days)
                     .padding(.top, 4)
                     .reveal(isShown, order: 2)
             }
 
-            FoodPills(foods: visibleFoods, dropped: isShown ? dropped : 0)
-                .padding(.top, 12)
+            HStack(spacing: 10) {
+                MacroTile(name: "Carboidratos", grams: Double(recap.carbsGrams) * progress,
+                          goal: macroGoal(carbsShare, kcalPerGram: 4), color: Theme.carbs,
+                          isShown: isShown && tiles >= 1)
+                MacroTile(name: "Proteína", grams: Double(recap.proteinGrams) * progress,
+                          goal: macroGoal(proteinShare, kcalPerGram: 4), color: Theme.protein,
+                          isShown: isShown && tiles >= 2)
+                MacroTile(name: "Gordura", grams: Double(recap.fatGrams) * progress,
+                          goal: macroGoal(fatShare, kcalPerGram: 9), color: Theme.fat,
+                          isShown: isShown && tiles >= 3)
+            }
+            .padding(.top, 14)
         }
-        .sensoryFeedback(.impact(weight: .light, intensity: 0.75), trigger: dropped)
+        .sensoryFeedback(.impact(weight: .light), trigger: tiles)
+        .sensoryFeedback(.selection, trigger: ticks)
         .sensoryFeedback(.impact(flexibility: .rigid), trigger: landed)
-        .sensoryFeedback(.impact(weight: .medium), trigger: showsGoal && shareSoFar >= 1)
-        .task { await drop() }
+        .sensoryFeedback(.impact(weight: .medium), trigger: showsGoal && landed && recap.share(of: goal) >= 1)
+        .task { await count() }
     }
 
-    /// A barra anda junto com o número que está subindo.
-    private var shareSoFar: Double {
-        recap.kcal > 0 ? recap.share(of: goal) * Double(counted) / Double(recap.kcal) : 0
+    /// Meta do macro em gramas, somando os dias anotados.
+    private func macroGoal(_ share: Double, kcalPerGram: Double) -> Double {
+        Double(goal) * share / kcalPerGram * Double(max(1, recap.days))
     }
 
-    /// Cada alimento cai e soma. Muitos alimentos aceleram, pra cena nunca passar de uns 2 segundos;
-    /// os que não couberam somam juntos no fim, quando o número assenta.
-    private func drop() async {
-        let foods = visibleFoods
+    /// Os anéis chegam um a um; depois tudo sobe junto, rápido e freando no fim, como placar.
+    private func count() async {
         guard !reduceMotion else {
-            dropped = foods.count
+            tiles = 3
             counted = recap.kcal
             landed = true
             return
         }
         tobi.mood(.presenting)
-        try? await Task.sleep(for: .milliseconds(320))
-        let pause = min(0.24, 1.7 / Double(max(1, foods.count)))
-        var total = 0
-        for (index, food) in foods.enumerated() {
-            total += food.kcal
-            withAnimation(Motion.surface) {
-                dropped = index + 1
-                counted = total
-            }
-            tobi.acknowledge()
-            try? await Task.sleep(for: .seconds(pause))
+        try? await Task.sleep(for: .milliseconds(260))
+        for tile in 1...3 {
+            withAnimation(Motion.surface) { tiles = tile }
+            try? await Task.sleep(for: .milliseconds(110))
         }
         try? await Task.sleep(for: .milliseconds(120))
+        let steps = 26
+        for step in 1...steps {
+            let eased = 1 - pow(1 - Double(step) / Double(steps), 3)
+            withAnimation(Motion.quick) { counted = Int(Double(recap.kcal) * eased) }
+            if step.isMultiple(of: 2) { ticks += 1 }
+            try? await Task.sleep(for: .milliseconds(40))
+        }
         withAnimation(Motion.surface) {
             counted = recap.kcal
             landed = true
         }
+        tobi.acknowledge()
     }
 }
 
-/// As pílulas de vidro com o que a pessoa comeu. Cada uma cai de cima com um quique quando chega a vez.
-private struct FoodPills: View {
-    let foods: [RecapFood]
-    /// Quantas já caíram.
-    let dropped: Int
-
-    private static let spacing: CGFloat = 8
-    private static let width: CGFloat = 345
-
-    /// Largura aproximada de uma pílula, pra saber quantas cabem sem cortar nada.
-    private static func estimatedWidth(_ food: RecapFood) -> CGFloat {
-        CGFloat(food.text.count) * 8.4 + CGFloat(food.kcal.formatted().count) * 7.6 + 38
-    }
-
-    /// As primeiras que cabem inteiras em `rows` fileiras.
-    static func fitting(_ foods: [RecapFood], rows: Int) -> [RecapFood] {
-        var row = 1
-        var used: CGFloat = 0
-        var fitted: [RecapFood] = []
-        for food in foods {
-            let pill = min(estimatedWidth(food), width)
-            if used + pill > width {
-                guard row < rows else { break }
-                row += 1
-                used = 0
-            }
-            fitted.append(food)
-            used += pill + spacing
-        }
-        return fitted
-    }
+/// Um macro em vidro: o anel na cor do macro enche até a meta, com os gramas no meio.
+private struct MacroTile: View {
+    let name: String
+    let grams: Double
+    let goal: Double
+    let color: Color
+    let isShown: Bool
 
     var body: some View {
-        FlowRows(spacing: Self.spacing) {
-            ForEach(Array(foods.enumerated()), id: \.element.id) { index, food in
-                pill {
-                    Text(food.text.prefix(1).uppercased() + food.text.dropFirst())
-                        .font(.system(size: 15, weight: .medium))
-                    Text(food.kcal.formatted())
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.secondary)
+        VStack(spacing: 8) {
+            ZStack {
+                Circle()
+                    .stroke(.quaternary, lineWidth: 6)
+                Circle()
+                    .trim(from: 0, to: goal > 0 ? min(1, grams / goal) : 0)
+                    .stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                HStack(alignment: .firstTextBaseline, spacing: 1) {
+                    Text(Int(grams.rounded()).formatted())
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
                         .monospacedDigit()
+                        .contentTransition(.numericText(value: grams))
+                    Text("g")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.secondary)
                 }
-                .dropIn(index < dropped)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .padding(.horizontal, 8)
             }
+            .frame(width: 56, height: 56)
+
+            Text(name)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+        .glassEffect(.regular, in: .rect(cornerRadius: 22))
+        .scaleEffect(isShown ? 1 : 0.82, anchor: .bottom)
+        .reveal(isShown, order: 0)
+        .animation(Motion.surface, value: isShown)
         .accessibilityElement(children: .combine)
-    }
-
-    private func pill<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        HStack(spacing: 6) { content() }
-            .lineLimit(1)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .glassEffect(.regular, in: .capsule)
-    }
-}
-
-private extension View {
-    /// Cai de cima pro lugar dela: chega desfocada, um pouco maior, e quica ao assentar.
-    func dropIn(_ isDropped: Bool) -> some View {
-        self
-            .opacity(isDropped ? 1 : 0)
-            .blur(radius: isDropped ? 0 : 6)
-            .scaleEffect(isDropped ? 1 : 1.25)
-            .offset(y: isDropped ? 0 : -26)
-            .animation(.spring(duration: 0.42, bounce: 0.45), value: isDropped)
-    }
-}
-
-/// Fileiras que quebram linha quando a próxima peça não cabe.
-private struct FlowRows: Layout {
-    var spacing: CGFloat
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = proposal.width ?? .infinity
-        var x: CGFloat = 0
-        var y: CGFloat = 0
-        var rowHeight: CGFloat = 0
-        var widest: CGFloat = 0
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            if x > 0, x + size.width > width {
-                y += rowHeight + spacing
-                x = 0
-                rowHeight = 0
-            }
-            x += size.width + spacing
-            widest = max(widest, x - spacing)
-            rowHeight = max(rowHeight, size.height)
-        }
-        return CGSize(width: min(widest, width), height: y + rowHeight)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        var x = bounds.minX
-        var y = bounds.minY
-        var rowHeight: CGFloat = 0
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            if x > bounds.minX, x + size.width > bounds.maxX {
-                y += rowHeight + spacing
-                x = bounds.minX
-                rowHeight = 0
-            }
-            subview.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
-            x += size.width + spacing
-            rowHeight = max(rowHeight, size.height)
-        }
     }
 }
 

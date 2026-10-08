@@ -5,26 +5,20 @@ import Testing
 struct PaywallRecapTests {
     private let today = Calendar.current.startOfDay(for: .now)
 
-    @Test func sumsFoodsCaloriesAndProteinSinceTheStart() throws {
+    @Test func sumsCaloriesAndMacrosSinceTheStart() throws {
         let note = DayNote(day: today, text: "Almoço\narroz, feijão e bife\n2 ovos")
         let recap = try #require(PaywallRecap(notes: [note], since: today))
-        let lines = ["arroz, feijão e bife", "2 ovos"].map(FoodParser.shared.estimate)
-        #expect(recap.foods == 4)
+        let total = ["arroz, feijão e bife", "2 ovos"].map { FoodParser.shared.estimate($0).total }.total
+        #expect(recap.kcal == Int(total.kcal.rounded()))
+        #expect(recap.carbsGrams == Int(total.carbs.rounded()))
+        #expect(recap.proteinGrams == Int(total.protein.rounded()))
+        #expect(recap.fatGrams == Int(total.fat.rounded()))
         #expect(recap.days == 1)
-        #expect(recap.kcal == Int(lines.map(\.total.kcal).reduce(0, +).rounded()))
-        #expect(recap.proteinGrams == Int(lines.map(\.total.protein).reduce(0, +).rounded()))
     }
 
     @Test func goalShareAveragesTheDaysWritten() {
-        let foods = [RecapFood(id: 0, text: "arroz", kcal: 1500), RecapFood(id: 1, text: "bife", kcal: 1500)]
-        #expect(PaywallRecap(items: foods, proteinGrams: 120, days: 2).share(of: 2000) == 0.75)
-        #expect(PaywallRecap(items: foods, proteinGrams: 120, days: 1).share(of: 2000) == 1.5)
-    }
-
-    @Test func keepsEachFoodAsWrittenInOrder() throws {
-        let note = DayNote(day: today, text: "Café da manhã\n2 ovos\narroz, feijão e bife")
-        let recap = try #require(PaywallRecap(notes: [note], since: today))
-        #expect(recap.items.map(\.text) == ["2 ovos", "arroz", "feijão", "bife"])
+        #expect(PaywallRecap(kcal: 3000, carbsGrams: 0, proteinGrams: 0, fatGrams: 0, days: 2).share(of: 2000) == 0.75)
+        #expect(PaywallRecap(kcal: 3000, carbsGrams: 0, proteinGrams: 0, fatGrams: 0, days: 1).share(of: 2000) == 1.5)
     }
 
     @Test func leavesOutDaysBeforeTheStart() {
