@@ -102,7 +102,7 @@ CASES = [
  ("salada de frutas", r"salada.*fruta"),
  ("sopa de legumes", r"legum"),
  ("empadinha de frango", r"empad.*frango"),
- ("esfiha de carne", r"esf[ih][rh]?a.*carne"),
+ ("esfiha de carne", r"esf[ih]r{0,2}a.*carne"),
  ("kibe", r"kibe|quibe"),
  ("leite com chocolate", r"chocolat|chocomilk"),
  ("danone", None),

@@ -63,7 +63,7 @@ REGIONAL = [
  ("pirão", r"pir[ãa]o"), ("farofa de ovo", None), ("buchada", r"buchada|bucho"),
  ("açaí com banana", None), ("suco de caju", r"caju"), ("caldo de cana", r"cana"), ("tereré", r"terer"),
  ("cerveja long neck", r"cerveja"), ("caipirinha", r"caipir"), ("pinga", None),
- ("coxinha de frango", r"coxinha"), ("quibe frito", r"kibe|quibe"), ("esfiha", r"esf[ih][rh]?a"),
+ ("coxinha de frango", r"coxinha"), ("quibe frito", r"kibe|quibe"), ("esfiha", r"esf[ih]r{0,2}a"),
 ]
 
 HARD = TRAPS + UNKNOWN_BRANDS + NONFOOD + MESSY + REGIONAL

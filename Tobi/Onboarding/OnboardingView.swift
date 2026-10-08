@@ -20,6 +20,17 @@ enum OnboardingStep: Int, CaseIterable {
     /// Total de telas planejadas (ver TODO.md), pra barra de progresso não pular quando entrar tela nova.
     static let planned = 14
 
+    /// Estado do Tobi em cada tela. "Suas metas" comemora na primeira vez (ver `OnboardingView.stage`).
+    var tobiMood: TobiIdleBehavior.Mood {
+        switch self {
+        case .welcome, .firstMeal, .inputs: .joyful
+        case .celebration: .celebrating
+        case .sex, .birthday, .height, .weight, .pace, .notifications: .attentive
+        case .objective, .activity: .curious
+        case .goals: .presenting
+        }
+    }
+
     #if DEBUG
     /// Tela em revisão: o atalho do Debug nos Ajustes abre direto nela. Trocar aqui quando a revisão mudar.
     static let debugJump: OnboardingStep = .celebration
@@ -237,16 +248,23 @@ struct OnboardingView: View {
 
     @State private var step: OnboardingStep
     @State private var answers: OnboardingAnswers
+    @State private var tobi: TobiPerformance
+    /// O plano pronto é comemorado uma vez só; depois "Suas metas" só se apresenta.
+    @State private var celebratedPlan = false
 
     /// `start` diferente de boas-vindas só vem do atalho do Debug, que já entra com respostas de exemplo.
     init(start: OnboardingStep = .welcome, onFinish: @escaping () -> Void) {
         self.onFinish = onFinish
         _step = State(initialValue: start)
         #if DEBUG
-        _answers = State(initialValue: start == .welcome ? OnboardingAnswers() : .sample)
+        let initial = start == .welcome ? OnboardingAnswers() : .sample
         #else
-        _answers = State(initialValue: OnboardingAnswers())
+        let initial = OnboardingAnswers()
         #endif
+        _answers = State(initialValue: initial)
+        _tobi = State(initialValue: TobiPerformance(mood: start == .goals ? .celebrating
+                                                    : Self.mood(for: start, in: initial)))
+        _celebratedPlan = State(initialValue: start == .goals)
     }
 
     var body: some View {
@@ -265,7 +283,7 @@ struct OnboardingView: View {
 
     private var questions: some View {
         VStack(spacing: 0) {
-            TobiStage()
+            TobiStage(performance: tobi, onPet: { tobi.pets += 1 })
                 .overlay(alignment: .top) {
                     if step != .welcome {
                         OnboardingHeader(progress: progress, onBack: goBack)
@@ -319,6 +337,15 @@ struct OnboardingView: View {
                 }
             }
             .frame(maxHeight: .infinity)
+            .environment(\.tobiReactions, TobiReactions(
+                acknowledge: {
+                    // Respondeu: o Tobi confirma e fica feliz. Sem resposta válida, segue gentil e neutro.
+                    tobi.mood = mood(for: step)
+                    tobi.entering = false
+                    tobi.acknowledgements += 1
+                },
+                present: { stage(.goals, entering: true) }
+            ))
         }
         .background { Theme.background }
     }
@@ -330,11 +357,49 @@ struct OnboardingView: View {
     private func advance() {
         guard let next = neighbor(of: step, by: 1) else { return onFinish() }
         withAnimation(Motion.surface) { step = next }
+        stage(next, entering: true)
     }
 
     private func goBack() {
         guard let previous = neighbor(of: step, by: -1) else { return }
         withAnimation(Motion.surface) { step = previous }
+        stage(previous, entering: false)
+    }
+
+    /// Pergunta já respondida: o Tobi fica feliz nela, inclusive ao voltar. Vale igual para qualquer valor.
+    static func isAnswered(_ step: OnboardingStep, in answers: OnboardingAnswers) -> Bool {
+        switch step {
+        case .sex: answers.sex != nil
+        case .birthday: answers.birthday != nil
+        case .height: answers.heightCm != nil
+        case .objective: answers.objective != nil
+        case .weight:
+            answers.weightKg != nil && (answers.objective == .maintain
+                || OnboardingAnswers.goalMatches(answers.goalWeightKg, weight: answers.weightKg, objective: answers.objective))
+        case .activity: answers.activity != nil
+        case .pace: answers.pace != nil && (answers.pace != .custom || answers.targetDate != nil)
+        default: false
+        }
+    }
+
+    static func mood(for step: OnboardingStep, in answers: OnboardingAnswers) -> TobiIdleBehavior.Mood {
+        isAnswered(step, in: answers) ? .joyful : step.tobiMood
+    }
+
+    private func mood(for step: OnboardingStep) -> TobiIdleBehavior.Mood {
+        Self.mood(for: step, in: answers)
+    }
+
+    /// Passa o Tobi para o estado da tela. A navegação nunca espera o gesto terminar.
+    private func stage(_ step: OnboardingStep, entering: Bool) {
+        var mood = mood(for: step)
+        if step == .goals, entering, !celebratedPlan {
+            celebratedPlan = true
+            mood = .celebrating
+        }
+        tobi.mood = mood
+        tobi.entering = entering
+        tobi.scene += 1
     }
 
     /// Próxima (ou anterior) tela, pulando o prazo pra quem quer manter o peso.
@@ -348,19 +413,63 @@ struct OnboardingView: View {
     }
 }
 
-/// Palco do Tobi no topo de toda tela. Hoje mostra um emoji; quando a arte chegar,
-/// as animações do Tobi entram aqui sem mexer no resto do layout.
+/// Palco do Tobi no topo de toda tela. Com `performance`, mostra o modelo 3D animado
+/// (uma instância só, que troca de estado); sem, ou se o modelo não carregar, o emoji.
 struct TobiStage: View {
     /// Altura do palco em todas as telas. Mudou aqui, muda no onboarding inteiro.
     static let height: CGFloat = 200
 
+    var performance: TobiPerformance?
+    /// Tocar no rosto faz carinho.
+    var onPet: (() -> Void)?
+
+    @State private var modelFailed = false
+    /// Na primeira abertura o modelo ainda está sendo lido; ele aparece num fade quando fica pronto.
+    @State private var modelReady = TobiFaceLibrary.shared.asset != nil
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+
     var body: some View {
-        Text("🐶")
-            .font(.system(size: 80))
-            .frame(maxWidth: .infinity)
-            .frame(height: Self.height)
-            .accessibilityLabel("Tobi")
+        if let performance, !modelFailed {
+            TobiFaceView(isPlaying: true, blinkRequest: 0, lookRequest: 0,
+                         isActive: scenePhase == .active, reduceMotion: reduceMotion,
+                         performance: performance, followsFinger: true, onFailure: { modelFailed = true },
+                         onReady: { withAnimation(Motion.surface) { modelReady = true } })
+                .frame(maxWidth: .infinity)
+                .frame(height: Self.height)
+                .opacity(modelReady ? 1 : 0)
+                .overlay {
+                    if let onPet {
+                        // Só a área do rosto responde, pra não roubar toques do resto da tela.
+                        Color.clear
+                            .frame(width: 150, height: 160)
+                            .contentShape(.rect)
+                            .onTapGesture(perform: onPet)
+                            .sensoryFeedback(.impact(weight: .light), trigger: performance.pets)
+                            .accessibilityElement()
+                            .accessibilityLabel("Tobi")
+                            .accessibilityHint("Toque para fazer carinho")
+                            .accessibilityAddTraits(.isButton)
+                    }
+                }
+        } else {
+            Text("🐶")
+                .font(.system(size: 80))
+                .frame(maxWidth: .infinity)
+                .frame(height: Self.height)
+                .accessibilityLabel("Tobi")
+        }
     }
+}
+
+/// O que as telas contam ao palco: um toque confirmado ou um pedido para se apresentar de novo.
+struct TobiReactions {
+    var acknowledge: @MainActor () -> Void = { }
+    var present: @MainActor () -> Void = { }
+}
+
+extension EnvironmentValues {
+    @Entry var tobiReactions = TobiReactions()
 }
 
 // MARK: - Peças comuns
@@ -550,6 +659,7 @@ private struct WelcomeStep: View {
 private struct SexStep: View {
     @Binding var selection: Sex?
     let onContinue: () -> Void
+    @Environment(\.tobiReactions) private var tobi
 
     var body: some View {
         QuestionStep(
@@ -563,6 +673,7 @@ private struct SexStep: View {
                     ForEach(Array(Sex.allCases.enumerated()), id: \.element) { index, sex in
                         ChoiceRow(title: sex.title, symbol: sex.symbol, isSelected: selection == sex) {
                             selection = sex
+                            tobi.acknowledge()
                         }
                         .reveal(visible, order: 2 + index)
                     }
@@ -644,7 +755,9 @@ private struct BirthdayStep: View {
     let onContinue: () -> Void
 
     @State private var picking = false
+    @State private var confirmed = false
     @State private var draft = Calendar.current.date(byAdding: .year, value: -25, to: .now) ?? .now
+    @Environment(\.tobiReactions) private var tobi
 
     private var range: ClosedRange<Date> { OnboardingAnswers.birthdayRange }
 
@@ -668,9 +781,10 @@ private struct BirthdayStep: View {
                     .reveal(visible, order: 3)
             }
         }
-        .sheet(isPresented: $picking) {
+        .sheet(isPresented: $picking, onDismiss: acknowledgeIfConfirmed) {
             PickerSheet(title: "Data de nascimento") {
                 withAnimation(Motion.quick) { birthday = draft }
+                confirmed = true
                 picking = false
             } picker: {
                 DatePicker("Data de nascimento", selection: $draft, in: range, displayedComponents: .date)
@@ -679,6 +793,13 @@ private struct BirthdayStep: View {
             }
             .onAppear { if let birthday { draft = birthday } }
         }
+    }
+
+    /// O Tobi reage depois que a folha fecha, e só se o valor foi confirmado.
+    private func acknowledgeIfConfirmed() {
+        guard confirmed else { return }
+        confirmed = false
+        tobi.acknowledge()
     }
 
     private func age(at date: Date) -> Int {
@@ -693,7 +814,9 @@ private struct HeightStep: View {
     let onContinue: () -> Void
 
     @State private var picking = false
+    @State private var confirmed = false
     @State private var draft = 170
+    @Environment(\.tobiReactions) private var tobi
 
     var body: some View {
         QuestionStep(
@@ -714,9 +837,10 @@ private struct HeightStep: View {
                     .reveal(visible, order: 3)
             }
         }
-        .sheet(isPresented: $picking) {
+        .sheet(isPresented: $picking, onDismiss: acknowledgeIfConfirmed) {
             PickerSheet(title: "Sua altura") {
                 withAnimation(Motion.quick) { heightCm = draft }
+                confirmed = true
                 picking = false
             } picker: {
                 Picker("Sua altura", selection: $draft) {
@@ -728,6 +852,13 @@ private struct HeightStep: View {
             .onAppear { if let heightCm { draft = heightCm } }
         }
     }
+
+    /// O Tobi reage depois que a folha fecha, e só se o valor foi confirmado.
+    private func acknowledgeIfConfirmed() {
+        guard confirmed else { return }
+        confirmed = false
+        tobi.acknowledge()
+    }
 }
 
 // MARK: - 5 · Objetivo
@@ -735,6 +866,7 @@ private struct HeightStep: View {
 private struct ObjectiveStep: View {
     @Binding var selection: Objective?
     let onContinue: () -> Void
+    @Environment(\.tobiReactions) private var tobi
 
     var body: some View {
         QuestionStep(
@@ -749,6 +881,7 @@ private struct ObjectiveStep: View {
                         ChoiceRow(title: objective.title, detail: objective.detail, symbol: objective.symbol,
                                   isSelected: selection == objective) {
                             selection = objective
+                            tobi.acknowledge()
                         }
                         .reveal(visible, order: 2 + index)
                     }
@@ -773,7 +906,9 @@ private struct WeightStep: View {
     }
 
     @State private var editing: Field?
+    @State private var confirmed = false
     @State private var draft = 70.0
+    @Environment(\.tobiReactions) private var tobi
 
     private static let options = Array(stride(from: OnboardingAnswers.weightRange.lowerBound,
                                                through: OnboardingAnswers.weightRange.upperBound, by: 0.5))
@@ -811,11 +946,12 @@ private struct WeightStep: View {
         }
         .onAppear(perform: suggestGoal)
         .onChange(of: weight) { suggestGoal() }
-        .sheet(item: $editing) { field in
+        .sheet(item: $editing, onDismiss: acknowledgeIfConfirmed) { field in
             PickerSheet(title: field == .current ? "Peso atual" : "Peso-meta") {
                 withAnimation(Motion.quick) {
                     if field == .current { weight = draft } else { goal = draft }
                 }
+                confirmed = true
                 editing = nil
             } picker: {
                 Picker("Peso", selection: $draft) {
@@ -831,6 +967,14 @@ private struct WeightStep: View {
         Text(text)
             .font(.system(size: 15, weight: .medium))
             .foregroundStyle(.secondary)
+    }
+
+    /// O Tobi reage depois que a folha fecha, e só se o valor foi confirmado. A reação é a mesma
+    /// para qualquer peso, inclusive quando aparece a orientação de corrigir a meta.
+    private func acknowledgeIfConfirmed() {
+        guard confirmed else { return }
+        confirmed = false
+        tobi.acknowledge()
     }
 
     /// A roleta abre no valor já escolhido.
@@ -869,6 +1013,7 @@ private struct WeightStep: View {
 private struct ActivityStep: View {
     @Binding var selection: ActivityLevel?
     let onContinue: () -> Void
+    @Environment(\.tobiReactions) private var tobi
 
     var body: some View {
         QuestionStep(
@@ -883,6 +1028,7 @@ private struct ActivityStep: View {
                         ChoiceRow(title: level.title, detail: level.detail, symbol: level.symbol,
                                   isSelected: selection == level) {
                             selection = level
+                            tobi.acknowledge()
                         }
                         .reveal(visible, order: 2 + index)
                     }
@@ -900,6 +1046,8 @@ private struct PaceStep: View {
     let onContinue: () -> Void
 
     @State private var pickingDate = false
+    @State private var confirmedDate = false
+    @Environment(\.tobiReactions) private var tobi
 
     var body: some View {
         QuestionStep(
@@ -918,6 +1066,7 @@ private struct PaceStep: View {
                                     pickingDate = true
                                 } else {
                                     answers.pace = pace
+                                    tobi.acknowledge()
                                 }
                             }
                             .reveal(visible, order: 2 + index)
@@ -932,9 +1081,19 @@ private struct PaceStep: View {
             .animation(Motion.quick, value: answers.pace)
             .sensoryFeedback(.selection, trigger: answers.pace)
         }
-        .sheet(isPresented: $pickingDate) {
-            CustomPaceSheet(answers: $answers) { pickingDate = false }
+        .sheet(isPresented: $pickingDate, onDismiss: acknowledgeIfConfirmed) {
+            CustomPaceSheet(answers: $answers) {
+                confirmedDate = true
+                pickingDate = false
+            }
         }
+    }
+
+    /// O Tobi reage depois que a folha fecha, e só se a data foi confirmada.
+    private func acknowledgeIfConfirmed() {
+        guard confirmedDate else { return }
+        confirmedDate = false
+        tobi.acknowledge()
     }
 
     /// "0,5 kg por semana · mar. de 2027": a velocidade e quando a pessoa chega na meta.
@@ -1314,6 +1473,7 @@ private struct GoalsStep: View {
     @State private var customKcal: Int?
     @State private var explaining = false
     @State private var editing = false
+    @Environment(\.tobiReactions) private var tobi
 
     private var plan: NutritionPlan? {
         NutritionPlan(answers: answers).map { plan in customKcal.map(plan.adjusted) ?? plan }
@@ -1366,7 +1526,8 @@ private struct GoalsStep: View {
                 }
             }
             .sheet(isPresented: $explaining) { GoalsExplanation(plan: current) }
-            .sheet(isPresented: $editing) {
+            // Voltando dos ajustes, o Tobi apresenta as metas de novo, uma vez por volta.
+            .sheet(isPresented: $editing, onDismiss: { tobi.present() }) {
                 GoalsEditor(answers: $answers, customKcal: $customKcal,
                             calculatedKcal: NutritionPlan(answers: answers)?.kcal ?? current.kcal)
             }
