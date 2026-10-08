@@ -217,8 +217,18 @@ struct FoodParser: Sendable {
         var words = text.split(separator: " ").map(String.init)
         var trailing = false
 
+        // Quantidade falada sem número: "um pouco de arroz", "bastante feijão". Vira uma fração
+        // da porção de sempre, com "~".
+        for (phrase, factor) in vagueAmounts where words.starts(with: phrase) {
+            quantity.count = factor
+            quantity.isRough = true
+            quantity.isWritten = true
+            words.removeFirst(phrase.count)
+            break
+        }
+
         // Número seguido de medida em qualquer lugar; número sozinho só no começo ou no fim.
-        for start in words.indices {
+        for start in words.indices where !quantity.isRough || start > 0 {
             guard let found = number(in: words, at: start) else { continue }
             var (count, end) = found
             let measure = Self.measure(in: words, at: end)
@@ -232,8 +242,8 @@ struct FoodParser: Sendable {
                     count += 0.5
                     end += 2
                 }
-                if measure.key == "duzia" {
-                    count *= 12
+                if let multiplier = multipliers[measure.key] {
+                    count *= multiplier
                 } else {
                     quantity.measure = measure.key
                     quantity.isRough = rough
@@ -248,7 +258,8 @@ struct FoodParser: Sendable {
         }
 
         // Medida sem número no começo: "colher de leite condensado" = uma colher. Só se vier comida depois.
-        if !quantity.isWritten, let measure = Self.measure(in: words, at: 0), measure.key != "duzia",
+        if !quantity.isWritten || quantity.isRough && quantity.measure == nil,
+           let measure = Self.measure(in: words, at: 0), multipliers[measure.key] == nil,
            words.dropFirst(measure.length).contains(where: { !stopWords.contains(singularize($0)) }) {
             var end = measure.length
             quantity.measure = measure.key
@@ -276,6 +287,11 @@ struct FoodParser: Sendable {
             return nil
         }
         var end = index + 1
+        // "um terço", "três quartos"
+        if end < words.count, let part = ["terco": 3.0, "quarto": 4.0][singularize(words[end])] {
+            value /= part
+            end += 1
+        }
         // "1 e meio", "dois e meio" (sem medida no meio)
         if end + 1 < words.count, words[end] == "e", ["meia", "meio"].contains(words[end + 1]) {
             value += 0.5
@@ -296,6 +312,16 @@ struct FoodParser: Sendable {
         return nil
     }
 
+    /// Contagens em grupo: "meia dúzia de ovos", "um par de pães".
+    private static let multipliers: [String: Double] = ["duzia": 12, "par": 2, "dezena": 10]
+
+    /// Jeitos de falar quantidade sem número, como fração da porção de sempre.
+    private static let vagueAmounts: [([String], Double)] = [
+        (["um", "pouquinho"], 0.5), (["um", "pouco"], 0.5), (["um", "tiquinho"], 0.5), (["um", "bocadinho"], 0.5),
+        (["pouquinho"], 0.5), (["pouco"], 0.5), (["um", "montao"], 1.5), (["um", "monte"], 1.5),
+        (["bastante"], 1.5), (["muito"], 1.5),
+    ]
+
     /// "cheia", "rasa", "bem servido": tira da frase e marca a medida como aproximada.
     private static func roughWords(in words: [String], at index: Int, quantity: inout Quantity) -> Int {
         var length = 0
@@ -308,14 +334,18 @@ struct FoodParser: Sendable {
 
     private static let roughAdjectives: Set<String> = ["cheia", "cheio", "cheinha", "rasa", "raso", "bem", "servido", "servida", "generosa", "generoso"]
     /// Diminutivos sem tabela própria: viram a medida de base, mas o número fica "~".
-    private static let roughMeasures: Set<String> = ["pedacinho", "fatiazinha", "fatinha", "conchinha", "potinho", "garrafinha", "pacotinho", "pratinho", "pratao"]
+    private static let roughMeasures: Set<String> = [
+        "pedacinho", "fatiazinha", "fatinha", "conchinha", "potinho", "garrafinha", "pacotinho", "pratinho", "pratao",
+        "pitada", "pitadinha", "fio", "fiozinho", "gota", "gotinha", "dedo", "dedinho", "gole", "golinho", "golada",
+        "sache", "sachezinho", "caixinha", "tablete", "quadradinho",
+    ]
 
     /// Todas as medidas que o parser entende, já em tokens, das mais longas pras mais curtas.
     private static let measurePhrases: [(tokens: [String], key: String)] = {
         var phrases = FoodDatabase.measures.keys.map { (tokenize($0), $0) }
         phrases += FoodDatabase.portionWords.map { (tokenize($0), $0) }
         phrases += FoodDatabase.measureSynonyms.map { (tokenize($0.key), $0.value) }
-        phrases.append((["duzia"], "duzia"))
+        phrases += multipliers.keys.map { ([$0], $0) }
         return phrases.sorted { $0.0.count > $1.0.count }
     }()
 
@@ -368,6 +398,7 @@ struct FoodParser: Sendable {
     private func hasKnownMeasure(_ food: Food, measure: String?) -> Bool {
         guard let measure else { return true }
         return food.measures[measure] != nil || FoodDatabase.portionWords.contains(measure)
+            || FoodDatabase.absoluteMeasures.contains(measure)
             || (measure == "colher de sopa" && food.measures["colher"] != nil)
     }
 
@@ -466,7 +497,9 @@ struct FoodParser: Sendable {
         "um": 1, "uma": 1, "dois": 2, "duas": 2, "tres": 3, "quatro": 4, "cinco": 5,
         "seis": 6, "sete": 7, "oito": 8, "nove": 9, "dez": 10, "onze": 11, "doze": 12,
         "treze": 13, "quatorze": 14, "catorze": 14, "quinze": 15, "dezesseis": 16, "dezessete": 17,
-        "dezoito": 18, "dezenove": 19, "vinte": 20, "trinta": 30,
+        "dezoito": 18, "dezenove": 19, "vinte": 20, "trinta": 30, "quarenta": 40, "cinquenta": 50,
+        "sessenta": 60, "setenta": 70, "oitenta": 80, "noventa": 90, "cem": 100, "duzentos": 200, "duzentas": 200,
+        "trezentos": 300, "trezentas": 300, "quatrocentos": 400, "quinhentos": 500, "quinhentas": 500,
         "meio": 0.5, "meia": 0.5, "metade": 0.5,
     ]
 

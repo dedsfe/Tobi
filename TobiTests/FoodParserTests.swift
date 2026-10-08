@@ -224,3 +224,45 @@ struct BrazilianQuantityTests {
         #expect(grams("2 postas de peixe") == 240)
     }
 }
+
+/// Do jeito que se fala na cozinha: pitada, fio, gota, um pouco, meio quilo, um terço.
+struct KitchenTalkTests {
+    let parser = FoodParser.shared
+
+    private func item(_ line: String) -> ItemEstimate? { parser.estimate(line).items.first }
+
+    @Test func pinchesDropsAndDrizzles() {
+        #expect(item("uma pitada de sal")?.foodName == "Sal")
+        #expect(item("uma pitada de sal")?.grams == 0.5)
+        #expect(item("uma pitada de sal")?.confidence == .estimated)
+        #expect(item("pitada de canela")?.foodName == "Canela")
+        #expect(item("um fio de azeite")?.foodName == "Azeite de oliva")
+        #expect(item("um fio de azeite")?.grams == 8)
+        #expect(item("3 gotas de adoçante")?.foodName == "Adoçante")
+        #expect(item("1 colher de chá de pimenta do reino")?.grams == 1.5)
+        #expect(item("azeite")?.foodName == "Azeite de oliva")
+    }
+
+    @Test func wordsForWeightAndFractions() {
+        #expect(item("meio quilo de carne moída")?.grams == 500)
+        #expect(item("meio quilo de carne moída")?.confidence == .exact)
+        #expect(item("duzentos gramas de arroz")?.grams == 200)
+        #expect(item("meio litro de leite")?.grams == 500)
+        #expect(item("um terço de pizza")?.grams == (item("1 pizza")?.grams).map { $0 / 3 })
+        #expect(item("um par de ovos")?.grams == item("2 ovos")?.grams)
+    }
+
+    @Test func vagueAmountsAreEstimates() {
+        let some = item("um pouco de arroz")
+        #expect(some?.foodName == "Arroz branco")
+        #expect(some?.grams == (item("arroz")?.grams).map { $0 / 2 })
+        #expect(some?.confidence == .estimated)
+        #expect(item("bastante feijão")?.grams == (item("feijão")?.grams).map { $0 * 1.5 })
+    }
+
+    @Test func drinksBySize() {
+        #expect(item("1 long neck de cerveja")?.grams == 355)
+        #expect(item("um latão de cerveja")?.grams == 473)
+        #expect(item("dois dedos de whisky")?.isRecognized != nil)
+    }
+}

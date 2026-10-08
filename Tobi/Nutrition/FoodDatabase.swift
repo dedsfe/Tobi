@@ -18,7 +18,17 @@ enum FoodDatabase {
         "copo americano": 150, "copo de requeijao": 240, "copo grande": 300, "copo medio": 240,
         "xicara de cha": 200, "xicara de cafe": 50, "prato fundo": 300,
         "prato raso": 140, "prato de sobremesa": 120, "caneco": 300,
+        // Unidades por extenso: "meio quilo de carne", "duzentos gramas de arroz".
+        "grama": 1, "quilo": 1000, "kilo": 1000, "litro": 1000, "mililitro": 1,
+        // Embalagens com tamanho de mercado: lata 350 ml, latão 473 ml, long neck 355 ml.
+        "latao": 473, "long neck": 355, "caixinha": 200,
+        // Medidas de cozinha sem tabela oficial: o número sai sempre com "~" (ver FoodParser.roughMeasures).
+        "pitada": 0.5, "fio": 5, "gota": 0.05, "dedo": 30, "gole": 30, "sache": 5, "tablete": 20,
+        "quadradinho": 5,
     ]
+
+    /// Medidas que são unidade de peso ou volume: sempre exatas.
+    static let absoluteMeasures: Set<String> = ["grama", "quilo", "kilo", "litro", "mililitro"]
 
     /// Jeitos de falar a mesma medida: diminutivo e aumentativo viram a medida mais parecida.
     static let measureSynonyms: [String: String] = [
@@ -27,7 +37,9 @@ enum FoodDatabase {
         "xicrinha": "xicara de cafe", "xicarazinha": "xicara de cafe", "latinha": "lata", "latao": "lata",
         "pedacinho": "pedaco", "fatiazinha": "fatia", "fatinha": "fatia", "conchinha": "concha",
         "potinho": "pote", "garrafinha": "garrafa", "pacotinho": "pacote", "pratinho": "prato raso",
-        "pratao": "prato fundo", "unid": "unidade", "porcoe": "porcao",
+        "pratao": "prato fundo", "unid": "unidade", "und": "unidade", "porcoe": "porcao",
+        "pitadinha": "pitada", "fiozinho": "fio", "gotinha": "gota", "golinho": "gole", "golada": "gole",
+        "dedinho": "dedo", "saquinho": "pacote", "sachezinho": "sache", "kg": "quilo", "gr": "grama",
     ]
 
     /// Palavras que significam "uma porção do próprio alimento".
@@ -53,6 +65,11 @@ enum FoodDatabase {
         }
         return Food(table: food, source: .ibge(id), additionalAliases: aliases, guessedAliases: guesses)
     }
+
+    /// Colheres de tempero seco: "pimenta em pó" da Tabela de Medidas Referidas (POF 2008-2009, IBGE).
+    private static let spoon: [String: Double] = [
+        "colher de cafe": 1.2, "colher de cha": 1.5, "colher de sobremesa": 6.5, "colher de sopa": 13, "colher": 13,
+    ]
 
     /// Os que a gente fala todo dia, com apelido e porção caseira. Sem `taco:` = estimativa nossa
     /// (prato pronto que a TACO não tem). Ganham da TACO automática quando o apelido empata.
@@ -168,6 +185,32 @@ enum FoodDatabase {
         Food("Gelatina", ["gelatina"], kcal: 60, p: 1.2, c: 14, f: 0, portion: 100),
         Food("Amendoim", ["amendoim", "pasta de amendoim"], taco: 558, portion: 20, measures: ["colher": 15]),
         Food("Castanhas", ["castanha", "castanha do para", "castanha de caju", "noz", "mix de castanha"], kcal: 600, p: 15, c: 25, f: 50, portion: 25),
+
+        // Temperos e óleos. Números da TACO, do IBGE ou do USDA (o que a TACO não tem); as colheres
+        // dos temperos secos são as da "pimenta em pó" da POF 2008-2009 do IBGE.
+        Food("Azeite de oliva", ["azeite", "azeite de oliva", "azeite extra virgem"], taco: 260, portion: 8,
+             measures: ["colher": 8, "colher de sopa": 8, "colher de sobremesa": 5, "colher de cha": 2, "colher de cafe": 1, "fio": 8]),
+        Food("Sal", ["sal", "sal refinado", "sal grosso", "sal marinho", "sal rosa", "sal do himalaia"], usda: 173468,
+             kcal: 0, p: 0, c: 0, f: 0, sodium: 38_800, portion: 1),
+        Food("Pimenta-do-reino", ["pimenta", "pimenta do reino", "pimenta preta", "pimenta em po"], usda: 170931,
+             kcal: 251, p: 10.4, c: 64, f: 3.26, fiber: 25.3, sodium: 20, portion: 0.5, measures: spoon),
+        Food("Canela", ["canela", "canela em po"], usda: 171320, kcal: 247, p: 3.99, c: 80.6, f: 1.24, fiber: 53.1,
+             sodium: 10, portion: 0.5, measures: spoon),
+        Food("Cominho", ["cominho", "cominho em po"], usda: 170923, kcal: 375, p: 17.8, c: 44.2, f: 22.3, fiber: 10.5,
+             sodium: 168, portion: 0.5, measures: spoon),
+        Food("Páprica", ["paprica", "paprica doce", "paprica picante", "paprica defumada"], usda: 171329,
+             kcal: 282, p: 14.1, c: 54, f: 12.9, fiber: 34.9, sodium: 68, portion: 0.5, measures: spoon),
+        Food("Louro", ["louro", "folha de louro"], usda: 170917, kcal: 313, p: 7.61, c: 75, f: 8.36, fiber: 26.3,
+             sodium: 23, portion: 0.5, measures: spoon),
+        Food("Noz-moscada", ["noz moscada"], usda: 171326, kcal: 525, p: 5.84, c: 49.3, f: 36.3, fiber: 20.8,
+             sodium: 16, portion: 0.5, measures: spoon),
+        Food("Cravo", ["cravo", "cravo da india"], usda: 171321, kcal: 274, p: 5.97, c: 65.5, f: 13, fiber: 33.9,
+             sodium: 277, portion: 0.5, measures: spoon),
+        Food("Gengibre", ["gengibre"], usda: 169231, kcal: 80, p: 1.82, c: 17.8, f: 0.75, fiber: 2, sodium: 13, portion: 5),
+        Food("Vinagre", ["vinagre", "vinagre de maca", "vinagre de vinho", "vinagre de alcool"], usda: 172237,
+             kcal: 18, p: 0, c: 0.04, f: 0, sodium: 2, portion: 15),
+        Food("Adoçante", ["adocante", "adocante liquido", "adocante em po", "stevia", "sucralose"],
+             kcal: 0, p: 0, c: 0, f: 0, portion: 0.3, measures: ["gota": 0.3, "colher de cha": 0.8, "sache": 0.8]),
 
         // Bebidas
         Food("Refrigerante", ["refrigerante", "refri", "coca", "coca cola", "guarana", "fanta", "sprite"], taco: 480, portion: 350),

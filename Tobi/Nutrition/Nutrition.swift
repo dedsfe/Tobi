@@ -53,7 +53,7 @@ struct Food: Sendable {
         switch source {
         case .estimate: true
         case .chain(_, let estimated): estimated
-        case .taco, .ibge, .brand: false
+        case .taco, .ibge, .usda, .brand: false
         }
     }
 
@@ -61,7 +61,7 @@ struct Food: Sendable {
     var countsByUnit: Bool {
         switch source {
         case .chain, .brand: true
-        case .taco, .ibge, .estimate: false
+        case .taco, .ibge, .usda, .estimate: false
         }
     }
 
@@ -83,6 +83,17 @@ struct Food: Sendable {
         self.aliases = aliases
         self.per100 = taco.per100
         self.source = .taco(taco.id)
+        self.portion = portion
+        self.measures = measures
+    }
+
+    /// Números oficiais do USDA (id do FoodData Central), pra sal e temperos que faltam na TACO.
+    init(_ name: String, _ aliases: [String], usda id: Int, kcal: Double, p: Double, c: Double, f: Double,
+         fiber: Double = 0, sodium: Double = 0, portion: Double, measures: [String: Double] = [:]) {
+        self.name = name
+        self.aliases = aliases
+        self.per100 = Nutrition(kcal: kcal, protein: p, carbs: c, fat: f, fiber: fiber, sodium: sodium)
+        self.source = .usda(String(id))
         self.portion = portion
         self.measures = measures
     }

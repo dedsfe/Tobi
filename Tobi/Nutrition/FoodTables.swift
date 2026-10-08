@@ -9,6 +9,9 @@ enum FoodSource: Equatable, Sendable {
     /// Tabela nutricional oficial de rede de fast food (McDonald's, Burger King...). `estimated` quando
     /// a rede não publica tabela no Brasil e o número vem da tabela oficial de fora (Outback).
     case chain(String, estimated: Bool)
+    /// USDA FoodData Central (SR Legacy, domínio público): só o que a TACO e o IBGE não têm,
+    /// como sal e temperos secos.
+    case usda(String)
     /// Rótulo do produto, via Open Food Facts (código de barras).
     case brand(String)
     /// Estimativa nossa, pra prato pronto que nenhuma tabela tem.
