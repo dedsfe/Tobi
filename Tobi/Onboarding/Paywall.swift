@@ -36,8 +36,13 @@ struct PaywallStep: View {
                 TobiLetter(onAccept: acceptFreePass, onBack: { declined = false })
             }
         }
-        .overlay {
-            if celebrating { Confetti(count: 44) }
+        .overlay(alignment: .bottom) {
+            // Presa embaixo e mais alta que a tela: os canhões saem do pé da tela e o papel passa por cima do Tobi.
+            if celebrating {
+                ConfettiCannons()
+                    .frame(height: 1000)
+                    .ignoresSafeArea()
+            }
         }
         .sensoryFeedback(.selection, trigger: benefits)
         .sensoryFeedback(.impact(weight: .light), trigger: milestones)
@@ -210,7 +215,8 @@ struct PaywallStep: View {
         celebrating = true
         tobi.celebrate()
         Task {
-            try? await Task.sleep(for: .seconds(1.8))
+            // Tempo de ver o confete subir e começar a cair antes de abrir o app.
+            try? await Task.sleep(for: .seconds(2.6))
             onFinish()
         }
     }

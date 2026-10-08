@@ -58,6 +58,7 @@
 		E493A9B7173AFAF4F9A42F3D /* WelcomeFoodRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9155A902428D8604F628C436 /* WelcomeFoodRoute.swift */; };
 		F10047776139D6EE95053CB9 /* FoodParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A61D93B4C4C2B1562F8CBA23 /* FoodParserTests.swift */; };
 		F4F03DB08A9EB42588CE07CE /* InputMethodsShowcase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E169475F08FF10FB129498E /* InputMethodsShowcase.swift */; };
+		F629E96C5891DFAA0E5AF0BC /* ConfettiCannons.swift in Sources */ = {isa = PBXBuildFile; fileRef = D776BAEAF45963A2D807E30C /* ConfettiCannons.swift */; };
 		F90651BCAF45D616918D5187 /* WelcomeFood.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49472BC1DE4C1DCD9F5E6204 /* WelcomeFood.swift */; };
 		FB452BB1ED37189C55EFF16B /* LineRewriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C87CE0B25D3C707E51A6DBA /* LineRewriter.swift */; };
 		FDD953D0FE09F4316F02D6DC /* FoodParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A46A98F03E2CF68A0D4D7978 /* FoodParser.swift */; };
@@ -130,6 +131,7 @@
 		C9B9ABA662E17E8154754CE6 /* WelcomeFoodRouteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFoodRouteTests.swift; sourceTree = "<group>"; };
 		CBD850D37F024E14534FF063 /* PaywallLetter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallLetter.swift; sourceTree = "<group>"; };
 		D5F15F5DFF3D1C5DFB4747B1 /* VoiceSpectrumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSpectrumTests.swift; sourceTree = "<group>"; };
+		D776BAEAF45963A2D807E30C /* ConfettiCannons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiCannons.swift; sourceTree = "<group>"; };
 		DA5FA395EEC1B1F95F8911D0 /* BrandProductTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandProductTests.swift; sourceTree = "<group>"; };
 		E1994A7BED207538543F656B /* Motion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion.swift; sourceTree = "<group>"; };
 		E75C5C4C8C0241704136815F /* WelcomeFoodFlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFoodFlight.swift; sourceTree = "<group>"; };
@@ -247,6 +249,7 @@
 		A2B3E6E2F2BD447E2B520798 /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
+				D776BAEAF45963A2D807E30C /* ConfettiCannons.swift */,
 				C751682A98CEC2AF35AC1405 /* FirstMealDemo.swift */,
 				3E169475F08FF10FB129498E /* InputMethodsShowcase.swift */,
 				65A29F5B27272F349425B6B0 /* JourneyChart.swift */,
@@ -456,6 +459,7 @@
 				6E31F7E803495BBDD87B2FAD /* BarcodeScanner.swift in Sources */,
 				7267903BFF169BAE53EB59A7 /* BrandProduct.swift in Sources */,
 				876E32B23BA5977857E4C448 /* Confetti.swift in Sources */,
+				F629E96C5891DFAA0E5AF0BC /* ConfettiCannons.swift in Sources */,
 				31AD92836C08C9713CE4457E /* DayNote.swift in Sources */,
 				A17543C64D9C4306850BE85F /* DayView.swift in Sources */,
 				5CF651F012F4A1CCD3A49B2E /* Dictation.swift in Sources */,
