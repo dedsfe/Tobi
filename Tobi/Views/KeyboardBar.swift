@@ -9,6 +9,8 @@ struct KeyboardBar: View {
     let onMic: () -> Void
     let onScan: () -> Void
     let onDismiss: () -> Void
+    /// Tocou nos totais: fecha o teclado e abre as metas.
+    let onTotals: () -> Void
 
     private var kcal: Int { Int(total.kcal.rounded()) }
 
@@ -27,6 +29,15 @@ struct KeyboardBar: View {
 
     /// As calorias em cima e os macros embaixo, na mesma pílula que vira a barra de totais quando o teclado fecha.
     private var totals: some View {
+        Button(action: onTotals) { totalsContent }
+            .buttonStyle(.plain)
+            .glassEffect(.regular.interactive(), in: .capsule)
+            .glassEffectID("totals", in: glass)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(kcal) calorias, \(grams(total.carbs)) de carboidrato, \(grams(total.protein)) de proteína, \(grams(total.fat)) de gordura. Ver metas")
+    }
+
+    private var totalsContent: some View {
         VStack(spacing: 1) {
             HStack(spacing: 4) {
                 Text("🔥").font(.system(size: 13))
@@ -44,15 +55,12 @@ struct KeyboardBar: View {
         .monospacedDigit()
         .lineLimit(1)
         // Número grande encolhe um pouco em vez de cortar ou quebrar.
-        .minimumScaleFactor(0.7)
+        .minimumScaleFactor(0.6)
         .padding(.horizontal, 14)
         .frame(maxWidth: .infinity)
         .frame(height: 44)
-        .glassEffect(.regular, in: .capsule)
-        .glassEffectID("totals", in: glass)
+        .contentShape(.capsule)
         .animation(Motion.quick, value: total)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(kcal) calorias, \(grams(total.carbs)) de carboidrato, \(grams(total.protein)) de proteína, \(grams(total.fat)) de gordura")
     }
 
     private func macro(_ letter: String, _ value: Double, _ color: Color) -> some View {
@@ -109,7 +117,7 @@ struct KeyboardBar: View {
     ZStack {
         Theme.background
         KeyboardBar(total: Nutrition(kcal: 374, protein: 28, carbs: 41, fat: 9), goal: 2000, dictation: Dictation(),
-                    glass: glass, onMic: {}, onScan: {}, onDismiss: {})
+                    glass: glass, onMic: {}, onScan: {}, onDismiss: {}, onTotals: {})
             .padding(24)
     }
 }

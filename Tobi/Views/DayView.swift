@@ -135,7 +135,11 @@ struct DayView: View {
                         glass: glass,
                         onMic: toggleDictation,
                         onScan: { showingScanner = true },
-                        onDismiss: { editor.dismissKeyboard() }
+                        onDismiss: { editor.dismissKeyboard() },
+                        onTotals: {
+                            editor.dismissKeyboard()
+                            if !showingGoals { toggleGoals() }
+                        }
                     )
                 } else if isDemo {
                     TotalsBar(total: total, goal: goal, glass: glass, onTap: {})
