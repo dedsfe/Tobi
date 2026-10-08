@@ -285,7 +285,9 @@ struct OnboardingView: View {
         .animation(Motion.surface, value: step == .firstMeal)
         .onChange(of: step) { old, next in
             if old == .welcome, next != .welcome { welcomeScene.end() }
+            Analytics.stepViewed(next)
         }
+        .onAppear { Analytics.stepViewed(step) }
         .onDisappear { welcomeScene.end() }
     }
 

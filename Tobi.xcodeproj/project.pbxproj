@@ -29,6 +29,7 @@
 		5B79DA8DC5FB679ABA3BD35E /* VoiceSpectrumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F15F5DFF3D1C5DFB4747B1 /* VoiceSpectrumTests.swift */; };
 		5C7A22804DA7A3FAF5BBAFBF /* WelcomeFoodFlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = E75C5C4C8C0241704136815F /* WelcomeFoodFlight.swift */; };
 		5CF651F012F4A1CCD3A49B2E /* Dictation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C304B2749615A9C8558D00 /* Dictation.swift */; };
+		60CF9B735A8AAE014F543DC8 /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6565AD07DD783BF23AD3A699 /* Analytics.swift */; };
 		62734DD3F35E21CA38AFACD5 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 849BBE740074FABF951F498A /* Theme.swift */; };
 		65C464813A2DDB0CB263616C /* tobi-head@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 733787F40680C2123994FCF0 /* tobi-head@3x.png */; };
 		6E31F7E803495BBDD87B2FAD /* BarcodeScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6BC12515FB31BEA5AA5C7D /* BarcodeScanner.swift */; };
@@ -114,6 +115,7 @@
 		5DEA2923D51ECF843DD4BBED /* PaywallRecapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallRecapTests.swift; sourceTree = "<group>"; };
 		5EF17015117CAFBD333185A7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		641C53C984F6E9BE0929536C /* Confetti.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Confetti.swift; sourceTree = "<group>"; };
+		6565AD07DD783BF23AD3A699 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		65A29F5B27272F349425B6B0 /* JourneyChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyChart.swift; sourceTree = "<group>"; };
 		693E1062F5E9612595AAFAE8 /* OpenFoodFacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenFoodFacts.swift; sourceTree = "<group>"; };
 		6DDD333EB71EFBF77A7476E6 /* Tobi.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tobi.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -150,6 +152,7 @@
 		043BB0472D4B09E963CFC188 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				6565AD07DD783BF23AD3A699 /* Analytics.swift */,
 				3C5944BEFBCE0A6BC683771E /* TobiApp.swift */,
 			);
 			path = App;
@@ -463,6 +466,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				60CF9B735A8AAE014F543DC8 /* Analytics.swift in Sources */,
 				6E31F7E803495BBDD87B2FAD /* BarcodeScanner.swift in Sources */,
 				7267903BFF169BAE53EB59A7 /* BrandProduct.swift in Sources */,
 				876E32B23BA5977857E4C448 /* Confetti.swift in Sources */,

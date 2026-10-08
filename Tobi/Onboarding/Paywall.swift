@@ -64,6 +64,7 @@ struct PaywallStep: View {
         .sensoryFeedback(.warning, trigger: warnings)
         .onChange(of: declined) { _, isDeclined in
             if isDeclined {
+                track("paywall_declined")
                 // Primeiro a oferta sai rápida, depois o balão do Tobi nasce.
                 Task {
                     try? await Task.sleep(for: .seconds(Motion.exitDuration))
@@ -208,7 +209,9 @@ struct PaywallStep: View {
             defer { buying = false }
             do {
                 switch try await store.purchase(plan) {
-                case .purchased: celebrate()
+                case .purchased:
+                    track("paywall_purchased", ["plan": "\(plan)"])
+                    celebrate()
                 case .pending: say("Sua compra tá esperando aprovação. Assim que passar, o Tobi libera tudo.")
                 case .cancelled: break
                 }
@@ -223,6 +226,7 @@ struct PaywallStep: View {
     private func restore() {
         Task {
             if await store.restore() {
+                track("paywall_restored")
                 celebrate()
             } else {
                 say("Não achei nenhuma assinatura nessa conta da Apple.")
@@ -232,7 +236,17 @@ struct PaywallStep: View {
 
     private func acceptFreePass() {
         store.grantFreePass()
+        track("free_pass_accepted")
         celebrate()
+    }
+
+    private func track(_ event: String, _ properties: [String: String] = [:]) {
+        let source = switch story {
+        case .onboarding: "onboarding"
+        case .recap: "recap"
+        case .nothingWritten: "nothing_written"
+        }
+        Analytics.track(event, step: .paywall, properties: properties.merging(["source": source]) { a, _ in a })
     }
 
     /// Deu certo: confete, o Tobi comemora e o app abre.
