@@ -132,7 +132,7 @@ struct RecapHero: View {
 
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(counted.formatted())
-                    .font(.system(size: 58, weight: .heavy, design: .rounded))
+                    .font(.system(size: 52, weight: .heavy, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(landed ? Color.indigo : Color.primary)
                     .contentTransition(.numericText(value: Double(counted)))
@@ -146,11 +146,11 @@ struct RecapHero: View {
                 SpringKeyframe(1.08, duration: 0.14)
                 SpringKeyframe(1, duration: 0.4)
             }
-            .padding(.top, 10)
+            .padding(.top, 6)
             .reveal(isShown, order: 1)
 
             GoalBar(share: shareSoFar, days: recap.days)
-                .padding(.top, 8)
+                .padding(.top, 4)
                 .reveal(isShown, order: 2)
 
             HStack(spacing: 10) {
@@ -158,7 +158,7 @@ struct RecapHero: View {
                           isShown: isShown && chips >= 1)
                 RecapChip(value: "\(recap.proteinGrams) g", label: "de proteína", isShown: isShown && chips >= 2)
             }
-            .padding(.top, 16)
+            .padding(.top, 12)
         }
         .sensoryFeedback(.selection, trigger: ticks)
         .sensoryFeedback(.impact(weight: .medium), trigger: shareSoFar >= 1)
@@ -257,7 +257,7 @@ private struct RecapChip: View {
         .lineLimit(1)
         .minimumScaleFactor(0.8)
         .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassEffect(.regular, in: .rect(cornerRadius: 20))
         .scaleEffect(isShown ? 1 : 0.82, anchor: .bottom)

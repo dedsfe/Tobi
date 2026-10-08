@@ -156,7 +156,7 @@ struct PaywallStep: View {
     // MARK: Compra
 
     private var checkout: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 8) {
             Label("Sem cobrança hoje", systemImage: "checkmark.shield.fill")
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(.indigo)
@@ -169,7 +169,8 @@ struct PaywallStep: View {
                 .font(.system(size: 12))
                 .foregroundStyle(notice == nil ? .secondary : .primary)
                 .multilineTextAlignment(.center)
-                .lineLimit(2)
+                // Preço e renovação nunca encolhem nem cortam: é a outra parte da tela que cede.
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity)
                 .contentTransition(.numericText())
                 .animation(Motion.quick, value: notice ?? disclosure)
