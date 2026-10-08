@@ -61,7 +61,8 @@ final class TobiStore {
     /// Pode usar o app: assinou ou está nas 24 horas.
     var hasAccess: Bool { subscribed != false || freePassActive }
 
-    enum Outcome { case purchased, cancelled, pending }
+    /// `trial`: a compra começou o teste grátis, sem cobrança hoje.
+    enum Outcome { case purchased(trial: Bool), cancelled, pending }
     enum Failure: Error { case unavailable, unverified }
 
     private init() {
@@ -130,7 +131,7 @@ final class TobiStore {
             if transaction.offer?.type == .introductory, let charge = transaction.expirationDate {
                 await Self.remindBeforeCharge(on: charge)
             }
-            return .purchased
+            return .purchased(trial: transaction.offer?.paymentMode == .freeTrial)
         case .pending:
             return .pending
         case .userCancelled:

@@ -19,9 +19,11 @@ Código em `Tobi/Onboarding/OnboardingView.swift`. Toda tela tem o palco do Tobi
 - [x] 13. Notificações: os 3 lembretes (café 9:00, almoço 12:30, jantar 20:00) chegam na tela como no iPhone; "Ativar lembretes" pede a permissão e agenda exatamente esses; "Agora não" segue
 - [x] 14. Paywall: anual (destacado, com a economia) e semanal, os dois com 3 dias grátis; linha do tempo do teste com as datas de verdade; StoreKit 2 em `TobiStore` (IDs e preços de reserva num lugar só, `Tobi.storekit` pra testar rodando pelo Xcode). O X abre a carta do Tobi com 24 horas de cortesia; a compra solta canhões de confete. Sem plano e sem as 24 horas, o app trava no paywall (Ajustes → Debug → "Travar o app"): em cima, o resumo das 24 horas (calorias subindo, barra da meta a partir de 50%, anéis de C/P/G); sem nada anotado, um cartão onde a pessoa testa o Tobi escrevendo o que comeu (`PaywallGate.swift`)
 - [ ] Paywall: preços definitivos e os dois planos criados no App Store Connect (hoje R$ 99,90/ano e R$ 12,90/semana de reserva)
-- [ ] Paywall: link de Privacidade em `PaywallLinks.privacy` (site em construção); a Apple exige antes da revisão
+- [ ] Paywall: link de Privacidade em `PaywallLinks.privacy` (site em construção); a Apple exige antes da revisão. Texto pronto em `docs/privacidade.md`, revisão completa em `docs/revisao-apple.md`
+- [ ] Paywall: cumprir o "Te aviso antes" pra quem negou notificação, depois testar 7 dias de teste e plano mensal (`docs/paywall-conversao.md`)
+- [ ] Anúncios: SDKs do TikTok e da Meta; falta criar os apps nos painéis e decidir sobre o pedido de rastreamento (`docs/anuncios.md`)
 - [ ] Testar onboarding em formato de chat (perguntas na voz do Tobi) contra as telas atuais
-- [ ] Medir abandono em cada tela
+- [x] Medir abandono em cada tela: eventos anônimos no Supabase (`analytics_events`, coluna `ambiente` = debug ou producao), funil na view `onboarding_funnel`; sem rede, o evento espera no aparelho (`Tobi/App/Analytics.swift`)
 - [ ] Trocar o 🐶 do `TobiStage` pelas animações do Tobi (depende da arte)
 
 ## Em espera

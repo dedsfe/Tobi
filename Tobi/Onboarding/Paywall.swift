@@ -211,8 +211,9 @@ struct PaywallStep: View {
             defer { buying = false }
             do {
                 switch try await store.purchase(plan) {
-                case .purchased:
-                    track("paywall_purchased", ["plan": "\(plan)"])
+                case .purchased(let trial):
+                    // Teste grátis não é receita: as redes de anúncio vão precisar saber a diferença.
+                    track(trial ? "trial_started" : "paywall_purchased", ["plan": "\(plan)"])
                     celebrate()
                 case .pending: say("Sua compra tá esperando aprovação. Assim que passar, o Tobi libera tudo.")
                 case .cancelled: break
