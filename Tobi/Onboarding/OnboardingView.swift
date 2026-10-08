@@ -12,13 +12,14 @@ enum OnboardingStep: Int, CaseIterable {
     case pace
     case goals
     case firstMeal
+    case inputs
 
     /// Total de telas planejadas (ver TODO.md), pra barra de progresso não pular quando entrar tela nova.
-    static let planned = 13
+    static let planned = 14
 
     #if DEBUG
     /// Tela em revisão: o atalho do Debug nos Ajustes abre direto nela. Trocar aqui quando a revisão mudar.
-    static let debugJump: OnboardingStep = .firstMeal
+    static let debugJump: OnboardingStep = .inputs
 
     var debugName: String {
         switch self {
@@ -32,6 +33,7 @@ enum OnboardingStep: Int, CaseIterable {
         case .pace: "Em quanto tempo"
         case .goals: "Suas metas"
         case .firstMeal: "Primeira refeição"
+        case .inputs: "Formas de registrar"
         }
     }
     #endif
@@ -300,6 +302,9 @@ struct OnboardingView: View {
                     .transition(.opacity)
                 case .firstMeal:
                     EmptyView()
+                case .inputs:
+                    InputsStep(onContinue: advance)
+                        .transition(.opacity)
                 }
             }
             .frame(maxHeight: .infinity)
@@ -995,6 +1000,24 @@ struct PaceWarningLabel: View {
                 .foregroundStyle(warning.isSevere ? Color.red : Color(red: 0.85, green: 0.6, blue: 0))
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
+        }
+    }
+}
+
+// MARK: - 11 · Formas de registrar
+
+private struct InputsStep: View {
+    let onContinue: () -> Void
+
+    var body: some View {
+        QuestionStep(
+            title: "Do jeito mais fácil",
+            subtitle: "Escreva, fale ou escaneie. O Tobi entende.",
+            canContinue: true,
+            onContinue: onContinue
+        ) { visible in
+            InputMethodsShowcase()
+                .reveal(visible, order: 2)
         }
     }
 }

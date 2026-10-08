@@ -44,6 +44,7 @@
 		DB0945C61BAA86B1575D2F49 /* FoodTables.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC10422EB949975055CDB990 /* FoodTables.swift */; };
 		DFB03B6045CB81552DD4F5C4 /* fastfood.json in Resources */ = {isa = PBXBuildFile; fileRef = 445349C7B857AF907783D17F /* fastfood.json */; };
 		F10047776139D6EE95053CB9 /* FoodParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A61D93B4C4C2B1562F8CBA23 /* FoodParserTests.swift */; };
+		F4F03DB08A9EB42588CE07CE /* InputMethodsShowcase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E169475F08FF10FB129498E /* InputMethodsShowcase.swift */; };
 		FB452BB1ED37189C55EFF16B /* LineRewriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C87CE0B25D3C707E51A6DBA /* LineRewriter.swift */; };
 		FDD953D0FE09F4316F02D6DC /* FoodParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A46A98F03E2CF68A0D4D7978 /* FoodParser.swift */; };
 /* End PBXBuildFile section */
@@ -79,6 +80,7 @@
 		30CA4C9B21F8C3BEFF79C118 /* DayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayView.swift; sourceTree = "<group>"; };
 		330296912C2E99B26C68D398 /* FoodDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodDatabase.swift; sourceTree = "<group>"; };
 		3C5944BEFBCE0A6BC683771E /* TobiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TobiApp.swift; sourceTree = "<group>"; };
+		3E169475F08FF10FB129498E /* InputMethodsShowcase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputMethodsShowcase.swift; sourceTree = "<group>"; };
 		3E46D592AB857DDE87A3E279 /* taco.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = taco.json; sourceTree = "<group>"; };
 		3FA65013DB3626F696AD1207 /* Nutrition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nutrition.swift; sourceTree = "<group>"; };
 		41C304B2749615A9C8558D00 /* Dictation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictation.swift; sourceTree = "<group>"; };
@@ -208,6 +210,7 @@
 			isa = PBXGroup;
 			children = (
 				C751682A98CEC2AF35AC1405 /* FirstMealDemo.swift */,
+				3E169475F08FF10FB129498E /* InputMethodsShowcase.swift */,
 				A268DB5A88EC85BC89AB5337 /* NutritionPlan.swift */,
 				4964A550B3F84B8605839E0D /* OnboardingView.swift */,
 			);
@@ -406,6 +409,7 @@
 				FDD953D0FE09F4316F02D6DC /* FoodParser.swift in Sources */,
 				DB0945C61BAA86B1575D2F49 /* FoodTables.swift in Sources */,
 				8D24C9183E293DC3E8DC81F7 /* GoalsCard.swift in Sources */,
+				F4F03DB08A9EB42588CE07CE /* InputMethodsShowcase.swift in Sources */,
 				B7CFC256A15133CCE2655D22 /* KeyboardBar.swift in Sources */,
 				FB452BB1ED37189C55EFF16B /* LineRewriter.swift in Sources */,
 				76D459DF5D937386DAF12206 /* Motion.swift in Sources */,

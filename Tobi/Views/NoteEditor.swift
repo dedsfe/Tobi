@@ -315,7 +315,8 @@ struct KcalGutter: View {
     }
 }
 
-private struct KcalLabel: View {
+/// Também usado na vitrine do onboarding (`InputMethodsShowcase`), pra mostrar o rótulo de verdade.
+struct KcalLabel: View {
     let mark: LineMark
     private var estimate: LineEstimate { mark.estimate }
 
