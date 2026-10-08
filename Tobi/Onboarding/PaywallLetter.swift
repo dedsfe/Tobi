@@ -105,9 +105,10 @@ struct TobiLetter: View {
                 .opacity(envelopeOpacity)
                 .zIndex(0)
 
+            // Desce 1 pt pra dentro do fundo: aberta, a dobra emenda sem fio claro.
             EnvelopeFlapView(angle: flap)
                 .frame(width: size.width, height: size.height * EnvelopeFlap.depth)
-                .offset(y: envelopeY - size.height * (1 - EnvelopeFlap.depth) / 2)
+                .offset(y: envelopeY - size.height * (1 - EnvelopeFlap.depth) / 2 + 1)
                 .opacity(envelopeOpacity)
                 .zIndex(flapBehind ? 1 : 4)
 
@@ -559,12 +560,16 @@ private struct EnvelopeFlapView: View, Animatable {
         set { angle = newValue }
     }
 
+    /// Os cantos da dobra acompanham os cantos arredondados do envelope.
+    private static let corners = UnevenRoundedRectangle(topLeadingRadius: 14, topTrailingRadius: 14, style: .continuous)
+
     var body: some View {
         let showsInside = angle > 90
         let closed = max(0, cos(angle * .pi / 180))
         ZStack {
             EnvelopeFlap()
                 .fill(Color.indigo.mix(with: .white, by: 0.12))
+                .clipShape(Self.corners)
                 .overlay(alignment: .bottom) {
                     Image(systemName: "pawprint.fill")
                         .font(.system(size: 20))
@@ -577,6 +582,7 @@ private struct EnvelopeFlapView: View, Animatable {
                 .fill(Color.indigo.mix(with: .black, by: 0.35))
                 .overlay { PawLining() }
                 .clipShape(EnvelopeFlap())
+                .clipShape(Self.corners)
                 .opacity(showsInside ? 1 : 0)
         }
         .rotation3DEffect(.degrees(angle), axis: (x: 1, y: 0, z: 0), anchor: .top, perspective: 0.3)

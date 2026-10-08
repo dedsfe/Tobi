@@ -452,13 +452,43 @@ private struct PlanCard: View {
     }
 }
 
-/// Botão de compra: vidro índigo com um brilho que passa de tempos em tempos.
+/// Botão de compra: vidro índigo que, de tempos em tempos, respira um pouquinho
+/// enquanto uma luz macia atravessa de ponta a ponta.
 struct PaywallButton: View {
     let title: String
     var isLoading = false
     let action: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
+        if reduceMotion || isLoading {
+            button
+        } else {
+            button
+                .keyframeAnimator(initialValue: Pulse(), repeating: true) { content, pulse in
+                    content
+                        .scaleEffect(pulse.scale)
+                        .overlay {
+                            Shine(position: pulse.shine)
+                                .clipShape(.capsule)
+                                .allowsHitTesting(false)
+                        }
+                } keyframes: { _ in
+                    KeyframeTrack(\.shine) {
+                        LinearKeyframe(-0.6, duration: 2.2)
+                        CubicKeyframe(1.6, duration: 1.1)
+                    }
+                    KeyframeTrack(\.scale) {
+                        LinearKeyframe(1, duration: 2.35)
+                        SpringKeyframe(1.03, duration: 0.4, spring: .smooth)
+                        SpringKeyframe(1, duration: 0.55, spring: .smooth)
+                    }
+                }
+        }
+    }
+
+    private var button: some View {
         Button(action: action) {
             ZStack {
                 Text(title)
@@ -474,37 +504,32 @@ struct PaywallButton: View {
         }
         .buttonStyle(.glassProminent)
         .tint(.indigo)
-        .overlay {
-            Shine()
-                .clipShape(.capsule)
-                .allowsHitTesting(false)
-        }
         .disabled(isLoading)
         .animation(Motion.quick, value: isLoading)
     }
+
+    /// Onde está a luz (de fora à esquerda até fora à direita) e o quanto o botão cresceu.
+    private struct Pulse {
+        var shine = -0.6
+        var scale = 1.0
+    }
 }
 
-/// Faixa de luz que atravessa o botão a cada poucos segundos. Some com Reduzir Movimento.
+/// A luz que atravessa o botão: uma faixa larga, reta e de bordas bem macias.
 private struct Shine: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let position: Double
 
     var body: some View {
-        if !reduceMotion {
-            GeometryReader { proxy in
-                let width = proxy.size.width
-                LinearGradient(colors: [.white.opacity(0), .white.opacity(0.4), .white.opacity(0)],
-                               startPoint: .leading, endPoint: .trailing)
-                    .frame(width: width * 0.28)
-                    .rotationEffect(.degrees(18))
-                    .keyframeAnimator(initialValue: -0.4, repeating: true) { band, position in
-                        band.offset(x: position * width)
-                    } keyframes: { _ in
-                        LinearKeyframe(-0.4, duration: 2.6)
-                        CubicKeyframe(1.15, duration: 0.85)
-                    }
-            }
-            .blendMode(.plusLighter)
+        GeometryReader { proxy in
+            let width = proxy.size.width
+            LinearGradient(stops: [.init(color: .white.opacity(0), location: 0),
+                                   .init(color: .white.opacity(0.22), location: 0.5),
+                                   .init(color: .white.opacity(0), location: 1)],
+                           startPoint: .leading, endPoint: .trailing)
+                .frame(width: width * 0.5)
+                .offset(x: position * width - width * 0.25)
         }
+        .blendMode(.plusLighter)
     }
 }
 
