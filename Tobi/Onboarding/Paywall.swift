@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - 14 · Paywall
 
 /// Última tela: o que o Tobi faz, como corre o teste grátis e os dois planos.
-/// O X mora no palco (`PaywallCloseButton`) e liga `declined`; aí o Tobi oferece as 24 horas.
+/// O X mora no palco (`PaywallCloseButton`) e liga `declined`; aí chega a carta do Tobi (`TobiLetter`).
 struct PaywallStep: View {
     @Binding var declined: Bool
     let onFinish: () -> Void
@@ -33,7 +33,7 @@ struct PaywallStep: View {
             content
                 .allowsHitTesting(!declined && !celebrating)
             if offering {
-                FreePassOffer(onAccept: acceptFreePass, onBack: { declined = false })
+                TobiLetter(onAccept: acceptFreePass, onBack: { declined = false })
             }
         }
         .overlay {
@@ -453,7 +453,7 @@ private struct PlanCard: View {
 }
 
 /// Botão de compra: vidro índigo com um brilho que passa de tempos em tempos.
-private struct PaywallButton: View {
+struct PaywallButton: View {
     let title: String
     var isLoading = false
     let action: () -> Void
@@ -538,108 +538,5 @@ struct PaywallCloseButton: View {
             try? await Task.sleep(for: .seconds(1.5))
             shown = true
         }
-    }
-}
-
-// MARK: - 24 horas por conta do Tobi
-
-/// O Tobi fala num balão que sai dele: as 24 horas de cortesia e o porquê.
-/// A frase entra palavra por palavra, com um toque leve em cada uma.
-private struct FreePassOffer: View {
-    let onAccept: () -> Void
-    let onBack: () -> Void
-
-    private static let line = "Vou te dar \(Int(TobiStore.freePassHours)) horas de graça pra testar."
-    private static let reason = "Eu pago a IA, não consigo dar o app de graça."
-    private static let words = line.split(separator: " ").map(String.init)
-
-    @State private var bubble = false
-    @State private var typed = 0
-    @State private var settled = false
-    @State private var until = Date.now.addingTimeInterval(TobiStore.freePassHours * 3600)
-    @Environment(\.tobiReactions) private var tobi
-
-    var body: some View {
-        VStack(spacing: 0) {
-            if bubble {
-                VStack(alignment: .leading, spacing: 12) {
-                    typedLine
-                        .font(.system(size: 27, weight: .heavy, design: .rounded))
-                        .contentTransition(.interpolate)
-                        .animation(Motion.quick, value: typed)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text(Self.reason)
-                        .font(.system(size: 17))
-                        .foregroundStyle(.secondary)
-                        .reveal(settled, order: 0)
-                    Label("Liberado até amanhã às \(until.formatted(date: .omitted, time: .shortened))",
-                          systemImage: "clock.fill")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(.indigo)
-                        .padding(.top, 4)
-                        .reveal(settled, order: 1)
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 22 + SpeechBubble.tail)
-                .padding(.bottom, 24)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .glassEffect(.regular, in: SpeechBubble())
-                .padding(.horizontal, 16)
-                .transition(.emerge(from: .top))
-            }
-
-            Spacer(minLength: 0)
-
-            VStack(spacing: 6) {
-                PaywallButton(title: "Quero minhas \(Int(TobiStore.freePassHours)) horas", action: onAccept)
-                Button("Prefiro ver os planos", action: onBack)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .frame(height: 36)
-            }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 4)
-            .reveal(settled, order: 2)
-        }
-        .sensoryFeedback(.impact(weight: .light, intensity: 0.55), trigger: typed)
-        .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: settled)
-        .task {
-            withAnimation(Motion.surface) { bubble = true }
-            try? await Task.sleep(for: .milliseconds(320))
-            for count in 1...Self.words.count {
-                typed = count
-                try? await Task.sleep(for: .milliseconds(95))
-            }
-            tobi.acknowledge()
-            settled = true
-        }
-    }
-
-    /// A frase inteira já ocupa o espaço; as palavras ainda não ditas ficam transparentes.
-    private var typedLine: Text {
-        Self.words.indices.reduce(Text(verbatim: "")) { line, index in
-            let word = Text(verbatim: Self.words[index] + (index < Self.words.count - 1 ? " " : ""))
-                .foregroundStyle(index < typed ? Color.primary : Color.clear)
-            return Text("\(line)\(word)")
-        }
-    }
-}
-
-/// Balão de fala com a ponta pra cima, apontando pro Tobi.
-private struct SpeechBubble: Shape {
-    static let tail: CGFloat = 12
-    var radius: CGFloat = 30
-
-    func path(in rect: CGRect) -> Path {
-        let body = CGRect(x: rect.minX, y: rect.minY + Self.tail, width: rect.width, height: rect.height - Self.tail)
-        let bubble = Path(roundedRect: body, cornerRadius: radius, style: .continuous)
-        var point = Path()
-        let mid = rect.midX
-        let half = Self.tail * 1.3
-        point.move(to: CGPoint(x: mid - half, y: body.minY + 1))
-        point.addQuadCurve(to: CGPoint(x: mid, y: rect.minY), control: CGPoint(x: mid - half * 0.35, y: body.minY))
-        point.addQuadCurve(to: CGPoint(x: mid + half, y: body.minY + 1), control: CGPoint(x: mid + half * 0.35, y: body.minY))
-        point.closeSubpath()
-        return bubble.union(point)
     }
 }
