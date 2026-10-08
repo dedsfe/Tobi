@@ -16,9 +16,15 @@ struct PaywallRecapTests {
     }
 
     @Test func goalShareAveragesTheDaysWritten() {
-        let recap = PaywallRecap(kcal: 3000, foods: 8, proteinGrams: 120, days: 2)
-        #expect(recap.share(of: 2000) == 0.75)
-        #expect(PaywallRecap(kcal: 2200, foods: 5, proteinGrams: 90, days: 1).share(of: 2000) == 1.1)
+        let foods = [RecapFood(id: 0, text: "arroz", kcal: 1500), RecapFood(id: 1, text: "bife", kcal: 1500)]
+        #expect(PaywallRecap(items: foods, proteinGrams: 120, days: 2).share(of: 2000) == 0.75)
+        #expect(PaywallRecap(items: foods, proteinGrams: 120, days: 1).share(of: 2000) == 1.5)
+    }
+
+    @Test func keepsEachFoodAsWrittenInOrder() throws {
+        let note = DayNote(day: today, text: "Café da manhã\n2 ovos\narroz, feijão e bife")
+        let recap = try #require(PaywallRecap(notes: [note], since: today))
+        #expect(recap.items.map(\.text) == ["2 ovos", "arroz", "feijão", "bife"])
     }
 
     @Test func leavesOutDaysBeforeTheStart() {
