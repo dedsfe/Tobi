@@ -44,6 +44,17 @@ struct SettingsView: View {
                     .foregroundStyle(.red)
                     .disabled(notes.isEmpty)
                 }
+
+                #if DEBUG
+                Section("Debug") {
+                    Button("Ver onboarding de novo", systemImage: "arrow.counterclockwise") {
+                        replayOnboarding(from: .welcome)
+                    }
+                    Button("Abrir \(OnboardingStep.debugJump.debugName)", systemImage: "arrow.forward.to.line") {
+                        replayOnboarding(from: .debugJump)
+                    }
+                }
+                #endif
             }
             .scrollContentBackground(.hidden)
             .background { Theme.background }
@@ -62,6 +73,20 @@ struct SettingsView: View {
             }
         }
     }
+
+    #if DEBUG
+    /// Fecha os Ajustes primeiro e só depois troca a raiz do app pro onboarding.
+    private func replayOnboarding(from step: OnboardingStep) {
+        dismiss()
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(0.45))
+            UserDefaults.standard.set(step.rawValue, forKey: "onboardingStart")
+            withAnimation(Motion.surface) {
+                UserDefaults.standard.set(false, forKey: "didCompleteOnboarding")
+            }
+        }
+    }
+    #endif
 
     private func eraseAll() {
         notes.forEach(context.delete)

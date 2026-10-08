@@ -9,10 +9,13 @@
 /* Begin PBXBuildFile section */
 		00E8D8A43016F993A8DBB259 /* VoiceGlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2872FA24B522D05EF587CF3E /* VoiceGlow.swift */; };
 		033CCA7C68D736FE7D53D869 /* VoiceSpectrum.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50C8DB4618CA48C83CE1C987 /* VoiceSpectrum.swift */; };
+		06A1A1458BDBCEC051CD3FA4 /* ThinkingReveal.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8C2E089F5BB672F2BC24E98 /* ThinkingReveal.swift */; };
+		108E7241B747FCAA46004206 /* NutritionPlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8734C3998A0F55F94AAD8688 /* NutritionPlanTests.swift */; };
 		19A4554982F37800C4D916AB /* LineEditingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E951F4742B5EFD8897822E6E /* LineEditingUITests.swift */; };
 		2DF31213B46DDD75D81E3D75 /* OpenFoodFacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693E1062F5E9612595AAFAE8 /* OpenFoodFacts.swift */; };
 		31AD92836C08C9713CE4457E /* DayNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2D449DF7D2B65CDE6700E42 /* DayNote.swift */; };
 		3A40FCE8DCFB7B67BC1DEB6E /* LineRewriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28C85519ACF4096B51BC3535 /* LineRewriterTests.swift */; };
+		3D8A8C1F589731F75AB33BCA /* NutritionPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = A268DB5A88EC85BC89AB5337 /* NutritionPlan.swift */; };
 		4F24112FDE712AF35ADB91E3 /* ProductNameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28648EF45A52ECDE9C7C2C92 /* ProductNameTests.swift */; };
 		5B79DA8DC5FB679ABA3BD35E /* VoiceSpectrumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F15F5DFF3D1C5DFB4747B1 /* VoiceSpectrumTests.swift */; };
 		5CF651F012F4A1CCD3A49B2E /* Dictation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C304B2749615A9C8558D00 /* Dictation.swift */; };
@@ -31,6 +34,7 @@
 		988D62DB0C9E2AB97C0914A3 /* Nutrition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA65013DB3626F696AD1207 /* Nutrition.swift */; };
 		A09B974FEC943B4597B945C8 /* ProductName.swift in Sources */ = {isa = PBXBuildFile; fileRef = 309F9AA6258B1C07AABF120A /* ProductName.swift */; };
 		A17543C64D9C4306850BE85F /* DayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30CA4C9B21F8C3BEFF79C118 /* DayView.swift */; };
+		AD15A9FF6ABCCF534EFA7145 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964A550B3F84B8605839E0D /* OnboardingView.swift */; };
 		B7CFC256A15133CCE2655D22 /* KeyboardBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2751B53BA08C6765765F0715 /* KeyboardBar.swift */; };
 		BEC070B5CD52869753A2C583 /* ibge.json in Resources */ = {isa = PBXBuildFile; fileRef = F114B1E25377701C98EEFCF0 /* ibge.json */; };
 		C43FE44916787D7ADD1601DA /* FoodDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 330296912C2E99B26C68D398 /* FoodDatabase.swift */; };
@@ -77,17 +81,21 @@
 		41C304B2749615A9C8558D00 /* Dictation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictation.swift; sourceTree = "<group>"; };
 		445349C7B857AF907783D17F /* fastfood.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = fastfood.json; sourceTree = "<group>"; };
 		45A6CD938A64353750C04F9A /* TobiTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TobiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4964A550B3F84B8605839E0D /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		50C8DB4618CA48C83CE1C987 /* VoiceSpectrum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSpectrum.swift; sourceTree = "<group>"; };
 		5EF17015117CAFBD333185A7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		693E1062F5E9612595AAFAE8 /* OpenFoodFacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenFoodFacts.swift; sourceTree = "<group>"; };
 		6DDD333EB71EFBF77A7476E6 /* Tobi.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tobi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		849BBE740074FABF951F498A /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		8734C3998A0F55F94AAD8688 /* NutritionPlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionPlanTests.swift; sourceTree = "<group>"; };
 		953F49314598C47639854B69 /* GoalsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsCard.swift; sourceTree = "<group>"; };
+		A268DB5A88EC85BC89AB5337 /* NutritionPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionPlan.swift; sourceTree = "<group>"; };
 		A2D449DF7D2B65CDE6700E42 /* DayNote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayNote.swift; sourceTree = "<group>"; };
 		A46A98F03E2CF68A0D4D7978 /* FoodParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodParser.swift; sourceTree = "<group>"; };
 		A61D93B4C4C2B1562F8CBA23 /* FoodParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodParserTests.swift; sourceTree = "<group>"; };
 		B5F71B97092266CA6BFFAEFA /* FoodCoverageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCoverageTests.swift; sourceTree = "<group>"; };
 		C0047EB4EB0B56B8E2ED251B /* TotalsBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TotalsBar.swift; sourceTree = "<group>"; };
+		C8C2E089F5BB672F2BC24E98 /* ThinkingReveal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThinkingReveal.swift; sourceTree = "<group>"; };
 		D5F15F5DFF3D1C5DFB4747B1 /* VoiceSpectrumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSpectrumTests.swift; sourceTree = "<group>"; };
 		DA5FA395EEC1B1F95F8911D0 /* BrandProductTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandProductTests.swift; sourceTree = "<group>"; };
 		E1994A7BED207538543F656B /* Motion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion.swift; sourceTree = "<group>"; };
@@ -136,6 +144,7 @@
 				B5F71B97092266CA6BFFAEFA /* FoodCoverageTests.swift */,
 				A61D93B4C4C2B1562F8CBA23 /* FoodParserTests.swift */,
 				28C85519ACF4096B51BC3535 /* LineRewriterTests.swift */,
+				8734C3998A0F55F94AAD8688 /* NutritionPlanTests.swift */,
 				28648EF45A52ECDE9C7C2C92 /* ProductNameTests.swift */,
 				D5F15F5DFF3D1C5DFB4747B1 /* VoiceSpectrumTests.swift */,
 			);
@@ -183,10 +192,20 @@
 				308590FF1E48DD45DCA78605 /* NoteEditor.swift */,
 				5EF17015117CAFBD333185A7 /* SettingsView.swift */,
 				849BBE740074FABF951F498A /* Theme.swift */,
+				C8C2E089F5BB672F2BC24E98 /* ThinkingReveal.swift */,
 				C0047EB4EB0B56B8E2ED251B /* TotalsBar.swift */,
 				2872FA24B522D05EF587CF3E /* VoiceGlow.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		A2B3E6E2F2BD447E2B520798 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				A268DB5A88EC85BC89AB5337 /* NutritionPlan.swift */,
+				4964A550B3F84B8605839E0D /* OnboardingView.swift */,
+			);
+			path = Onboarding;
 			sourceTree = "<group>";
 		};
 		ACCE96EE5608DD8053FEBD4E /* Tobi */ = {
@@ -197,6 +216,7 @@
 				7F67FF23429A7B508996553F /* Input */,
 				CB72E6588123A31FE3331B54 /* Models */,
 				2067EA3ADB64A7D60255A807 /* Nutrition */,
+				A2B3E6E2F2BD447E2B520798 /* Onboarding */,
 				FA714D49D7B050751EC6D8C2 /* Resources */,
 				89DD1B90E614A9922E1AA155 /* Views */,
 			);
@@ -351,6 +371,7 @@
 				904EBA54F3766F2FFAC8D665 /* FoodCoverageTests.swift in Sources */,
 				F10047776139D6EE95053CB9 /* FoodParserTests.swift in Sources */,
 				3A40FCE8DCFB7B67BC1DEB6E /* LineRewriterTests.swift in Sources */,
+				108E7241B747FCAA46004206 /* NutritionPlanTests.swift in Sources */,
 				4F24112FDE712AF35ADB91E3 /* ProductNameTests.swift in Sources */,
 				5B79DA8DC5FB679ABA3BD35E /* VoiceSpectrumTests.swift in Sources */,
 			);
@@ -382,11 +403,14 @@
 				76D459DF5D937386DAF12206 /* Motion.swift in Sources */,
 				C7B649C008949A3DA1A9FD57 /* NoteEditor.swift in Sources */,
 				988D62DB0C9E2AB97C0914A3 /* Nutrition.swift in Sources */,
+				3D8A8C1F589731F75AB33BCA /* NutritionPlan.swift in Sources */,
+				AD15A9FF6ABCCF534EFA7145 /* OnboardingView.swift in Sources */,
 				2DF31213B46DDD75D81E3D75 /* OpenFoodFacts.swift in Sources */,
 				A09B974FEC943B4597B945C8 /* ProductName.swift in Sources */,
 				84625DD8D6B6443969680CE8 /* ScanSheet.swift in Sources */,
 				92994DBBB9C2FE837CA5670E /* SettingsView.swift in Sources */,
 				62734DD3F35E21CA38AFACD5 /* Theme.swift in Sources */,
+				06A1A1458BDBCEC051CD3FA4 /* ThinkingReveal.swift in Sources */,
 				85A03EFDDA3D7B24646FC2DD /* TobiApp.swift in Sources */,
 				73A29CA35A4D4B571090FE1A /* TotalsBar.swift in Sources */,
 				00E8D8A43016F993A8DBB259 /* VoiceGlow.swift in Sources */,

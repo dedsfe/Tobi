@@ -20,6 +20,15 @@ enum Theme {
     }
 }
 
+extension View {
+    /// A superfície das metas do onboarding, compartilhada pelas telas do app.
+    func tobiGlassSurface(alignment: Alignment = .leading) -> some View {
+        padding(20)
+            .frame(maxWidth: .infinity, alignment: alignment)
+            .glassEffect(.regular, in: .rect(cornerRadius: 26))
+    }
+}
+
 extension Color {
     init(light: Color, dark: Color) {
         self.init(UIColor { $0.userInterfaceStyle == .dark ? UIColor(dark) : UIColor(light) })

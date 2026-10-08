@@ -12,13 +12,17 @@ struct GoalsCard: View {
     private var kcal: Int { Int(total.kcal.rounded()) }
     private var isOver: Bool { kcal > goal }
 
-    // Metas derivadas da meta de calorias: 50% carbo, 20% proteína, 30% gordura.
+    // Fatias das calorias por macro. O onboarding calcula as da pessoa; sem ele, 50% carbo, 20% proteína, 30% gordura.
+    @AppStorage("carbsShare") private var carbsShare = 0.5
+    @AppStorage("proteinShare") private var proteinShare = 0.2
+    @AppStorage("fatShare") private var fatShare = 0.3
+
     private var targets: [Target] {
         let kcalGoal = Double(goal)
         return [
-            Target(name: "Carboidratos", value: total.carbs, goal: kcalGoal * 0.5 / 4, unit: "g", color: Theme.carbs),
-            Target(name: "Proteína", value: total.protein, goal: kcalGoal * 0.2 / 4, unit: "g", color: Theme.protein),
-            Target(name: "Gordura", value: total.fat, goal: kcalGoal * 0.3 / 9, unit: "g", color: Theme.fat),
+            Target(name: "Carboidratos", value: total.carbs, goal: kcalGoal * carbsShare / 4, unit: "g", color: Theme.carbs),
+            Target(name: "Proteína", value: total.protein, goal: kcalGoal * proteinShare / 4, unit: "g", color: Theme.protein),
+            Target(name: "Gordura", value: total.fat, goal: kcalGoal * fatShare / 9, unit: "g", color: Theme.fat),
             Target(name: "Açúcar", value: total.sugar, goal: 50, unit: "g", color: Theme.sugar),
             Target(name: "Fibras", value: total.fiber, goal: 30, unit: "g", color: Theme.fiber),
             Target(name: "Sódio", value: total.sodium, goal: 2300, unit: "mg", color: Theme.sodium),
