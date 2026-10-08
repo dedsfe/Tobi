@@ -17,6 +17,15 @@ struct ProductNameTests {
         #expect(ProductName.clean("União Refinado", brands: ["Tio João", "União"]) == "União Refinado")
     }
 
+    @Test func shortensToHowPeopleWriteIt() {
+        #expect(ProductName.clean("BR Spice Páprica Picante Tempero", brands: ["BR Spice"]) == "Páprica Picante BR Spice")
+        #expect(ProductName.clean("Páprica Picante Com Tampa Dosadora Br Spices Essencial", brands: ["Br Spices"])
+                == "Páprica Picante Br Spices Essencial")
+        #expect(ProductName.clean("Nescau Nescau 2.0", brands: ["Nescau"]) == "Nescau 2.0")
+        #expect(ProductName.clean("Café Pilão Tradicional Refil 500g", brands: ["Pilão"]) == "Café Pilão Tradicional")
+        #expect(ProductName.clean("Doce de Leite de Corte", brands: ["Aviação"]) == "Aviação Doce de Leite de Corte")
+    }
+
     @Test func scannedProductWinsOverTheGenericFood() {
         let coca = Food(brand: "Refrigerante Coca-Cola", aliases: ["Refrigerante Coca-Cola", "Coca-Cola Refrigerante Coca-Cola"],
                         per100: Nutrition(kcal: 42.5), barcode: "7894900011517", portion: 200)

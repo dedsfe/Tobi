@@ -52,6 +52,9 @@ struct FoodParser: Sendable {
     /// Apelidos agrupados pela primeira palavra; dentro de cada grupo, o mais longo primeiro
     /// e, empatando, quem veio antes em `foods` (a lista curada ganha da TACO automática).
     private var entries: [String: [Entry]]
+    /// Produtos salvos no aparelho pelo conjunto de palavras de todos os nomes, pra achar o
+    /// produto mesmo escrito em outra ordem ou com palavra a menos.
+    private var products: [(words: Set<String>, food: Food)] = []
     private let labels: Set<String>
     /// Apelidos que têm um separador dentro ("café com leite", "alho e óleo"), pela primeira palavra.
     /// Na hora de dividir a linha em itens, esses ficam inteiros.
@@ -66,6 +69,8 @@ struct FoodParser: Sendable {
     func adding(_ foods: [Food]) -> FoodParser {
         var copy = self
         for (offset, food) in foods.enumerated() {
+            let words = Set(food.aliases.flatMap(Self.tokenize)).subtracting(Self.fillerWords)
+            if !words.isEmpty { copy.products.append((words, food)) }
             for alias in food.aliases {
                 let tokens = Self.tokenize(alias)
                 guard let first = tokens.first else { continue }
@@ -205,11 +210,15 @@ struct FoodParser: Sendable {
         // Só remove uma lista fechada de palavras introdutórias, nunca nomes de comida.
         var text = item.replacing(/^(?:(?:eu|hoje|comi|tomei|bebi|almocei|jantei|quero|registrar)\s+)+/, with: "")
 
-        // Quantidade absoluta em qualquer lugar: "200g", "350 ml", "1.5 kg".
-        if let match = text.firstMatch(of: /(\d+(?:\.\d+)?)\s*(kg|gramas?|gr|g|ml|litros?|l)\b/) {
-            let value = Double(match.1) ?? 0
-            let unit = String(match.2)
-            quantity.grams = value * (["kg", "l", "litro", "litros"].contains(unit) ? 1000 : 1)
+        // Quantidade absoluta em qualquer lugar: "200g", "350 ml", "1.5 kg", "500mg", "1.000 g", "8 oz".
+        // Abreviada ou por extenso, do mercado ou de receita gringa.
+        if let match = text.firstMatch(of: /(\d+(?:\.\d+)?)\s*(miligramas?|mg|quilogramas?|kilogramas?|quilos?|kilos?|kgs?|gramas?|grs?|g|mililitros?|ml|centilitros?|cl|decilitros?|dl|cc|litros?|lts?|l|oz|oncas?|lbs?|libras?)\b/) {
+            let unit = singularize(String(match.2))
+            let factor = absoluteFactors[unit] ?? 1
+            // "1.000 g" é mil gramas: ponto seguido de três dígitos é milhar, não decimal.
+            let number = factor <= 1 && match.1.wholeMatch(of: /\d{1,3}(?:\.\d{3})+/) != nil
+                ? String(match.1).replacing(".", with: "") : String(match.1)
+            quantity.grams = (Double(number) ?? 0) * factor
             quantity.isWritten = true
             text.removeSubrange(match.range)
         }
@@ -275,6 +284,16 @@ struct FoodParser: Sendable {
         return (quantity, tokens, trailing)
     }
 
+    /// Quanto vale cada unidade de `absoluteUnit` em gramas (ou ml), já no singular.
+    private static let absoluteFactors: [String: Double] = [
+        "miligrama": 0.001, "mg": 0.001,
+        "quilograma": 1000, "kilograma": 1000, "quilo": 1000, "kilo": 1000, "kg": 1000,
+        "grama": 1, "gr": 1, "g": 1, "mililitro": 1, "ml": 1, "cc": 1,
+        "centilitro": 10, "cl": 10, "decilitro": 100, "dl": 100,
+        "litro": 1000, "lt": 1000, "lts": 1000, "l": 1000, "kgs": 1000, "grs": 1, "lbs": 453.6,
+        "oz": 28.35, "onca": 28.35, "lb": 453.6, "libra": 453.6,
+    ]
+
     /// Número que começa em `index`: "2", "duas", "1/2", "3x", "x2", "meia dúzia", "1 e meio".
     private static func number(in words: [String], at index: Int) -> (Double, Int)? {
         let word = words[index]
@@ -338,6 +357,9 @@ struct FoodParser: Sendable {
         "pedacinho", "fatiazinha", "fatinha", "conchinha", "potinho", "garrafinha", "pacotinho", "pratinho", "pratao",
         "pitada", "pitadinha", "fio", "fiozinho", "gota", "gotinha", "dedo", "dedinho", "gole", "golinho", "golada",
         "sache", "sachezinho", "caixinha", "tablete", "quadradinho",
+        "dente", "cubo", "cubinho", "lasca", "lasquinha", "naco",
+        "calice", "tulipa", "mordida", "mordidinha", "bocado", "borrifada", "envelope", "punhadinho",
+        "mancheia", "maozada", "quilinho", "colherona", "conchona", "pedacao", "fationa",
     ]
 
     /// Todas as medidas que o parser entende, já em tokens, das mais longas pras mais curtas.
@@ -353,6 +375,12 @@ struct FoodParser: Sendable {
         guard !tokens.isEmpty else { return [] }
 
         var (matches, complete) = matchFoods(in: tokens)
+        // Produto salvo escrito do jeito da pessoa: "páprica picante br spice" acha
+        // "Páprica Picante Essencial Br Spices". Toda palavra escrita tem que estar no produto.
+        if !complete, let product = savedProduct(for: tokens) {
+            matches = [Match(food: product, isGuess: false)]
+            complete = true
+        }
         // Nada bateu: pode ser erro de digitação ("whoper", "picanah"). Só vale se a correção
         // explicar a frase inteira; senão "eu gostaria muito" vira "mostarda".
         var typo = false
@@ -384,6 +412,13 @@ struct FoodParser: Sendable {
             return ItemEstimate(text: item, foodName: food.name, grams: grams, nutrition: food.nutrition(grams: grams),
                                 confidence: sure ? .exact : .estimated)
         }
+    }
+
+    /// O produto salvo que contém todas as palavras escritas; empatando, o de nome mais curto.
+    private func savedProduct(for tokens: [String]) -> Food? {
+        let words = Set(tokens).subtracting(Self.fillerWords)
+        guard !words.isEmpty else { return nil }
+        return products.filter { words.isSubset(of: $0.words) }.min { $0.words.count < $1.words.count }?.food
     }
 
     private func grams(of food: Food, measure: String?) -> Double {

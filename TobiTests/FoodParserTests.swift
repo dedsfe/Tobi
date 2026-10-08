@@ -266,3 +266,100 @@ struct KitchenTalkTests {
         #expect(item("dois dedos de whisky")?.isRecognized != nil)
     }
 }
+
+/// Toda unidade de peso e volume que o brasileiro escreve, abreviada, por extenso ou gringa.
+struct UnitTests {
+    let parser = FoodParser.shared
+    func grams(_ line: String) -> Double? { parser.estimate(line).items.first?.grams }
+
+    @Test func weightUnits() {
+        #expect(grams("500mg de sal") == 0.5)
+        #expect(grams("1 mg de sal") == 0.001)
+        #expect(grams("2 miligramas de sal") == 0.002)
+        #expect(grams("200 gr de melancia") == 200)
+        #expect(grams("200grs de melancia") == 200)
+        #expect(grams("2 kilos de melancia") == 2000)
+        #expect(grams("1 quilograma de melancia") == 1000)
+        #expect(grams("1 kg de melancia") == 1000)
+        #expect(grams("1.000 g de melancia") == 1000)
+        #expect(grams("1,5 kg de melancia") == 1500)
+        #expect(grams("melancia 300 gramas") == 300)
+    }
+
+    @Test func volumeUnits() {
+        #expect(grams("350ml de leite") == 350)
+        #expect(grams("2 lts de leite") == 2000)
+        #expect(grams("1 lt de leite") == 1000)
+        #expect(grams("1,5 l de leite") == 1500)
+        #expect(grams("1 dl de leite") == 100)
+        #expect(grams("5 cl de leite") == 50)
+        #expect(grams("250 cc de leite") == 250)
+        #expect(grams("2 mililitros de leite") == 2)
+    }
+
+    @Test func spelledOutNumbersWithAbbreviations() {
+        #expect(grams("duzentos ml de leite") == 200)
+        #expect(grams("trezentos g de melancia") == 300)
+        #expect(grams("meio kg de melancia") == 500)
+        #expect(grams("meio litro de leite") == 500)
+        #expect(grams("um litro e meio de leite") == 1500)
+    }
+
+    @Test func importedUnits() {
+        #expect(grams("8 oz de leite") == 8 * 28.35)
+        #expect(grams("1 lb de melancia") == 453.6)
+    }
+
+    @Test func marketSizes() {
+        #expect(grams("1 litrão de cerveja") == 1000)
+        #expect(grams("1 litrinho de cerveja") == 300)
+    }
+
+    @Test func unusualKitchenMeasuresAreRough() {
+        let tulipa = parser.estimate("uma tulipa de feijoada").items.first
+        #expect(tulipa?.foodName == "Feijoada")
+        #expect(tulipa?.grams == 300)
+        #expect(tulipa?.confidence == .estimated)
+        // "Marmita" e "tirinha" são nome de comida (prato feito, tirinha do KFC), não medida.
+        #expect(parser.estimate("marmita").items.first?.foodName == "Prato feito")
+        #expect(parser.estimate("1 dente de alho").items.first?.foodName?.localizedCaseInsensitiveContains("alho") == true)
+        #expect(parser.estimate("uma mão cheia de amendoim").items.first?.foodName?.localizedCaseInsensitiveContains("amendoim") == true)
+    }
+
+    @Test func absoluteUnitsAreExact() {
+        #expect(parser.estimate("200 gr de melancia").items.first?.confidence == .exact)
+        #expect(parser.estimate("trezentos g de melancia").items.first?.confidence == .exact)
+    }
+
+    @Test func wordsThatLookLikeUnitsStayFood() {
+        #expect(grams("2 lanches") != 2000)
+        #expect(grams("3 goiabas") != 3)
+        #expect(grams("2 ovos") == 100)
+    }
+}
+
+/// Produto salvo escrito do jeito da pessoa, não do jeito do rótulo.
+struct SavedProductAnyOrderTests {
+    let paprica = Food(brand: "Páprica Picante Essencial Br Spices",
+                       aliases: ["Páprica Picante Essencial Br Spices", "Br Spices Páprica Picante Essencial"],
+                       per100: Nutrition(kcal: 280), barcode: "1", portion: 5)
+
+    @Test func wordsInAnyOrder() {
+        let parser = FoodParser.shared.adding([paprica])
+        let item = parser.estimate("1 mg de páprica picante br spice").items.first
+        #expect(item?.foodName == paprica.name)
+        #expect(item?.grams == 0.001)
+        #expect(parser.estimate("br spices páprica").items.first?.foodName == paprica.name)
+        #expect(parser.estimate("2 colheres de chá de páprica br spices").items.first?.foodName == paprica.name)
+    }
+
+    @Test func genericNameStaysGeneric() {
+        let parser = FoodParser.shared.adding([paprica])
+        #expect(parser.estimate("páprica picante").items.first?.foodName == "Páprica")
+    }
+
+    @Test func wordOutsideTheProductDoesNotPickIt() {
+        let parser = FoodParser.shared.adding([paprica])
+        #expect(parser.estimate("páprica picante da kitano").items.first?.foodName != paprica.name)
+    }
+}

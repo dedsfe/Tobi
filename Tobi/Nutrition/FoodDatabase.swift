@@ -18,17 +18,23 @@ enum FoodDatabase {
         "copo americano": 150, "copo de requeijao": 240, "copo grande": 300, "copo medio": 240,
         "xicara de cha": 200, "xicara de cafe": 50, "prato fundo": 300,
         "prato raso": 140, "prato de sobremesa": 120, "caneco": 300,
-        // Unidades por extenso: "meio quilo de carne", "duzentos gramas de arroz".
-        "grama": 1, "quilo": 1000, "kilo": 1000, "litro": 1000, "mililitro": 1,
+        // Unidades por extenso: "meio quilo de carne", "duzentos gramas de arroz", "trezentos ml de suco".
+        "grama": 1, "quilo": 1000, "kilo": 1000, "litro": 1000, "mililitro": 1, "miligrama": 0.001,
+        "quilograma": 1000, "kilograma": 1000, "centilitro": 10, "decilitro": 100, "onca": 28.35, "libra": 453.6,
         // Embalagens com tamanho de mercado: lata 350 ml, latão 473 ml, long neck 355 ml.
-        "latao": 473, "long neck": 355, "caixinha": 200,
+        "latao": 473, "long neck": 355, "caixinha": 200, "litrinho": 300, "litrao": 1000,
         // Medidas de cozinha sem tabela oficial: o número sai sempre com "~" (ver FoodParser.roughMeasures).
         "pitada": 0.5, "fio": 5, "gota": 0.05, "dedo": 30, "gole": 30, "sache": 5, "tablete": 20,
-        "quadradinho": 5,
+        "quadradinho": 5, "dente": 5, "cubo": 10, "lasca": 20, "naco": 50,
+        "calice": 50, "tulipa": 300, "mordida": 20, "bocado": 20,
+        "borrifada": 0.3, "envelope": 10,
     ]
 
     /// Medidas que são unidade de peso ou volume: sempre exatas.
-    static let absoluteMeasures: Set<String> = ["grama", "quilo", "kilo", "litro", "mililitro"]
+    static let absoluteMeasures: Set<String> = [
+        "grama", "quilo", "kilo", "litro", "mililitro", "miligrama", "quilograma", "kilograma",
+        "centilitro", "decilitro", "onca", "libra", "litrinho", "litrao",
+    ]
 
     /// Jeitos de falar a mesma medida: diminutivo e aumentativo viram a medida mais parecida.
     static let measureSynonyms: [String: String] = [
@@ -40,6 +46,14 @@ enum FoodDatabase {
         "pratao": "prato fundo", "unid": "unidade", "und": "unidade", "porcoe": "porcao",
         "pitadinha": "pitada", "fiozinho": "fio", "gotinha": "gota", "golinho": "gole", "golada": "gole",
         "dedinho": "dedo", "saquinho": "pacote", "sachezinho": "sache", "kg": "quilo", "gr": "grama",
+        // Abreviações depois de número por extenso: "duzentos ml", "meio kg", "trezentos g".
+        "g": "grama", "grs": "grama", "mg": "miligrama", "ml": "mililitro", "lt": "litro", "l": "litro",
+        "cl": "centilitro", "dl": "decilitro", "cc": "mililitro", "oz": "onca", "lb": "libra",
+        "quilinho": "quilo", "cubinho": "cubo", "lasquinha": "lasca", "mordidinha": "mordida",
+        "punhadinho": "punhado", "mao cheia": "punhado", "mancheia": "punhado", "maozada": "punhado",
+        "colherona": "colher de sopa", "conchona": "concha", "pedacao": "pedaco", "fationa": "fatia",
+        "barrinha": "barra", "tigelinha": "tigela", "shot": "dose", "medidor": "scoop", "dosador": "scoop",
+        "rodelinha": "rodela", "embalagem": "pacote",
     ]
 
     /// Palavras que significam "uma porção do próprio alimento".
