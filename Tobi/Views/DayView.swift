@@ -178,6 +178,18 @@ struct DayView: View {
     // MARK: - Topo
 
     private var topBar: some View {
+        VStack(spacing: 14) {
+            header
+            // Legenda da demonstração do onboarding, logo abaixo do topo.
+            if isDemo { firstMealHint }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 4)
+        .padding(.bottom, 12)
+        .background { EdgeFade(edge: .top) }
+    }
+
+    private var header: some View {
         ZStack {
             HStack {
                 Text("tobi")
@@ -215,16 +227,6 @@ struct DayView: View {
                 .foregroundStyle(.primary)
             }
         }
-        .overlay(alignment: .bottom) {
-            if isDemo {
-                firstMealHint
-                    .alignmentGuide(.bottom) { $0[.top] - 12 }
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 4)
-        .padding(.bottom, isDemo ? 64 : 12)
-        .background { EdgeFade(edge: .top) }
     }
 
     /// Legenda da demonstração; vira um "pronto" quando a última linha é calculada.
