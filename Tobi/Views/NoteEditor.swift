@@ -151,6 +151,7 @@ final class NoteTextView: UITextView {
 
         placeholderLabel.font = Self.font
         placeholderLabel.textColor = .placeholderText
+        placeholderLabel.numberOfLines = 0
         placeholderLabel.isUserInteractionEnabled = false
         addSubview(placeholderLabel)
 
@@ -261,9 +262,12 @@ final class NoteTextView: UITextView {
     override func layoutSubviews() {
         super.layoutSubviews()
         placeholderLabel.isHidden = !text.isEmpty
+        // Nota vazia não tem caloria do lado: o convite usa a largura toda e quebra linha se
+        // precisar, em vez de cortar com reticências.
+        let placeholderWidth = bounds.width - textContainerInset.left - Self.sideMargin
+        let placeholderHeight = placeholderLabel.sizeThatFits(CGSize(width: placeholderWidth, height: .greatestFiniteMagnitude)).height
         placeholderLabel.frame = CGRect(x: textContainerInset.left, y: textContainerInset.top,
-                                        width: bounds.width - textContainerInset.left - textContainerInset.right,
-                                        height: Self.font.lineHeight)
+                                        width: placeholderWidth, height: placeholderHeight)
 
         // Onde cai a primeira linha de cada parágrafo: a caloria se alinha nela.
         layoutManager.ensureLayout(for: textContainer)

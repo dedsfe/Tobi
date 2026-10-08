@@ -47,7 +47,7 @@ struct DayView: View {
                 LineMark(estimate: estimate(line), isSearching: searching.contains(index))
             },
             controller: editor,
-            placeholder: "Comece a registrar suas refeições...",
+            placeholder: "Comece a registrar suas refeições",
             onCaretLine: { caretMoved(from: $0, to: $1) }
         )
         .background { Theme.background }
