@@ -101,8 +101,9 @@ struct TobiLetter: View {
         let size = Self.envelope
         let envelopeY = Self.envelopeY + (envelopeAway ? 180 : 0)
         let envelopeOpacity: Double = envelopeAway ? 0 : 1
+        let topRadius = EnvelopeFlapView.topRadius(at: flap)
         return ZStack {
-            EnvelopeBack()
+            EnvelopeBack(topRadius: topRadius)
                 .frame(width: size.width, height: size.height)
                 .offset(y: envelopeY)
                 .opacity(envelopeOpacity)
@@ -118,7 +119,7 @@ struct TobiLetter: View {
             card
                 .zIndex(2)
 
-            EnvelopeFront()
+            EnvelopeFront(topRadius: topRadius)
                 .frame(width: size.width, height: size.height)
                 .offset(y: envelopeY)
                 .opacity(envelopeOpacity)
@@ -494,16 +495,32 @@ private struct InkSweep: View {
 
 /// O fundo do envelope por dentro: escuro, com forro de patinhas.
 private struct EnvelopeBack: View {
+    var topRadius: CGFloat
+
     var body: some View {
-        RoundedRectangle(cornerRadius: 14, style: .continuous)
+        let shape = EnvelopeShape.body(topRadius: topRadius)
+        shape
             .fill(Color.indigo.mix(with: .black, by: 0.35))
             .overlay { PawLining() }
-            .clipShape(.rect(cornerRadius: 14, style: .continuous))
+            .clipShape(shape)
+    }
+}
+
+private enum EnvelopeShape {
+    static let radius: CGFloat = 14
+
+    /// Corpo do envelope. Os cantos de cima só arredondam com a aba fechada: aberta, aba e fundo
+    /// são uma peça só e a dobra fica reta, sem entalhe dos lados.
+    static func body(topRadius: CGFloat) -> UnevenRoundedRectangle {
+        UnevenRoundedRectangle(topLeadingRadius: topRadius, bottomLeadingRadius: radius,
+                               bottomTrailingRadius: radius, topTrailingRadius: topRadius, style: .continuous)
     }
 }
 
 /// A frente do envelope: as abas dos lados e a de baixo, que se encontram no meio.
 private struct EnvelopeFront: View {
+    var topRadius: CGFloat
+
     var body: some View {
         ZStack {
             EnvelopeSide(leading: true)
@@ -520,7 +537,7 @@ private struct EnvelopeFront: View {
                         .padding(.bottom, 18)
                 }
         }
-        .clipShape(.rect(cornerRadius: 14, style: .continuous))
+        .clipShape(EnvelopeShape.body(topRadius: topRadius))
     }
 }
 
@@ -563,16 +580,20 @@ private struct EnvelopeFlapView: View, Animatable {
         set { angle = newValue }
     }
 
-    /// Os cantos da dobra acompanham os cantos arredondados do envelope.
-    private static let corners = UnevenRoundedRectangle(topLeadingRadius: 14, topTrailingRadius: 14, style: .continuous)
+    /// Raio dos cantos de cima do envelope pra cada ângulo da aba: inteiro fechada, zero de pé em diante.
+    static func topRadius(at angle: Double) -> CGFloat {
+        EnvelopeShape.radius * max(0, cos(angle * .pi / 180))
+    }
 
     var body: some View {
         let showsInside = angle > 90
         let closed = max(0, cos(angle * .pi / 180))
+        let radius = Self.topRadius(at: angle)
+        let corners = UnevenRoundedRectangle(topLeadingRadius: radius, topTrailingRadius: radius, style: .continuous)
         ZStack {
             EnvelopeFlap()
                 .fill(Color.indigo.mix(with: .white, by: 0.12))
-                .clipShape(Self.corners)
+                .clipShape(corners)
                 .overlay(alignment: .bottom) {
                     Image(systemName: "pawprint.fill")
                         .font(.system(size: 20))
@@ -585,7 +606,7 @@ private struct EnvelopeFlapView: View, Animatable {
                 .fill(Color.indigo.mix(with: .black, by: 0.35))
                 .overlay { PawLining() }
                 .clipShape(EnvelopeFlap())
-                .clipShape(Self.corners)
+                .clipShape(corners)
                 .opacity(showsInside ? 1 : 0)
         }
         .rotation3DEffect(.degrees(angle), axis: (x: 1, y: 0, z: 0), anchor: .top, perspective: 0.3)
