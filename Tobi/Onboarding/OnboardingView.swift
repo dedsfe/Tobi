@@ -289,7 +289,8 @@ struct OnboardingView: View {
 
     private var questions: some View {
         VStack(spacing: 0) {
-            TobiStage(performance: tobi, onPet: { tobi.pets += 1 })
+            TobiStage(performance: tobi, onPet: { tobi.pets += 1 },
+                      welcomeScene: step == .welcome ? welcomeScene : nil)
                 .background {
                     if step == .welcome { WelcomeFoodStageCapture(scene: welcomeScene) }
                 }
@@ -449,6 +450,7 @@ struct TobiStage: View {
     var performance: TobiPerformance?
     /// Tocar no rosto faz carinho.
     var onPet: (() -> Void)?
+    var welcomeScene: WelcomeFoodScene? = nil
 
     @State private var modelFailed = false
     /// Na primeira abertura o modelo ainda está sendo lido; ele aparece num fade quando fica pronto.
@@ -457,35 +459,45 @@ struct TobiStage: View {
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        if let performance, !modelFailed {
-            TobiFaceView(isPlaying: true, blinkRequest: 0, lookRequest: 0,
-                         isActive: scenePhase == .active, reduceMotion: reduceMotion,
-                         performance: performance, followsFinger: true, onFailure: { modelFailed = true },
-                         onReady: { withAnimation(Motion.surface) { modelReady = true } })
-                .frame(maxWidth: .infinity)
-                .frame(height: Self.height)
-                .opacity(modelReady ? 1 : 0)
-                .overlay {
-                    if let onPet {
-                        // Só a área do rosto responde, pra não roubar toques do resto da tela.
-                        Color.clear
-                            .frame(width: 150, height: 160)
-                            .contentShape(.rect)
-                            .onTapGesture(perform: onPet)
-                            .sensoryFeedback(.impact(weight: .light), trigger: performance.pets)
-                            .accessibilityElement()
-                            .accessibilityLabel("Tobi")
-                            .accessibilityHint("Toque para fazer carinho")
-                            .accessibilityAddTraits(.isButton)
+        TimelineView(.animation(minimumInterval: 1 / 30,
+                                paused: welcomeScene?.bite == nil || reduceMotion || scenePhase != .active)) { timeline in
+            if let performance, !modelFailed {
+                TobiFaceView(isPlaying: true, blinkRequest: 0, lookRequest: 0,
+                             isActive: scenePhase == .active, reduceMotion: reduceMotion,
+                             performance: performance, followsFinger: true,
+                             eatingTime: eatingTime(at: timeline.date), onFailure: { modelFailed = true },
+                             onReady: { withAnimation(Motion.surface) { modelReady = true } })
+                    .frame(maxWidth: .infinity)
+                    .frame(height: Self.height)
+                    .opacity(modelReady ? 1 : 0)
+                    .overlay {
+                        if let onPet {
+                            // Só a área do rosto responde, pra não roubar toques do resto da tela.
+                            Color.clear
+                                .frame(width: 150, height: 160)
+                                .contentShape(.rect)
+                                .onTapGesture(perform: onPet)
+                                .sensoryFeedback(.impact(weight: .light), trigger: performance.pets)
+                                .accessibilityElement()
+                                .accessibilityLabel("Tobi")
+                                .accessibilityHint("Toque para fazer carinho")
+                                .accessibilityAddTraits(.isButton)
+                        }
                     }
-                }
-        } else {
-            Text("🐶")
-                .font(.system(size: 80))
-                .frame(maxWidth: .infinity)
-                .frame(height: Self.height)
-                .accessibilityLabel("Tobi")
+            } else {
+                Text("🐶")
+                    .font(.system(size: 80))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: Self.height)
+                    .accessibilityLabel("Tobi")
+            }
         }
+    }
+
+    private func eatingTime(at date: Date) -> Double? {
+        guard !reduceMotion, scenePhase == .active, let bite = welcomeScene?.bite else { return nil }
+        return WelcomeFoodBite.sequenceTime(elapsed: date.timeIntervalSinceReferenceDate - bite.start,
+                                            flight: bite.flight)
     }
 }
 

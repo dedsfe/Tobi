@@ -39,6 +39,7 @@
 		85A03EFDDA3D7B24646FC2DD /* TobiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5944BEFBCE0A6BC683771E /* TobiApp.swift */; };
 		876E32B23BA5977857E4C448 /* Confetti.swift in Sources */ = {isa = PBXBuildFile; fileRef = 641C53C984F6E9BE0929536C /* Confetti.swift */; };
 		89EABA6C32FBFD3B11D2A734 /* SafeLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B188110F3F161DF643F945A2 /* SafeLaunch.swift */; };
+		8CEFBEA42E2411690944065B /* WelcomeFoodBite.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45D476B718C12DF8A8B1B062 /* WelcomeFoodBite.swift */; };
 		8D24C9183E293DC3E8DC81F7 /* GoalsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 953F49314598C47639854B69 /* GoalsCard.swift */; };
 		8E3E1AA54F455F6455A96B16 /* taco.json in Resources */ = {isa = PBXBuildFile; fileRef = 3E46D592AB857DDE87A3E279 /* taco.json */; };
 		904EBA54F3766F2FFAC8D665 /* FoodCoverageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F71B97092266CA6BFFAEFA /* FoodCoverageTests.swift */; };
@@ -100,6 +101,7 @@
 		445349C7B857AF907783D17F /* fastfood.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = fastfood.json; sourceTree = "<group>"; };
 		44FE4189A6E5925F21B89BC5 /* Paywall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Paywall.swift; sourceTree = "<group>"; };
 		45A6CD938A64353750C04F9A /* TobiTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TobiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		45D476B718C12DF8A8B1B062 /* WelcomeFoodBite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFoodBite.swift; sourceTree = "<group>"; };
 		49472BC1DE4C1DCD9F5E6204 /* WelcomeFood.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFood.swift; sourceTree = "<group>"; };
 		4964A550B3F84B8605839E0D /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		49AFBD09578FE79F28932BBC /* WritingScreenUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WritingScreenUITests.swift; sourceTree = "<group>"; };
@@ -254,6 +256,7 @@
 				CBD850D37F024E14534FF063 /* PaywallLetter.swift */,
 				5BCAAA368D3AECD109559A74 /* Reminders.swift */,
 				49472BC1DE4C1DCD9F5E6204 /* WelcomeFood.swift */,
+				45D476B718C12DF8A8B1B062 /* WelcomeFoodBite.swift */,
 				E75C5C4C8C0241704136815F /* WelcomeFoodFlight.swift */,
 				9155A902428D8604F628C436 /* WelcomeFoodRoute.swift */,
 			);
@@ -485,6 +488,7 @@
 				00E8D8A43016F993A8DBB259 /* VoiceGlow.swift in Sources */,
 				033CCA7C68D736FE7D53D869 /* VoiceSpectrum.swift in Sources */,
 				F90651BCAF45D616918D5187 /* WelcomeFood.swift in Sources */,
+				8CEFBEA42E2411690944065B /* WelcomeFoodBite.swift in Sources */,
 				5C7A22804DA7A3FAF5BBAFBF /* WelcomeFoodFlight.swift in Sources */,
 				E493A9B7173AFAF4F9A42F3D /* WelcomeFoodRoute.swift in Sources */,
 			);

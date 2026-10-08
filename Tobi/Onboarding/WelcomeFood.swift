@@ -88,7 +88,7 @@ struct WelcomeFood: View {
             }
         }
         .onAppear { shown = true }
-        .onDisappear { shown = false; trip = nil }
+        .onDisappear { shown = false; trip = nil; scene.bite = nil }
         .task(id: reduceMotion || scenePhase != .active) { await feed() }
         .sensoryFeedback(.impact(weight: .medium), trigger: taps)
         .sensoryFeedback(.impact(weight: .light), trigger: chomps)
@@ -98,6 +98,8 @@ struct WelcomeFood: View {
     /// Para sempre: uma comida por vez, sorteada (nunca a mesma de antes), vai pra boca do Tobi.
     private func feed() async {
         trip = nil
+        scene.bite = nil
+        defer { scene.bite = nil }
         guard !reduceMotion, scenePhase == .active else { return }
         do {
             try await Task.sleep(for: .seconds(1.6))
@@ -110,8 +112,12 @@ struct WelcomeFood: View {
                 guard let next = choices.randomElement() else { return }
                 guard let origin = scene.foodCenters[next] else { continue }
                 lastFood = next
-                trip = (next, Date.now.timeIntervalSinceReferenceDate, origin)
-                try await Task.sleep(for: .seconds(Self.flight + Self.away + Self.pop + 1.1))
+                let start = Date.now.timeIntervalSinceReferenceDate
+                scene.bite = (start, Self.flight)
+                trip = (next, start, origin)
+                try await Task.sleep(for: .seconds(Self.flight + WelcomeFoodBite.finish))
+                scene.bite = nil
+                try await Task.sleep(for: .seconds(Self.away + Self.pop + 1.1 - WelcomeFoodBite.finish))
             }
         } catch {
             // Ao sair ou pausar, a comida volta pra mesa.

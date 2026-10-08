@@ -65,3 +65,70 @@ struct WelcomeFoodRouteTests {
         }
     }
 }
+
+struct WelcomeFoodBiteTests {
+    @Test func retractsTongueAndOpensBeforeFoodEnters() {
+        for flight in [1.0, 1.5, 2.0] {
+            #expect(abs(WelcomeFoodBite.age(elapsed: flight * 0.6, flight: flight) - 2.2) < 0.00001)
+            #expect(abs(WelcomeFoodBite.age(elapsed: flight * 0.85, flight: flight) - 2.9) < 0.00001)
+            #expect(abs(WelcomeFoodBite.age(elapsed: flight, flight: flight) - 3.32) < 0.00001)
+        }
+    }
+
+    @Test func chewsTwiceWithTongueStillRetracted() {
+        let flight = 1.5
+        for offset in [0.0, 0.28, 0.56] {
+            #expect(abs(WelcomeFoodBite.age(elapsed: flight + 0.12 + offset, flight: flight) - 3.52) < 0.00001)
+        }
+        for offset in [0.14, 0.42] {
+            #expect(abs(WelcomeFoodBite.age(elapsed: flight + 0.12 + offset, flight: flight) - 3.32) < 0.00001)
+        }
+    }
+
+    @Test func completesWithoutStartingAnotherSnackCycle() {
+        #expect(abs(WelcomeFoodBite.age(elapsed: 1.5 + WelcomeFoodBite.finish, flight: 1.5) - 4.05) < 0.00001)
+        #expect(abs(WelcomeFoodBite.age(elapsed: 100, flight: 1.5) - 4.05) < 0.00001)
+        #expect(WelcomeFoodBite.age(elapsed: -1, flight: 1.5) == 0)
+    }
+
+    @Test func joinsPreparationBiteAndChewingWithoutJumps() {
+        for t in [0.9, 1.275, 1.5, 1.62, 2.18, 2.45] {
+            let before = WelcomeFoodBite.age(elapsed: t - 0.00001, flight: 1.5)
+            let after = WelcomeFoodBite.age(elapsed: t + 0.00001, flight: 1.5)
+            #expect(abs(before - after) < 0.001)
+        }
+    }
+}
+
+#if canImport(Tobi)
+@MainActor
+struct WelcomeFoodEatingPoseTests {
+    private func pose(at elapsed: Double) -> TobiIdleBehavior.Pose {
+        TobiSnackSequence.pose(TobiIdleBehavior.Pose(),
+                               at: WelcomeFoodBite.sequenceTime(elapsed: elapsed, flight: 1.5))
+    }
+
+    @Test func receivesFoodWithOpenMouthAndRetractedTongue() {
+        for time in [1.275, 1.4, 1.5] {
+            #expect(pose(at: time).mouthOpen > 0.85)
+            #expect(pose(at: time).tongueRetract > 0.99)
+        }
+    }
+
+    @Test func mouthChewsTwiceAfterArrival() {
+        for time in [1.62, 1.9, 2.18] {
+            #expect(pose(at: time).mouthOpen < 0.01)
+            #expect(pose(at: time).tongueRetract > 0.99)
+        }
+        for time in [1.76, 2.04] {
+            #expect(pose(at: time).mouthOpen > 0.85)
+            #expect(pose(at: time).tongueRetract > 0.99)
+        }
+    }
+
+    @Test func releasesTongueAfterFinishing() {
+        #expect(pose(at: 1.5 + WelcomeFoodBite.finish).tongueRetract < 0.01)
+        #expect(pose(at: 1.5 + WelcomeFoodBite.finish).mouthOpen < 0.01)
+    }
+}
+#endif

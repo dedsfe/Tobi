@@ -1,11 +1,14 @@
 import SwiftUI
 import RealityKit
+import Observation
 
 /// Só a boas-vindas conhece esta ponte; o rosto e suas poses continuam independentes.
+@Observable
 @MainActor
 final class WelcomeFoodScene {
-    weak var view: ARView?
-    var foodCenters: [Int: CGPoint] = [:]
+    @ObservationIgnored weak var view: ARView?
+    @ObservationIgnored var foodCenters: [Int: CGPoint] = [:]
+    var bite: (start: TimeInterval, flight: Double)?
 
     var isReady: Bool {
         guard let view, view.window != nil, view.bounds.height > 0 else { return false }
