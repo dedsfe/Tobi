@@ -3,9 +3,13 @@ import SwiftData
 
 /// A tela principal: um bloco de notas do dia, com as calorias de cada linha do lado.
 struct DayView: View {
-    /// Só no onboarding (tela "Primeira refeição"): a mesma tela, com um convite no topo e o
-    /// "Continuar" aparecendo assim que a primeira linha ganha calorias.
+    /// Só no onboarding (tela "Primeira refeição"): a mesma tela escrevendo sozinha (`FirstMealDemo`),
+    /// sem as opções do topo, sem salvar nada; o "Continuar" aparece quando a demonstração termina.
     var onFirstMealDone: (() -> Void)?
+    private var isDemo: Bool { onFirstMealDone != nil }
+    @State private var demoDone = false
+    /// Conta as linhas calculadas na demonstração, só pra vibrar a cada uma.
+    @State private var demoLineDone = 0
 
     @Environment(\.modelContext) private var context
     @AppStorage("dailyGoal") private var goal = 2000
@@ -51,9 +55,10 @@ struct DayView: View {
                 LineMark(estimate: estimate(line), isSearching: searching.contains(index))
             },
             controller: editor,
-            placeholder: onFirstMealDone == nil ? "Comece a registrar suas refeições" : "Ex.: arroz, feijão e bife",
+            placeholder: isDemo ? "" : "Comece a registrar suas refeições",
             onCaretLine: { caretMoved(from: $0, to: $1) }
         )
+        .allowsHitTesting(!isDemo)
         .background { Theme.background }
         // Barras que o sistema reconhece: o texto que passa por baixo some num desfoque progressivo.
         .safeAreaBar(edge: .top) { topBar }
@@ -71,10 +76,8 @@ struct DayView: View {
         }
         .task(id: day) { load() }
         .task {
-            // Na primeira refeição o teclado já sobe: a pessoa só precisa escrever.
-            guard onFirstMealDone != nil else { return }
-            try? await Task.sleep(for: .seconds(0.6))
-            editor.focus()
+            guard isDemo else { return }
+            await playFirstMealDemo()
         }
         .onChange(of: text) { save() }
         .onChange(of: dictation.transcript) { _, spoken in applyDictation(spoken) }
@@ -87,7 +90,7 @@ struct DayView: View {
     private var bottomBar: some View {
         GlassEffectContainer(spacing: 6) {
             VStack(spacing: 10) {
-                if let onFirstMealDone, total.kcal > 0 {
+                if let onFirstMealDone, demoDone {
                     Button(action: onFirstMealDone) {
                         Text("Continuar")
                             .font(.system(size: 18, weight: .semibold))
@@ -114,7 +117,7 @@ struct DayView: View {
                         onDismiss: { editor.dismissKeyboard() }
                     )
                 } else {
-                    TotalsBar(total: total, goal: goal, glass: glass, onTap: toggleGoals)
+                    TotalsBar(total: total, goal: goal, glass: glass, onTap: isDemo ? {} : toggleGoals)
                 }
             }
         }
@@ -133,7 +136,8 @@ struct DayView: View {
             }
         }
         .animation(Motion.surface, value: dictation.isRecording)
-        .animation(Motion.surface, value: total.kcal > 0)
+        .animation(Motion.surface, value: demoDone)
+        .sensoryFeedback(.impact(weight: .light), trigger: demoLineDone)
         .sensoryFeedback(.impact(weight: .light), trigger: showingGoals)
         .sensoryFeedback(trigger: dictation.isRecording) { _, recording in recording ? .start : .stop }
     }
@@ -180,54 +184,80 @@ struct DayView: View {
                     .font(.system(size: 24, weight: .heavy, design: .rounded))
                     .foregroundStyle(.indigo)
                 Spacer()
-                HStack(spacing: 14) {
-                    HStack(spacing: 4) {
-                        Text("🔥").font(.system(size: 14))
-                        Text(streak.formatted())
-                            .font(.system(size: 16, weight: .semibold, design: .rounded))
-                            .monospacedDigit()
+                // Na demonstração do onboarding o topo fica limpo: sem sequência, ajustes e dia.
+                if !isDemo {
+                    HStack(spacing: 14) {
+                        HStack(spacing: 4) {
+                            Text("🔥").font(.system(size: 14))
+                            Text(streak.formatted())
+                                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                .monospacedDigit()
+                        }
+                        Button("Ajustes", systemImage: "gearshape.fill") { showingSettings = true }
+                            .labelStyle(.iconOnly)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.primary)
                     }
-                    Button("Ajustes", systemImage: "gearshape.fill") { showingSettings = true }
-                        .labelStyle(.iconOnly)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.primary)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 9)
+                    .glassEffect(.regular.interactive(), in: .capsule)
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 9)
-                .glassEffect(.regular.interactive(), in: .capsule)
             }
 
-            Button { showingCalendar = true } label: {
-                Text(title)
-                    .font(.system(size: 15, weight: .semibold))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
+            if !isDemo {
+                Button { showingCalendar = true } label: {
+                    Text(title)
+                        .font(.system(size: 15, weight: .semibold))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                }
+                .buttonStyle(.glass)
+                .foregroundStyle(.primary)
             }
-            .buttonStyle(.glass)
-            .foregroundStyle(.primary)
         }
         .overlay(alignment: .bottom) {
-            if onFirstMealDone != nil {
+            if isDemo {
                 firstMealHint
                     .alignmentGuide(.bottom) { $0[.top] - 12 }
             }
         }
         .padding(.horizontal, 20)
         .padding(.top, 4)
-        .padding(.bottom, onFirstMealDone == nil ? 12 : 64)
+        .padding(.bottom, isDemo ? 64 : 12)
         .background { EdgeFade(edge: .top) }
     }
 
-    /// Convite da primeira refeição; vira um "pronto" quando o Tobi calcula a primeira linha.
+    /// Legenda da demonstração; vira um "pronto" quando a última linha é calculada.
     private var firstMealHint: some View {
-        let done = total.kcal > 0
-        return Text(done ? "Pronto! O Tobi calculou na hora ✨" : "Escreve o que você comeu hoje ✍️")
+        Text(demoDone ? "Pronto! O Tobi calculou tudo ✨" : "É só escrever o que você comeu ✍️")
             .font(.system(size: 15, weight: .semibold))
             .contentTransition(.opacity)
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
             .glassEffect(.regular, in: .capsule)
-            .animation(Motion.quick, value: done)
+            .animation(Motion.quick, value: demoDone)
+    }
+
+    /// Escreve `FirstMealDemo.lines` letra por letra. Enquanto a linha é escrita, ela mostra o ✨
+    /// (o mesmo de "procurando"); no fim da linha o ✨ vira as calorias, com uma vibração leve.
+    private func playFirstMealDemo() async {
+        text = ""
+        try? await Task.sleep(for: .seconds(0.8))
+        for (index, line) in FirstMealDemo.lines.enumerated() {
+            if index > 0 { text += "\n" }
+            let isLabel = parser.estimate(line).isLabel
+            if !isLabel { searching.insert(index) }
+            for letter in line {
+                guard !Task.isCancelled else { return }
+                text.append(letter)
+                try? await Task.sleep(for: FirstMealDemo.letterDelay)
+            }
+            try? await Task.sleep(for: .milliseconds(250))
+            withAnimation(Motion.quick) { _ = searching.remove(index) }
+            if !isLabel { demoLineDone += 1 }
+            try? await Task.sleep(for: FirstMealDemo.linePause)
+        }
+        withAnimation(Motion.surface) { demoDone = true }
     }
 
     private var calendar: some View {
@@ -334,10 +364,12 @@ struct DayView: View {
     }
 
     private func load() {
+        guard !isDemo else { return }
         text = note(for: day)?.text ?? ""
     }
 
     private func save() {
+        guard !isDemo else { return }
         if let note = note(for: day) {
             if note.text != text { note.text = text }
         } else if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
