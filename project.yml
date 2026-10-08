@@ -16,7 +16,12 @@ targets:
   Tobi:
     type: application
     platform: iOS
-    sources: [Tobi]
+    sources:
+      - Tobi
+      # Ícone feito no Icon Composer (Liquid Glass): o Xcode compila direto do arquivo .icon.
+      - path: Asset-Icon/TobiIcon.icon
+        type: file
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.andrefelipe.tobi
@@ -30,7 +35,7 @@ targets:
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
         # Só a criptografia do próprio iOS (HTTPS): a App Store não pergunta a cada build.
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
-        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_APPICON_NAME: TobiIcon
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic
   TobiTests:

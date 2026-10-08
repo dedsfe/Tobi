@@ -45,6 +45,7 @@
 		76D459DF5D937386DAF12206 /* Motion.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1994A7BED207538543F656B /* Motion.swift */; };
 		7F1E791DA4625F1175FCADEA /* PaywallRecapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DEA2923D51ECF843DD4BBED /* PaywallRecapTests.swift */; };
 		84625DD8D6B6443969680CE8 /* ScanSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1131CC3800D87E1B7D9072F2 /* ScanSheet.swift */; };
+		85617CBCDA00C7F8B9AE1EA5 /* TobiIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 79FD6A8D17346C2902A3582A /* TobiIcon.icon */; };
 		85A03EFDDA3D7B24646FC2DD /* TobiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5944BEFBCE0A6BC683771E /* TobiApp.swift */; };
 		876E32B23BA5977857E4C448 /* Confetti.swift in Sources */ = {isa = PBXBuildFile; fileRef = 641C53C984F6E9BE0929536C /* Confetti.swift */; };
 		89EABA6C32FBFD3B11D2A734 /* SafeLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B188110F3F161DF643F945A2 /* SafeLaunch.swift */; };
@@ -142,6 +143,7 @@
 		733787F40680C2123994FCF0 /* tobi-head@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "tobi-head@3x.png"; sourceTree = "<group>"; };
 		75ECB48C3EDC7FA0CFE250EA /* LineHelp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineHelp.swift; sourceTree = "<group>"; };
 		762C73C803ADECE8C3C246BC /* LineResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineResolver.swift; sourceTree = "<group>"; };
+		79FD6A8D17346C2902A3582A /* TobiIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = TobiIcon.icon; sourceTree = "<group>"; };
 		849BBE740074FABF951F498A /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		8734C3998A0F55F94AAD8688 /* NutritionPlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionPlanTests.swift; sourceTree = "<group>"; };
 		9155A902428D8604F628C436 /* WelcomeFoodRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFoodRoute.swift; sourceTree = "<group>"; };
@@ -195,6 +197,7 @@
 		1050D008790E920C10D84724 = {
 			isa = PBXGroup;
 			children = (
+				DC16048050945594E5019867 /* Asset-Icon */,
 				ACCE96EE5608DD8053FEBD4E /* Tobi */,
 				22717634C632AF809F7A655B /* TobiTests */,
 				D7FC5BB26AC27DA44D71C5E8 /* TobiUITests */,
@@ -353,6 +356,14 @@
 			path = TobiUITests;
 			sourceTree = "<group>";
 		};
+		DC16048050945594E5019867 /* Asset-Icon */ = {
+			isa = PBXGroup;
+			children = (
+				79FD6A8D17346C2902A3582A /* TobiIcon.icon */,
+			);
+			path = "Asset-Icon";
+			sourceTree = "<group>";
+		};
 		FA714D49D7B050751EC6D8C2 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -474,6 +485,7 @@
 			files = (
 				964360C5675E68D3AF4C1E5A /* Assets.xcassets in Resources */,
 				75921BBD618E283954DC1EF1 /* PrivacyInfo.xcprivacy in Resources */,
+				85617CBCDA00C7F8B9AE1EA5 /* TobiIcon.icon in Resources */,
 				DFB03B6045CB81552DD4F5C4 /* fastfood.json in Resources */,
 				BEC070B5CD52869753A2C583 /* ibge.json in Resources */,
 				8E3E1AA54F455F6455A96B16 /* taco.json in Resources */,
@@ -672,7 +684,7 @@
 		2B8D60C031F27631235B7D89 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = TobiIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -731,7 +743,7 @@
 		AA35F51BE66B57EE164FAF27 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = TobiIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
