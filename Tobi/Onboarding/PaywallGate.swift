@@ -45,6 +45,8 @@ struct LockedPaywall: View {
                 ))
         }
         .background { Theme.background }
+        // O teclado do "escreve o seu" passa por cima dos planos em vez de espremer a tela.
+        .ignoresSafeArea(.keyboard)
     }
 
     private func perform(_ mood: TobiIdleBehavior.Mood) {
@@ -309,23 +311,28 @@ private struct GoalBar: View {
 
 // MARK: - Sem nada anotado
 
-/// Quem não anotou nada nas 24 horas: o Tobi não inventa resumo. Ele mostra, no desenho do dia
-/// do app, duas refeições sendo escritas letra por letra e as calorias de verdade aparecendo.
+/// Quem não anotou nada nas 24 horas: o Tobi não inventa resumo, ele deixa testar ali mesmo.
+/// O cartão de vidro é um campo de verdade. Parado, o Tobi escreve um exemplo letra por letra, a conta
+/// aparece (calorias e macros subindo), ele apaga e escreve o próximo. Tocou, abre o teclado e a pessoa
+/// escreve o que comeu: a conta sai na hora, do parser de verdade, com um toque a cada alimento entendido.
 struct NothingWrittenHero: View {
     let isShown: Bool
 
-    /// Os exemplos, e as calorias que o próprio Tobi calcula pra eles (o parser de verdade).
-    static let examples = ["2 ovos e pão francês", "arroz, feijão e bife"]
+    static let examples = ["2 ovos e pão francês", "arroz, feijão e bife", "café com leite e banana"]
 
-    @State private var typed = [0, 0]
-    @State private var counted = [false, false]
-    @State private var writing: Int?
+    @State private var demo = ""
+    @State private var input = ""
+    @State private var editing = false
+    @State private var counted = Nutrition.zero
+    @State private var understood = 0
     @State private var keys = 0
+    @State private var erasing = 0
     @State private var lands = 0
+    @FocusState private var focused: Bool
     @Environment(\.tobiReactions) private var tobi
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private let kcal = examples.map { Int(FoodParser.shared.estimate($0).total.kcal.rounded()) }
+    private var hasResult: Bool { counted.kcal > 0 }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -334,78 +341,187 @@ struct NothingWrittenHero: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .reveal(isShown, order: 0)
 
-            Text("Escreve do seu jeito que eu faço a conta. Olha só:")
-                .font(.system(size: 16))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 8)
+            card
+                .padding(.top, 16)
                 .reveal(isShown, order: 1)
 
-            VStack(spacing: 4) {
-                ForEach(Self.examples.indices, id: \.self) { index in
-                    row(index)
-                }
-            }
-            .padding(.top, 16)
-            .reveal(isShown, order: 2)
+            hint
+                .padding(.top, 10)
+                .padding(.leading, 4)
+                .reveal(isShown, order: 2)
         }
         .sensoryFeedback(.selection, trigger: keys)
+        .sensoryFeedback(.impact(weight: .light, intensity: 0.4), trigger: erasing)
         .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.8), trigger: lands)
-        .task { await write() }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Faltou me contar o que você comeu. Escreve do seu jeito que eu faço a conta.")
+        .sensoryFeedback(.impact(weight: .medium), trigger: editing)
+        .task(id: editing) {
+            guard !editing else { return }
+            await runDemo()
+        }
+        .onChange(of: input) { _, text in
+            let estimate = FoodParser.shared.estimate(text)
+            let recognized = estimate.items.filter(\.isRecognized).count
+            if recognized > understood {
+                lands += 1
+                tobi.acknowledge()
+            }
+            understood = recognized
+            withAnimation(Motion.quick) { counted = estimate.total }
+        }
+        .onChange(of: focused) { _, isFocused in
+            // Fechou o teclado sem escrever nada: o Tobi volta a mostrar os exemplos.
+            if !isFocused, input.trimmingCharacters(in: .whitespaces).isEmpty {
+                withAnimation(Motion.surface) { editing = false }
+            }
+        }
     }
 
-    /// Uma linha no desenho do dia: o que se comeu à esquerda, as calorias à direita.
-    private func row(_ index: Int) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            HStack(spacing: 1) {
-                Text(String(Self.examples[index].prefix(typed[index])))
-                    .font(.system(size: 18))
-                if writing == index {
-                    Caret()
+    // MARK: Cartão
+
+    /// O campo em vidro: a linha escrita à esquerda, a conta à direita e os macros embaixo,
+    /// no mesmo jeito da barra do dia (letra colorida e número).
+    private var card: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                line
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                    Text(Int(counted.kcal.rounded()).formatted())
+                        .font(.system(size: 26, weight: .heavy, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(hasResult ? Color.indigo : Color.secondary.opacity(0.4))
+                        .contentTransition(.numericText(value: counted.kcal))
+                    Text("cal")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.secondary)
                 }
+                .lineLimit(1)
+                .fixedSize()
             }
-            Spacer(minLength: 8)
-            HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text((counted[index] ? kcal[index] : 0).formatted())
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
-                    .contentTransition(.numericText(value: Double(counted[index] ? kcal[index] : 0)))
-                Text("cal")
-                    .font(.system(size: 13, weight: .medium))
+
+            HStack(spacing: 16) {
+                macro("C", counted.carbs, Theme.carbs)
+                macro("P", counted.protein, Theme.protein)
+                macro("G", counted.fat, Theme.fat)
+                Spacer(minLength: 0)
             }
-            .foregroundStyle(.secondary)
-            .opacity(counted[index] ? 1 : 0)
-            .blur(radius: counted[index] ? 0 : 4)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(.rect(cornerRadius: 26))
+        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 26))
+        .onTapGesture(perform: startEditing)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint("Escreva o que você comeu e o Tobi faz a conta")
+    }
+
+    /// Parado: o exemplo sendo escrito com o cursor. Tocado: o campo de verdade.
+    @ViewBuilder
+    private var line: some View {
+        if editing {
+            // Uma linha só (texto longo rola pro lado): o cartão nunca cresce e empurra os planos.
+            TextField("O que você comeu hoje?", text: $input)
+                .font(.system(size: 19))
+                .focused($focused)
+                .submitLabel(.done)
+                .onSubmit { focused = false }
+                .tint(.indigo)
+        } else {
+            HStack(spacing: 1) {
+                Text(demo)
+                    .font(.system(size: 19))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Caret()
+            }
+        }
+    }
+
+    private func macro(_ letter: String, _ grams: Double, _ color: Color) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
+            Text(letter)
+                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .foregroundStyle(color)
+            Text("\(Int(grams.rounded()).formatted()) g")
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .contentTransition(.numericText(value: grams))
         }
         .lineLimit(1)
-        .frame(minHeight: 36)
+        .opacity(hasResult ? 1 : 0.35)
     }
 
-    /// Escreve uma linha de cada vez, com um toque por letra; terminada, a conta aparece com um tranco.
-    private func write() async {
-        guard !reduceMotion else {
-            typed = Self.examples.map(\.count)
-            counted = [true, true]
+    /// Embaixo do cartão: o convite pra tocar, ou o "viu?" quando a conta da pessoa saiu.
+    private var hint: some View {
+        Group {
+            if editing && hasResult {
+                Label("Viu? Você escreve, eu faço a conta.", systemImage: "checkmark")
+                    .foregroundStyle(.indigo)
+            } else if editing {
+                Label("Escreve do seu jeito, com quantidade ou não", systemImage: "pencil")
+                    .foregroundStyle(.secondary)
+            } else {
+                Label("Toca no cartão e escreve o seu", systemImage: "hand.tap.fill")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .font(.system(size: 14, weight: .semibold))
+        .contentTransition(.opacity)
+        .animation(Motion.quick, value: editing)
+        .animation(Motion.quick, value: hasResult)
+    }
+
+    // MARK: Coreografia
+
+    private func startEditing() {
+        guard !editing else { return }
+        demo = ""
+        input = ""
+        understood = 0
+        withAnimation(Motion.surface) {
+            counted = .zero
+            editing = true
+        }
+        tobi.mood(.attentive)
+        focused = true
+    }
+
+    /// Escreve, mostra a conta, segura, apaga e passa pro próximo. Para quando a pessoa toca.
+    private func runDemo() async {
+        if reduceMotion {
+            demo = Self.examples[0]
+            counted = FoodParser.shared.estimate(demo).total
             return
         }
         tobi.mood(.curious)
-        try? await Task.sleep(for: .milliseconds(700))
-        for index in Self.examples.indices {
-            writing = index
-            for count in 1...Self.examples[index].count {
-                typed[index] = count
-                keys += 1
-                try? await Task.sleep(for: .milliseconds(42))
+        try? await Task.sleep(for: .milliseconds(800))
+        while !Task.isCancelled {
+            for example in Self.examples {
+                for count in 1...example.count {
+                    guard !Task.isCancelled else { return }
+                    demo = String(example.prefix(count))
+                    keys += 1
+                    try? await Task.sleep(for: .milliseconds(45))
+                }
+                try? await Task.sleep(for: .milliseconds(240))
+                guard !Task.isCancelled else { return }
+                withAnimation(Motion.surface) { counted = FoodParser.shared.estimate(example).total }
+                lands += 1
+                tobi.acknowledge()
+                try? await Task.sleep(for: .milliseconds(1600))
+                guard !Task.isCancelled else { return }
+                withAnimation(Motion.quick) { counted = .zero }
+                for count in stride(from: example.count - 1, through: 0, by: -1) {
+                    guard !Task.isCancelled else { return }
+                    demo = String(example.prefix(count))
+                    if count.isMultiple(of: 3) { erasing += 1 }
+                    try? await Task.sleep(for: .milliseconds(16))
+                }
+                try? await Task.sleep(for: .milliseconds(350))
             }
-            try? await Task.sleep(for: .milliseconds(220))
-            withAnimation(Motion.surface) { counted[index] = true }
-            lands += 1
-            tobi.acknowledge()
-            try? await Task.sleep(for: .milliseconds(320))
         }
-        writing = nil
     }
 }
 
@@ -414,7 +530,7 @@ private struct Caret: View {
     var body: some View {
         RoundedRectangle(cornerRadius: 1)
             .fill(.indigo)
-            .frame(width: 2, height: 20)
+            .frame(width: 2, height: 22)
             .phaseAnimator([1.0, 0.0]) { caret, opacity in
                 caret.opacity(opacity)
             } animation: { _ in
@@ -422,4 +538,3 @@ private struct Caret: View {
             }
     }
 }
-
