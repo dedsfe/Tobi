@@ -16,7 +16,7 @@ Código em `Tobi/Onboarding/OnboardingView.swift`. Toda tela tem o palco do Tobi
 - [x] 10. Primeira refeição: a DayView de verdade escrevendo sozinha (`FirstMealDemo`), sem as opções do topo e sem salvar; ✨ em cada linha e as calorias aparecendo; "Continuar" no fim.
 - [x] 11. Formas de registrar: palco de vidro rodando Escrever, Falar e Escanear com o rótulo de calorias de verdade, e pílulas de story que enchem e pulam de cena
 - [x] 12. Tudo pronto: resumo do plano (cal por dia e quando chega na meta), confete nas cores dos macros e pedido de avaliação nativo depois de 1,6 s
-- [ ] 13. Notificações: explica pra que serve, depois pede a permissão
+- [x] 13. Notificações: os 3 lembretes (café 9:00, almoço 12:30, jantar 20:00) chegam na tela como no iPhone; "Ativar lembretes" pede a permissão e agenda exatamente esses; "Agora não" segue
 - [ ] 14. Paywall: planos e linha do tempo do teste grátis
 - [ ] Testar onboarding em formato de chat (perguntas na voz do Tobi) contra as telas atuais
 - [ ] Medir abandono em cada tela

@@ -15,13 +15,14 @@ enum OnboardingStep: Int, CaseIterable {
     case firstMeal
     case inputs
     case celebration
+    case notifications
 
     /// Total de telas planejadas (ver TODO.md), pra barra de progresso não pular quando entrar tela nova.
     static let planned = 14
 
     #if DEBUG
     /// Tela em revisão: o atalho do Debug nos Ajustes abre direto nela. Trocar aqui quando a revisão mudar.
-    static let debugJump: OnboardingStep = .celebration
+    static let debugJump: OnboardingStep = .notifications
 
     var debugName: String {
         switch self {
@@ -37,6 +38,7 @@ enum OnboardingStep: Int, CaseIterable {
         case .firstMeal: "Primeira refeição"
         case .inputs: "Formas de registrar"
         case .celebration: "Tudo pronto"
+        case .notifications: "Notificações"
         }
     }
     #endif
@@ -311,6 +313,9 @@ struct OnboardingView: View {
                 case .celebration:
                     CelebrationStep(answers: answers, onContinue: advance)
                         .transition(.opacity)
+                case .notifications:
+                    NotificationsStep(onContinue: advance)
+                        .transition(.opacity)
                 }
             }
             .frame(maxHeight: .infinity)
@@ -417,6 +422,9 @@ private struct QuestionStep<Content: View>: View {
     let title: String
     let subtitle: String
     let canContinue: Bool
+    var buttonTitle = "Continuar"
+    /// Saída discreta embaixo do botão (ex.: "Agora não").
+    var secondary: (title: String, action: () -> Void)?
     let onContinue: () -> Void
     @ViewBuilder let content: (_ visible: Bool) -> Content
 
@@ -440,10 +448,18 @@ private struct QuestionStep<Content: View>: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .safeAreaBar(edge: .bottom) {
-            OnboardingButton(title: "Continuar", isEnabled: canContinue, action: onContinue)
-                .padding(.horizontal, 24)
-                .padding(.bottom, 12)
-                .reveal(visible, order: 6)
+            VStack(spacing: 6) {
+                OnboardingButton(title: buttonTitle, isEnabled: canContinue, action: onContinue)
+                if let secondary {
+                    Button(secondary.title, action: secondary.action)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(height: 36)
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 12)
+            .reveal(visible, order: 6)
         }
         .onAppear { visible = true }
     }
@@ -1094,6 +1110,81 @@ private struct CelebrationStep: View {
             guard !Task.isCancelled else { return }
             requestReview()
         }
+    }
+}
+
+// MARK: - 13 · Notificações
+
+/// Mostra os lembretes chegando, um por um, como na tela bloqueada; só depois pede a permissão.
+/// Os textos são exatamente os que `Reminders` agenda.
+private struct NotificationsStep: View {
+    let onContinue: () -> Void
+    @State private var arrived = 0
+    @State private var asking = false
+
+    var body: some View {
+        QuestionStep(
+            title: "Um toque na hora certa",
+            subtitle: "No café, no almoço e no jantar. Só isso, sem spam.",
+            canContinue: !asking,
+            buttonTitle: "Ativar lembretes",
+            secondary: ("Agora não", onContinue),
+            onContinue: enable
+        ) { _ in
+            VStack(spacing: 10) {
+                ForEach(Array(Reminders.daily.enumerated()), id: \.element.id) { index, reminder in
+                    if index < arrived {
+                        NotificationPreview(reminder: reminder)
+                            .transition(.move(edge: .top).combined(with: .opacity).combined(with: .scale(0.92, anchor: .top)))
+                    }
+                }
+            }
+            .frame(minHeight: 260, alignment: .top)
+        }
+        .sensoryFeedback(.impact(weight: .light), trigger: arrived)
+        .task {
+            for count in 1...Reminders.daily.count {
+                try? await Task.sleep(for: .milliseconds(count == 1 ? 600 : 750))
+                guard !Task.isCancelled else { return }
+                withAnimation(Motion.surface) { arrived = count }
+            }
+        }
+    }
+
+    private func enable() {
+        asking = true
+        Task {
+            await Reminders.enable()
+            onContinue()
+        }
+    }
+}
+
+/// Um lembrete no desenho das notificações do iPhone: ícone, nome do app, hora e a mensagem.
+private struct NotificationPreview: View {
+    let reminder: Reminders.Reminder
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text("🐶")
+                .font(.system(size: 22))
+                .frame(width: 38, height: 38)
+                .background(.white, in: .rect(cornerRadius: 9))
+            VStack(alignment: .leading, spacing: 2) {
+                HStack {
+                    Text("Tobi").font(.system(size: 15, weight: .semibold))
+                    Spacer()
+                    Text(reminder.time).font(.system(size: 13)).foregroundStyle(.secondary)
+                }
+                Text(reminder.message)
+                    .font(.system(size: 15))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .foregroundStyle(Color(uiColor: .label))
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassEffect(.regular, in: .rect(cornerRadius: 24))
     }
 }
 
