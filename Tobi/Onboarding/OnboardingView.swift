@@ -1273,7 +1273,6 @@ private struct CelebrationStep: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(alignment: .center) { aurora }
         .safeAreaBar(edge: .bottom) {
             OnboardingButton(title: "Continuar", action: onContinue)
                 .padding(.horizontal, 24)
@@ -1328,21 +1327,6 @@ private struct CelebrationStep: View {
         guard days >= 30.4 else { return "Hoje" }
         let date = Calendar.current.date(byAdding: .day, value: Int(days), to: .now) ?? .now
         return "Em " + date.formatted(.dateTime.month(.wide))
-    }
-
-    /// Luz de fundo que acompanha a caminhada e floresce na chegada. Fica parada, então o blur é barato.
-    private var aurora: some View {
-        Ellipse()
-            .fill(LinearGradient(colors: [.indigo, .purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing))
-            .frame(width: 420, height: 300)
-            .blur(radius: 90)
-            .opacity(reached ? 0.32 : (walkStart == nil ? 0 : 0.16))
-            .scaleEffect(reached ? 1.15 : 0.9)
-            .offset(y: 40)
-            .animation(.easeInOut(duration: reached ? 0.9 : Self.walk), value: walkStart == nil)
-            .animation(Motion.surface, value: reached)
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
     }
 
     /// A coreografia: o número entra, o Tobi anda até a meta (vibrando em cada virada de mês),

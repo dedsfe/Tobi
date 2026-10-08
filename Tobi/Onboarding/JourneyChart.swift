@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A jornada até a meta, sem moldura: a curva do peso de hoje até o peso-meta e o Tobi
+/// A jornada até a meta, sem moldura nem sombra: a curva do peso de hoje até o peso-meta e o Tobi
 /// andando na ponta dela, mês a mês, até a bandeira. Ocupa a largura toda da tela.
 /// `progress` vai de 0 a 1 e `time` é o relógio da caminhada (o passinho); quem anima é a tela.
 struct JourneyChart: View {
@@ -53,24 +53,12 @@ struct JourneyChart: View {
             let tip = point(at: progress, in: plot)
 
             ZStack(alignment: .topLeading) {
-                // Sombra colorida sob a curva, que some no fundo da tela (sem card).
-                area(in: plot)
-                    .fill(LinearGradient(colors: [.indigo.opacity(0.22), .purple.opacity(0.06), .clear],
-                                         startPoint: .top, endPoint: .bottom))
-                    .mask(alignment: .leading) {
-                        Rectangle().frame(width: tip.x)
-                    }
-
                 // A trilha inteira, apagada: o caminho que falta.
                 curve
                     .stroke(Color(uiColor: .label).opacity(0.08),
                             style: StrokeStyle(lineWidth: 4, lineCap: .round, dash: [1, 9]))
 
-                // O caminho andado, com brilho por baixo.
-                curve
-                    .trim(from: 0, to: progress)
-                    .stroke(.indigo.opacity(0.5), style: StrokeStyle(lineWidth: 12, lineCap: .round))
-                    .blur(radius: 10)
+                // O caminho andado.
                 curve
                     .trim(from: 0, to: progress)
                     .stroke(LinearGradient(colors: [.indigo, .purple, .pink], startPoint: .leading, endPoint: .trailing),
@@ -125,7 +113,6 @@ struct JourneyChart: View {
             .frame(width: Self.headSize, height: Self.headSize)
             .rotationEffect(.degrees(tilt + sin(step) * 7))
             .offset(y: -abs(sin(step)) * 4)
-            .shadow(color: .indigo.opacity(0.35), radius: 8, y: 5)
             .keyframeAnimator(initialValue: Hop(), trigger: reached) { content, hop in
                 content
                     .scaleEffect(hop.scale, anchor: .bottom)
@@ -171,14 +158,6 @@ struct JourneyChart: View {
                 step == 0 ? path.move(to: spot) : path.addLine(to: spot)
             }
         }
-    }
-
-    private func area(in plot: CGRect) -> Path {
-        var area = path(in: plot)
-        area.addLine(to: CGPoint(x: plot.maxX, y: plot.maxY + 30))
-        area.addLine(to: CGPoint(x: plot.minX, y: plot.maxY + 30))
-        area.closeSubpath()
-        return area
     }
 
     private func axisLabel(_ text: String, lit: Bool) -> some View {
