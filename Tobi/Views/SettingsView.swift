@@ -11,9 +11,17 @@ struct SettingsView: View {
     @State private var confirmingErase = false
     @State private var eraseFailed = false
     @State private var destination: SettingsDestination?
+    @State private var managingSubscription = false
+    @State private var restoring = false
+    @State private var restoreResult: RestoreResult?
     #if DEBUG
     @AppStorage("debugLocked") private var debugLocked = false
     #endif
+
+    private enum RestoreResult: Identifiable {
+        case restored, nothing
+        var id: Self { self }
+    }
 
     private enum SettingsDestination: Hashable {
         case changelog, about
@@ -33,6 +41,27 @@ struct SettingsView: View {
                     .padding(.vertical, 14)
                     .glassEffect(.regular, in: .capsule)
                 }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
+
+                Section {
+                    Button { managingSubscription = true } label: {
+                        settingsLabel("Gerenciar assinatura", systemImage: "creditcard.fill", navigates: true)
+                    }
+                    Button(action: restore) {
+                        HStack(spacing: 12) {
+                            settingsLabel("Restaurar compras", systemImage: "arrow.clockwise")
+                            if restoring { ProgressView() }
+                        }
+                    }
+                    .disabled(restoring)
+                } header: {
+                    Text("Assinatura").foregroundStyle(.secondary)
+                }
+                .buttonStyle(.glass)
+                .controlSize(.large)
+                .foregroundStyle(.primary)
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
@@ -126,11 +155,39 @@ struct SettingsView: View {
                     Button("OK") { dismiss() }
                 }
             }
+            // Cancelar, trocar de plano e ver a renovação: a folha da própria App Store.
+            .manageSubscriptionsSheet(isPresented: $managingSubscription)
+            .alert(item: $restoreResult) { result in
+                switch result {
+                case .restored:
+                    Alert(title: Text("Assinatura restaurada"), message: Text("Tá tudo liberado de novo."))
+                case .nothing:
+                    Alert(title: Text("Nenhuma assinatura encontrada"),
+                          message: Text("Não achei nenhuma assinatura do Tobi nessa conta da Apple."))
+                }
+            }
+            .sensoryFeedback(trigger: restoreResult) { _, result in
+                switch result {
+                case .restored: .success
+                case .nothing: .warning
+                case nil: nil
+                }
+            }
             .alert("Não foi possível apagar as refeições", isPresented: $eraseFailed) {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text("Seus dados foram mantidos. Tente novamente.")
             }
+        }
+    }
+
+    /// Confere na App Store se a conta já tem o Tobi e conta o resultado.
+    private func restore() {
+        restoring = true
+        Task {
+            let restored = await TobiStore.shared.restore()
+            restoring = false
+            restoreResult = restored ? .restored : .nothing
         }
     }
 
