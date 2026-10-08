@@ -31,4 +31,13 @@ struct PaywallRecapTests {
         let empty = DayNote(day: today, text: "Café da manhã\n")
         #expect(PaywallRecap(notes: [empty], since: today) == nil)
     }
+
+    @Test func emptyScreenExamplesAreFullyUnderstood() {
+        for example in NothingWrittenHero.examples {
+            let estimate = FoodParser.shared.estimate(example)
+            #expect(!estimate.items.isEmpty, "\(example)")
+            #expect(!estimate.hasUnknown, "\(example)")
+            #expect(estimate.total.kcal > 0, "\(example)")
+        }
+    }
 }

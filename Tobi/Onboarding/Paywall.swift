@@ -10,6 +10,8 @@ struct PaywallStep: View {
     enum Story: Equatable {
         case onboarding
         case recap(PaywallRecap)
+        /// App travado sem nada anotado nas 24 horas.
+        case nothingWritten
     }
 
     @Binding var declined: Bool
@@ -82,6 +84,9 @@ struct PaywallStep: View {
                 promise
             case .recap(let recap):
                 RecapHero(recap: recap, isShown: shown)
+                Spacer(minLength: 14)
+            case .nothingWritten:
+                NothingWrittenHero(isShown: shown)
                 Spacer(minLength: 14)
             }
 
@@ -254,9 +259,9 @@ struct PaywallStep: View {
 
     private func choreograph() async {
         visible = true
-        if case .recap = story {
-            // O resumo conta sozinho; os planos chegam quando os números já assentaram.
-            try? await Task.sleep(for: .milliseconds(1900))
+        if story != .onboarding {
+            // O resumo conta (ou o Tobi escreve) sozinho; os planos chegam quando a cena já respirou.
+            try? await Task.sleep(for: .milliseconds(story == .nothingWritten ? 1200 : 1900))
             withAnimation(Motion.surface) { plansIn = true }
             try? await Task.sleep(for: .milliseconds(320))
             withAnimation(Motion.surface) { badgeIn = true }

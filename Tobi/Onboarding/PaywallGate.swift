@@ -2,7 +2,8 @@ import SwiftUI
 import SwiftData
 
 /// O app travado: sem plano e sem as 24 horas, o Tobi no palco e os planos, sem X.
-/// Em cima, a prova: o que a pessoa fez com o Tobi nas 24 horas. Sem nada anotado, volta a promessa.
+/// Em cima, a prova: o que a pessoa fez com o Tobi nas 24 horas. Sem nada anotado, o Tobi
+/// mostra em ação como é fácil (`NothingWrittenHero`), com conta de verdade, nada inventado.
 /// Destrava quando a compra ou a restauração dá certo, depois do confete.
 struct LockedPaywall: View {
     let onUnlock: () -> Void
@@ -13,13 +14,8 @@ struct LockedPaywall: View {
     private var story: PaywallStep.Story {
         let since = TobiStore.freePassUntil.map { $0.addingTimeInterval(-TobiStore.freePassHours * 3600) }
             ?? .now.addingTimeInterval(-TobiStore.freePassHours * 3600)
-        if let recap = PaywallRecap(notes: notes, since: since) { return .recap(recap) }
-        #if DEBUG
-        // Sem refeições no aparelho de teste, mostra o resumo com números de exemplo pra revisar o desenho.
-        return .recap(.sample)
-        #else
-        return .onboarding
-        #endif
+        // Nunca inventa número: sem nada anotado, a tela é outra (o Tobi mostra como é fácil).
+        return PaywallRecap(notes: notes, since: since).map { .recap($0) } ?? .nothingWritten
     }
 
     var body: some View {
@@ -68,8 +64,6 @@ struct PaywallRecap: Equatable {
     var proteinGrams: Int
     var fatGrams: Int
     var days: Int
-
-    static let sample = PaywallRecap(kcal: 2140, carbsGrams: 236, proteinGrams: 112, fatGrams: 74, days: 1)
 
     /// Quanto da meta de calorias foi, na média dos dias anotados (1 = bateu a meta).
     func share(of goal: Int) -> Double {
@@ -312,3 +306,120 @@ private struct GoalBar: View {
         .accessibilityElement(children: .combine)
     }
 }
+
+// MARK: - Sem nada anotado
+
+/// Quem não anotou nada nas 24 horas: o Tobi não inventa resumo. Ele mostra, no desenho do dia
+/// do app, duas refeições sendo escritas letra por letra e as calorias de verdade aparecendo.
+struct NothingWrittenHero: View {
+    let isShown: Bool
+
+    /// Os exemplos, e as calorias que o próprio Tobi calcula pra eles (o parser de verdade).
+    static let examples = ["2 ovos e pão francês", "arroz, feijão e bife"]
+
+    @State private var typed = [0, 0]
+    @State private var counted = [false, false]
+    @State private var writing: Int?
+    @State private var keys = 0
+    @State private var lands = 0
+    @Environment(\.tobiReactions) private var tobi
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private let kcal = examples.map { Int(FoodParser.shared.estimate($0).total.kcal.rounded()) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Faltou me contar\n\(Text("o que você comeu").foregroundStyle(.indigo))")
+                .font(.system(size: 27, weight: .heavy, design: .rounded))
+                .fixedSize(horizontal: false, vertical: true)
+                .reveal(isShown, order: 0)
+
+            Text("Escreve do seu jeito que eu faço a conta. Olha só:")
+                .font(.system(size: 16))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 8)
+                .reveal(isShown, order: 1)
+
+            VStack(spacing: 4) {
+                ForEach(Self.examples.indices, id: \.self) { index in
+                    row(index)
+                }
+            }
+            .padding(.top, 16)
+            .reveal(isShown, order: 2)
+        }
+        .sensoryFeedback(.selection, trigger: keys)
+        .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.8), trigger: lands)
+        .task { await write() }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Faltou me contar o que você comeu. Escreve do seu jeito que eu faço a conta.")
+    }
+
+    /// Uma linha no desenho do dia: o que se comeu à esquerda, as calorias à direita.
+    private func row(_ index: Int) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            HStack(spacing: 1) {
+                Text(String(Self.examples[index].prefix(typed[index])))
+                    .font(.system(size: 18))
+                if writing == index {
+                    Caret()
+                }
+            }
+            Spacer(minLength: 8)
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text((counted[index] ? kcal[index] : 0).formatted())
+                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .contentTransition(.numericText(value: Double(counted[index] ? kcal[index] : 0)))
+                Text("cal")
+                    .font(.system(size: 13, weight: .medium))
+            }
+            .foregroundStyle(.secondary)
+            .opacity(counted[index] ? 1 : 0)
+            .blur(radius: counted[index] ? 0 : 4)
+        }
+        .lineLimit(1)
+        .frame(minHeight: 36)
+    }
+
+    /// Escreve uma linha de cada vez, com um toque por letra; terminada, a conta aparece com um tranco.
+    private func write() async {
+        guard !reduceMotion else {
+            typed = Self.examples.map(\.count)
+            counted = [true, true]
+            return
+        }
+        tobi.mood(.curious)
+        try? await Task.sleep(for: .milliseconds(700))
+        for index in Self.examples.indices {
+            writing = index
+            for count in 1...Self.examples[index].count {
+                typed[index] = count
+                keys += 1
+                try? await Task.sleep(for: .milliseconds(42))
+            }
+            try? await Task.sleep(for: .milliseconds(220))
+            withAnimation(Motion.surface) { counted[index] = true }
+            lands += 1
+            tobi.acknowledge()
+            try? await Task.sleep(for: .milliseconds(320))
+        }
+        writing = nil
+    }
+}
+
+/// O cursor piscando na linha que está sendo escrita.
+private struct Caret: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: 1)
+            .fill(.indigo)
+            .frame(width: 2, height: 20)
+            .phaseAnimator([1.0, 0.0]) { caret, opacity in
+                caret.opacity(opacity)
+            } animation: { _ in
+                .easeInOut(duration: 0.45)
+            }
+    }
+}
+
