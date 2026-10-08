@@ -55,4 +55,14 @@ struct BrandMeasureTests {
         #expect(grams("2 porções de Leite Condensado Integral moça") == 40)
         #expect(grams("395 g de Leite Condensado Integral moça") == 395)
     }
+
+    /// Lido no iPhone em 07/10/2026: o "Com" do nome partia a linha em dois e nada era reconhecido.
+    @Test func productNameWithSeparatorWordStaysWhole() {
+        let name = "Páprica Picante Com Tampa Dosadora Br Spices Essencial"
+        let paprica = Food(brand: name, aliases: [name], per100: Nutrition(kcal: 280), barcode: "1", portion: 5)
+        let estimate = FoodParser.shared.adding([paprica]).estimate("1 porção de \(name)")
+        #expect(estimate.items.count == 1)
+        #expect(estimate.items.first?.foodName == name)
+        #expect(estimate.items.first?.grams == 5)
+    }
 }

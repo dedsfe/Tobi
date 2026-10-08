@@ -55,7 +55,7 @@ struct FoodParser: Sendable {
     private let labels: Set<String>
     /// Apelidos que têm um separador dentro ("café com leite", "alho e óleo"), pela primeira palavra.
     /// Na hora de dividir a linha em itens, esses ficam inteiros.
-    private let compounds: [String: [[String]]]
+    private var compounds: [String: [[String]]]
     /// Toda palavra que aparece em algum apelido, pelo tamanho. Serve pra consertar erro de digitação.
     private var vocabulary: [Int: [String]]
     private var knownWords: Set<String>
@@ -73,6 +73,11 @@ struct FoodParser: Sendable {
                 let entry = Entry(tokens: tokens, food: food, rank: offset - foods.count, isGuess: false)
                 for word in tokens where copy.knownWords.insert(word).inserted {
                     copy.vocabulary[word.count, default: []].append(word)
+                }
+                // Nome de produto com "com"/"e" no meio ("Páprica Picante Com Tampa") não pode ser
+                // partido em dois itens.
+                if tokens.contains(where: Self.separatorWords.contains) {
+                    copy.compounds[first, default: []].append(tokens)
                 }
                 let position = group.firstIndex { other in
                     other.tokens.count < tokens.count || (other.tokens.count == tokens.count && other.rank > entry.rank)
