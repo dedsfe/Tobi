@@ -6,6 +6,11 @@ options:
   createIntermediateGroups: true
   # App em português: datas, números e textos do sistema saem em pt-BR.
   developmentLanguage: pt-BR
+packages:
+  # Só registra as compras pro painel de receita e pros anúncios. Quem decide o acesso continua sendo a App Store.
+  RevenueCat:
+    url: https://github.com/RevenueCat/purchases-ios-spm
+    from: 5.94.0
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -22,6 +27,9 @@ targets:
       - path: Asset-Icon/TobiIcon.icon
         type: file
         buildPhase: resources
+    dependencies:
+      - package: RevenueCat
+        product: RevenueCat
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.andrefelipe.tobi

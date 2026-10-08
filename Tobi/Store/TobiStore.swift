@@ -1,4 +1,5 @@
 import Foundation
+import RevenueCat
 import StoreKit
 import UserNotifications
 
@@ -73,7 +74,15 @@ final class TobiStore {
     enum Outcome { case purchased(Purchase), cancelled, pending }
     enum Failure: Error { case unavailable, unverified }
 
+    /// Chave pública do RevenueCat (app da App Store). É feita pra ficar dentro do app.
+    private static let revenueCatKey = "appl_kKDCrvHhYDtuBFpojWZOcwXvODV"
+
     private init() {
+        // O RevenueCat só observa: a compra é feita aqui em StoreKit 2 e ele registra pro painel e pros anúncios.
+        Purchases.logLevel = .warn
+        Purchases.configure(with: Configuration.Builder(withAPIKey: Self.revenueCatKey)
+            .with(purchasesAreCompletedBy: .myApp, storeKitVersion: .storeKit2)
+            .build())
         // Renovações e compras aprovadas fora do app chegam por aqui.
         updates = Task { [weak self] in
             for await result in Transaction.updates {
@@ -143,7 +152,9 @@ final class TobiStore {
         }
         #endif
         guard let product = products[plan] else { throw Failure.unavailable }
-        switch try await product.purchase() {
+        let result = try await product.purchase()
+        _ = try? await Purchases.shared.recordPurchase(result)
+        switch result {
         case .success(let result):
             guard case .verified(let transaction) = result else { throw Failure.unverified }
             await transaction.finish()
@@ -165,6 +176,7 @@ final class TobiStore {
     /// Sincroniza com a App Store e diz se a conta tem um plano ativo.
     func restore() async -> Bool {
         try? await AppStore.sync()
+        _ = try? await Purchases.shared.syncPurchases()
         await refreshAccess()
         return subscribed == true
     }

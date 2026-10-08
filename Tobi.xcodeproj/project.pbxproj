@@ -77,6 +77,7 @@
 		F4F03DB08A9EB42588CE07CE /* InputMethodsShowcase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E169475F08FF10FB129498E /* InputMethodsShowcase.swift */; };
 		F629E96C5891DFAA0E5AF0BC /* ConfettiCannons.swift in Sources */ = {isa = PBXBuildFile; fileRef = D776BAEAF45963A2D807E30C /* ConfettiCannons.swift */; };
 		F90651BCAF45D616918D5187 /* WelcomeFood.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49472BC1DE4C1DCD9F5E6204 /* WelcomeFood.swift */; };
+		FAAE64B7C7E77D5DD57C8FDC /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = BFE74D4BCEDBAC94581CB0A8 /* RevenueCat */; };
 		FB452BB1ED37189C55EFF16B /* LineRewriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C87CE0B25D3C707E51A6DBA /* LineRewriter.swift */; };
 		FDD953D0FE09F4316F02D6DC /* FoodParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A46A98F03E2CF68A0D4D7978 /* FoodParser.swift */; };
 /* End PBXBuildFile section */
@@ -175,6 +176,17 @@
 		FB6BC12515FB31BEA5AA5C7D /* BarcodeScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeScanner.swift; sourceTree = "<group>"; };
 		FC10422EB949975055CDB990 /* FoodTables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodTables.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FC9B540CE5B8B2E87CB3B5AA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FAAE64B7C7E77D5DD57C8FDC /* RevenueCat in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		043BB0472D4B09E963CFC188 /* App */ = {
@@ -387,6 +399,7 @@
 			buildPhases = (
 				E68827120B8E412B31D46DC3 /* Sources */,
 				75F731371E45F2AC1E05CEDE /* Resources */,
+				FC9B540CE5B8B2E87CB3B5AA /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -394,6 +407,7 @@
 			);
 			name = Tobi;
 			packageProductDependencies = (
+				BFE74D4BCEDBAC94581CB0A8 /* RevenueCat */,
 			);
 			productName = Tobi;
 			productReference = 6DDD333EB71EFBF77A7476E6 /* Tobi.app */;
@@ -466,6 +480,9 @@
 			);
 			mainGroup = 1050D008790E920C10D84724;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				28F16F2A9C3501D10E8A1FD7 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 34AEF3B9EB6A46C994955C63 /* Products */;
 			projectDirPath = "";
@@ -881,6 +898,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		28F16F2A9C3501D10E8A1FD7 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.94.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BFE74D4BCEDBAC94581CB0A8 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 28F16F2A9C3501D10E8A1FD7 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1FDF005C269014936688677A /* Project object */;
 }
