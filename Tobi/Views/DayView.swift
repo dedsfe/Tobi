@@ -231,13 +231,20 @@ struct DayView: View {
 
     /// Legenda da demonstração; vira um "pronto" quando a última linha é calculada.
     private var firstMealHint: some View {
-        Text(demoDone ? "Pronto! O Tobi calculou tudo ✨" : "É só escrever o que você comeu ✍️")
-            .font(.system(size: 15, weight: .semibold))
-            .contentTransition(.opacity)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .glassEffect(.regular, in: .capsule)
-            .animation(Motion.quick, value: demoDone)
+        HStack(spacing: 8) {
+            Image(systemName: demoDone ? "checkmark.circle.fill" : "pencil.line")
+                .foregroundStyle(.indigo)
+            // Cor fixa: no vidro, o texto em cor "adaptável" sumia no fundo claro.
+            Text(demoDone ? "Pronto! O Tobi calculou tudo" : "É só escrever o que você comeu")
+                .foregroundStyle(Color(uiColor: .label))
+        }
+        .font(.system(size: 15, weight: .semibold))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .glassEffect(.regular, in: .capsule)
+        .id(demoDone)
+        .transition(.blurReplace)
+        .animation(Motion.quick, value: demoDone)
     }
 
     /// Escreve `FirstMealDemo.lines` letra por letra. Enquanto a linha é escrita, ela mostra o ✨
