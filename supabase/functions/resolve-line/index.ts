@@ -39,7 +39,7 @@ function stem(t: string): string {
 }
 
 function content(s: string): string[] {
-  return fold(s).split(" ").filter((t) => t && !STOP.has(t) && !/^\d+$/.test(t)).map(stem);
+  return fold(s).split(" ").filter((t) => t && !STOP.has(t) && !/^\d+[a-z]{0,2}$/.test(t)).map(stem);
 }
 
 function json(body: unknown, status = 200): Response {
@@ -132,10 +132,12 @@ async function verify(key: string, text: string, name: string): Promise<number> 
           instructions:
             "A `linha` e `alimento` são o mesmo prato? Ignore quantidades. " +
             "Preparo padrão do prato (frito, cozido, assado), pontuação, singular ou plural e nome regional não mudam o alimento. " +
-            "Zero, light e diet são a mesma coisa. Num nome com 'ou', as duas partes são o mesmo alimento.",
+            "Zero, light e diet são a mesma coisa. Num nome com 'ou', as duas partes são o mesmo alimento. " +
+            "Se a `linha` traz um qualificador que `alimento` não tem (marca, versão diet ou light, 'da vovó', sabor), não são o mesmo. " +
+            "Palavras de conversa (comi, tomei, um, uma) e quantidades não contam como qualificador.",
           criteria: {
             true: "Mesmo alimento ou prato, só escrito de outro jeito ou com o preparo padrão",
-            false: "Alimento diferente, mais genérico que a linha, prato maior que contém o outro, ou com ingrediente que a linha não cita",
+            false: "Alimento diferente, mais genérico que a linha, prato maior que contém o outro, com ingrediente que a linha não cita, ou sem um qualificador que a linha cita",
           },
         },
       },
@@ -195,8 +197,13 @@ Deno.serve(async (req) => {
   });
   const mass = covering.reduce((a, r) => a + r.p, 0);
   const lead = ranked[0];
+  // Mesmo nome vindo de tabelas diferentes ("Mamão" TACO e IBGE) também divide a probabilidade.
+  const sameName = lead?.c
+    ? ranked.filter((r) => r.c && fold(r.c.name).trim() === fold(lead.c!.name).trim())
+    : [];
+  const sameMass = sameName.reduce((a, r) => a + r.p, 0);
   let pick: Candidate | null = null;
-  if (lead?.c && lead.p >= MIN_CONFIDENCE) pick = lead.c;
+  if (lead?.c && (lead.p >= MIN_CONFIDENCE || sameMass >= MIN_MASS)) pick = lead.c;
   else if (covering.length > 0 && mass >= MIN_MASS && mass > (probs[NONE] ?? 0)) pick = covering[0].c;
 
   let match: string | null = null;

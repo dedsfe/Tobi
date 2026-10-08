@@ -21,6 +21,12 @@ for src in ("taco", "ibge", "fastfood"):
                       "aliases": x.get("aliases", []),
                       "t": set(toks(x["name"] + " " + " ".join(x.get("aliases", []))))})
 
+# A lista curada do app (FoodDatabase.swift) também entra, como entra no app.
+for m in re.finditer(r'Food\("([^"]+)",\s*\[([^\]]*)\]', (ROOT / "Tobi/Nutrition/FoodDatabase.swift").read_text()):
+    name, al = m.group(1), re.findall(r'"([^"]+)"', m.group(2))
+    foods.append({"id": f"curated:{len(foods)}", "name": name, "src": "curated", "aliases": al,
+                  "t": set(toks(name + " " + " ".join(al)))})
+
 def stem(t): return t[:4] if len(t) > 4 else t
 
 BRANDS = {"mc","mcdonalds","mequi","bk","burger","king","kfc","subway","bobs","habibs","outback"}
@@ -75,9 +81,9 @@ CASES = [
  ("ovo mexido", r"ovo.*mexid"),
  ("ovo frito", r"ovo.*frito"),
  ("banana com aveia", None),
- ("whey protein", None),
+ ("whey protein", r"whey"),
  ("sushi", r"sushi"),
- ("hot roll", None),
+ ("hot roll", r"hot roll"),
  ("x-bacon", r"bacon"),
  ("xis salada", r"salada|x-salada"),
  ("academia 18h", "NONFOOD"),
@@ -85,8 +91,8 @@ CASES = [
  ("comprar leite", "NONFOOD"),
  ("pagar a conta de luz", "NONFOOD"),
  ("dormi 6 horas", "NONFOOD"),
- ("bebi 2 litros de água", None),
- ("agua", r"[áa]gua"),
+ ("bebi 2 litros de água", r"^Água$"),
+ ("agua", r"^[áa]gua$"),
  ("arroz e feijão", r"arroz.*feij"),
  ("pão francês", r"^Pão, trigo, francês|^Pão francês"),
  ("pão de forma", r"p[ãa]o.*forma"),
@@ -96,7 +102,7 @@ CASES = [
  ("salada de frutas", r"salada.*fruta"),
  ("sopa de legumes", r"legum"),
  ("empadinha de frango", r"empad.*frango"),
- ("esfiha de carne", r"esf[ih]rr?a.*carne"),
+ ("esfiha de carne", r"esf[ih][rh]?a.*carne"),
  ("kibe", r"kibe|quibe"),
  ("leite com chocolate", r"chocolat|chocomilk"),
  ("danone", None),
@@ -163,7 +169,7 @@ def run(case):
     names = {c["id"]: c["name"] for c in cands}
     got = names.get(r.get("match"))
     if "error" in r: verdict = "ERRO"
-    elif want == "NONFOOD": verdict = "ok" if (r["isFood"] or 0) < 0.5 else "FALHA(achou comida)"
+    elif want == "NONFOOD": verdict = "ok" if got is None else f"FALHA(achou {got})"
     elif want is None:
         verdict = "ok" if got is None else f"ERRADO({got})"
     else:
@@ -177,6 +183,9 @@ def run(case):
     return shown, verdict, r, len(cands)
 
 if __name__ == "__main__":
+    if "--hard" in sys.argv:
+        from hard_cases import HARD
+        CASES = HARD
     with cf.ThreadPoolExecutor(6) as ex: out = list(ex.map(run, CASES))
     bad = 0
     for text, v, r, n in out:
