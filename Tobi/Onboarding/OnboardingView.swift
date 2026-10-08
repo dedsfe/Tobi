@@ -366,6 +366,11 @@ struct OnboardingView: View {
                     tobi.mood = .celebrating
                     tobi.entering = true
                     tobi.scene += 1
+                },
+                mood: { mood in
+                    tobi.mood = mood
+                    tobi.entering = true
+                    tobi.scene += 1
                 }
             ))
         }
@@ -490,6 +495,8 @@ struct TobiReactions {
     var present: @MainActor () -> Void = { }
     /// Compra feita ou cortesia aceita: o Tobi comemora.
     var celebrate: @MainActor () -> Void = { }
+    /// Muda o estado do Tobi no meio da tela (ex.: curioso com a carta, atento enquanto escreve).
+    var mood: @MainActor (TobiIdleBehavior.Mood) -> Void = { _ in }
 }
 
 extension EnvironmentValues {
