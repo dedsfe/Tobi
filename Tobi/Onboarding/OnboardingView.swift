@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 /// Telas do onboarding, na ordem. Só entra aqui o que já está feito; o resto vive no TODO.md.
 enum OnboardingStep: Int, CaseIterable {
@@ -13,13 +14,14 @@ enum OnboardingStep: Int, CaseIterable {
     case goals
     case firstMeal
     case inputs
+    case celebration
 
     /// Total de telas planejadas (ver TODO.md), pra barra de progresso não pular quando entrar tela nova.
     static let planned = 14
 
     #if DEBUG
     /// Tela em revisão: o atalho do Debug nos Ajustes abre direto nela. Trocar aqui quando a revisão mudar.
-    static let debugJump: OnboardingStep = .inputs
+    static let debugJump: OnboardingStep = .celebration
 
     var debugName: String {
         switch self {
@@ -34,6 +36,7 @@ enum OnboardingStep: Int, CaseIterable {
         case .goals: "Suas metas"
         case .firstMeal: "Primeira refeição"
         case .inputs: "Formas de registrar"
+        case .celebration: "Tudo pronto"
         }
     }
     #endif
@@ -304,6 +307,9 @@ struct OnboardingView: View {
                     EmptyView()
                 case .inputs:
                     InputsStep(onContinue: advance)
+                        .transition(.opacity)
+                case .celebration:
+                    CelebrationStep(answers: answers, onContinue: advance)
                         .transition(.opacity)
                 }
             }
@@ -1018,6 +1024,75 @@ private struct InputsStep: View {
         ) { visible in
             InputMethodsShowcase()
                 .reveal(visible, order: 2)
+        }
+    }
+}
+
+// MARK: - 12 · Tudo pronto
+
+/// Comemoração: o resumo do plano, confete e, logo depois, o pedido de avaliação da Apple
+/// (quem decide se ele aparece de fato é o sistema).
+private struct CelebrationStep: View {
+    let answers: OnboardingAnswers
+    let onContinue: () -> Void
+
+    /// A meta salva em "Suas metas" (inclui o que a pessoa mudou na mão).
+    @AppStorage("dailyGoal") private var dailyGoal = 2000
+    @Environment(\.requestReview) private var requestReview
+    @State private var celebrated = false
+
+    private var plan: NutritionPlan? {
+        NutritionPlan(answers: answers).map { $0.adjusted(kcal: dailyGoal) }
+    }
+
+    /// "65 kg em mar. de 2027", ou "Manter os 70 kg".
+    private var goalLine: String? {
+        guard let plan else { return nil }
+        let goal = plan.goalWeightKg.formatted(.number.precision(.fractionLength(0...1)))
+        let weekly = abs(plan.weeklyChangeKg)
+        guard plan.objective != .maintain, weekly >= 0.05 else { return "Manter os \(goal) kg" }
+        let weeks = abs(plan.goalWeightKg - plan.weightKg) / weekly
+        let arrival = Calendar.current.date(byAdding: .day, value: Int((weeks * 7).rounded()), to: .now) ?? .now
+        return "\(goal) kg em \(arrival.formatted(.dateTime.month(.abbreviated).year()))"
+    }
+
+    var body: some View {
+        QuestionStep(
+            title: "Tá tudo pronto!",
+            subtitle: "Seu plano já está na nota. Agora é só escrever o que comer.",
+            canContinue: true,
+            onContinue: onContinue
+        ) { visible in
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("🔥").font(.system(size: 28))
+                    Text((visible ? dailyGoal : 0).formatted())
+                        .font(.system(size: 46, weight: .heavy, design: .rounded))
+                        .monospacedDigit()
+                        .contentTransition(.numericText(value: Double(visible ? dailyGoal : 0)))
+                        .animation(visible ? Motion.cascade(3) : Motion.exit, value: visible)
+                    Text("cal por dia")
+                        .font(.system(size: 17))
+                        .foregroundStyle(.secondary)
+                }
+                if let goalLine {
+                    Label(goalLine, systemImage: "flag.checkered")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(Color(uiColor: .label))
+                        .reveal(visible, order: 4)
+                }
+            }
+            .tobiGlassSurface()
+            .reveal(visible, order: 2)
+        }
+        .overlay { Confetti() }
+        .sensoryFeedback(.success, trigger: celebrated)
+        .task {
+            celebrated = true
+            // Deixa o confete cair antes de pedir a avaliação.
+            try? await Task.sleep(for: .seconds(1.6))
+            guard !Task.isCancelled else { return }
+            requestReview()
         }
     }
 }

@@ -15,7 +15,7 @@ Código em `Tobi/Onboarding/OnboardingView.swift`. Toda tela tem o palco do Tobi
 - [x] 9. Suas metas: Mifflin-St Jeor × atividade ± o déficit/superávit do prazo. "Como calculei" e "Mudar meta" (edita todas as respostas e as calorias numa folha só). Salva meta e fatias dos macros no app
 - [x] 10. Primeira refeição: a DayView de verdade escrevendo sozinha (`FirstMealDemo`), sem as opções do topo e sem salvar; ✨ em cada linha e as calorias aparecendo; "Continuar" no fim.
 - [x] 11. Formas de registrar: palco de vidro rodando Escrever, Falar e Escanear com o rótulo de calorias de verdade, e pílulas de story que enchem e pulam de cena
-- [ ] 12. Comemoração e pedido de avaliação na App Store
+- [x] 12. Tudo pronto: resumo do plano (cal por dia e quando chega na meta), confete nas cores dos macros e pedido de avaliação nativo depois de 1,6 s
 - [ ] 13. Notificações: explica pra que serve, depois pede a permissão
 - [ ] 14. Paywall: planos e linha do tempo do teste grátis
 - [ ] Testar onboarding em formato de chat (perguntas na voz do Tobi) contra as telas atuais
