@@ -10,8 +10,15 @@ struct PaywallRecapTests {
         let recap = try #require(PaywallRecap(notes: [note], since: today))
         let lines = ["arroz, feijão e bife", "2 ovos"].map(FoodParser.shared.estimate)
         #expect(recap.foods == 4)
+        #expect(recap.days == 1)
         #expect(recap.kcal == Int(lines.map(\.total.kcal).reduce(0, +).rounded()))
         #expect(recap.proteinGrams == Int(lines.map(\.total.protein).reduce(0, +).rounded()))
+    }
+
+    @Test func goalShareAveragesTheDaysWritten() {
+        let recap = PaywallRecap(kcal: 3000, foods: 8, proteinGrams: 120, days: 2)
+        #expect(recap.share(of: 2000) == 0.75)
+        #expect(PaywallRecap(kcal: 2200, foods: 5, proteinGrams: 90, days: 1).share(of: 2000) == 1.1)
     }
 
     @Test func leavesOutDaysBeforeTheStart() {
