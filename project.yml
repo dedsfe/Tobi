@@ -4,6 +4,8 @@ options:
   deploymentTarget:
     iOS: "26.0"
   createIntermediateGroups: true
+  # App em português: datas, números e textos do sistema saem em pt-BR.
+  developmentLanguage: pt-BR
 settings:
   base:
     SWIFT_VERSION: "6.0"
