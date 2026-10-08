@@ -285,9 +285,14 @@ struct OnboardingView: View {
         .animation(Motion.surface, value: step == .firstMeal)
     }
 
+    @State private var welcomeScene = WelcomeFoodScene()
+
     private var questions: some View {
         VStack(spacing: 0) {
             TobiStage(performance: tobi, onPet: { tobi.pets += 1 })
+                .background {
+                    if step == .welcome { WelcomeFoodStageCapture(scene: welcomeScene) }
+                }
                 .overlay(alignment: .top) {
                     if step == .paywall {
                         PaywallCloseButton { paywallDeclined = true }
@@ -302,7 +307,7 @@ struct OnboardingView: View {
             ZStack {
                 switch step {
                 case .welcome:
-                    WelcomeStep(onStart: advance)
+                    WelcomeStep(scene: welcomeScene, onStart: advance)
                         .transition(.opacity)
                 case .sex:
                     SexStep(selection: $answers.sex, onContinue: advance)
@@ -645,31 +650,29 @@ private struct ChoiceRow: View {
 // MARK: - 1 · Boas-vindas
 
 private struct WelcomeStep: View {
+    let scene: WelcomeFoodScene
     let onStart: () -> Void
-    @State private var visible = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Bem-vindo ao Tobi")
-                .font(.system(size: 34, weight: .heavy, design: .rounded))
-                .reveal(visible, order: 0)
-            Group {
-                Text("O contador de calorias mais simples do mundo.")
-                    .reveal(visible, order: 1)
-                Text("É só escrever o que você comeu, como num bloco de notas.")
-                    .reveal(visible, order: 2)
-            }
-            .foregroundStyle(.secondary)
+        VStack(spacing: 20) {
+            WelcomeFood(scene: scene)
+                .frame(maxHeight: .infinity)
 
-            Spacer()
+            VStack(spacing: 12) {
+                Text("Bem-vindo ao Tobi")
+                    .font(.system(size: 34, weight: .heavy, design: .rounded))
+                Text("O contador de \(Text("calorias").bold().underline())\n\(Text("mais simples").bold().underline()) do mundo.")
+                    .font(.system(size: 19))
+                    .foregroundStyle(.secondary)
+            }
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
+            .fixedSize(horizontal: false, vertical: true)
 
             OnboardingButton(title: "Começar", action: onStart)
-                .reveal(visible, order: 3)
         }
-        .font(.system(size: 19))
         .padding(.horizontal, 24)
         .padding(.bottom, 12)
-        .onAppear { visible = true }
     }
 }
 
