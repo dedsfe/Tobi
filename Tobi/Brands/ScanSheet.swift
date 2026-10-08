@@ -1,7 +1,8 @@
 import AVFoundation
 import SwiftUI
 
-/// Tela da câmera: mira no código, trava quando lê, mostra o produto e só então devolve.
+/// Tela da câmera, em tela cheia: mira no código, trava quando lê e mostra o produto já
+/// perguntando quanto a pessoa comeu. Devolve a linha pronta pra nota.
 struct ScanSheet: View {
     /// O produto e a linha pronta pra nota ("2 colheres de sopa de Leite Condensado Moça").
     var onProduct: (BrandProductInfo, String) -> Void
@@ -36,18 +37,23 @@ struct ScanSheet: View {
                 BarcodeScanner { code in lookUp(code) }
                     .id(attempt)
                     .ignoresSafeArea()
-                ScanReticle(isLocked: status != .scanning)
+                // Com o resultado na tela, a câmera recua pra o painel ser o foco.
+                Color.black
+                    .opacity(isShowingResult ? 0.45 : 0)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+                ScanReticle(isLocked: status == .looking)
+                    .opacity(isShowingResult ? 0 : 1)
+                    .scaleEffect(isShowingResult ? 0.92 : 1)
                     .ignoresSafeArea()
             } else {
                 Theme.background.ignoresSafeArea()
             }
 
-            VStack {
+            VStack(spacing: 0) {
                 topBar
                 Spacer()
-                card
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 12)
+                bottom
             }
         }
         .animation(Motion.surface, value: status)
@@ -60,11 +66,16 @@ struct ScanSheet: View {
             }
         }
         .onDisappear { Torch.set(false) }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.hidden)
     }
 
-    // MARK: - Barra de cima
+    private var isShowingResult: Bool {
+        switch status {
+        case .found, .noNutrition, .notFound, .offline: true
+        case .scanning, .looking: false
+        }
+    }
+
+    // MARK: - Topo
 
     private var topBar: some View {
         HStack {
@@ -86,90 +97,86 @@ struct ScanSheet: View {
         .buttonBorderShape(.circle)
         .controlSize(.large)
         .padding(.horizontal, 20)
-        .padding(.top, 16)
+        .padding(.top, 8)
     }
 
-    // MARK: - Cartão de baixo
+    // MARK: - Embaixo
 
     @ViewBuilder
-    private var card: some View {
-        Group {
-            switch status {
-            case .found(let product):
-                ProductCard(product: product, onAdd: { line in add(product, line) }, onAnother: scanAgain)
-            default:
-                messageCard
-            }
-        }
-        .transition(.emerge)
-    }
-
-    private var messageCard: some View {
-        VStack(spacing: 14) {
-            HStack(spacing: 10) {
-                Image(systemName: icon)
-                    .font(.system(size: 18, weight: .semibold))
-                    .symbolEffect(.pulse, isActive: status == .looking)
-                    .contentTransition(.symbolEffect(.replace))
-                Text(title)
-                    .font(.system(size: 16, weight: .semibold))
-                    .contentTransition(.opacity)
-            }
-            if let detail {
-                Text(detail)
-                    .font(.system(size: 14))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .transition(.emerge)
-            }
-            if status.isProblem {
-                HStack(spacing: 10) {
-                    Button("Escrever o nome") {
-                        dismiss()
-                        onWriteInstead()
-                    }
-                    .buttonStyle(.glass)
-                    Button("Tentar de novo", action: scanAgain)
-                        .buttonStyle(.glassProminent)
-                }
-                .font(.system(size: 15, weight: .semibold))
+    private var bottom: some View {
+        switch status {
+        case .scanning, .looking:
+            hint
+                .padding(.bottom, 28)
                 .transition(.emerge)
+        case .found(let product):
+            ProductPanel(product: product, onAdd: { line in add(product, line) }, onAnother: scanAgain)
+                .id(product.barcode)
+                .transition(.emerge)
+        case .noNutrition, .notFound, .offline:
+            problemPanel
+                .transition(.emerge)
+        }
+    }
+
+    /// Enquanto procura: uma pílula só, sem cartão grande cobrindo a câmera.
+    private var hint: some View {
+        Label(status == .looking ? "Procurando o produto…" : hintTitle,
+              systemImage: status == .looking ? "magnifyingglass" : "barcode.viewfinder")
+            .font(.system(size: 15, weight: .semibold))
+            .symbolEffect(.pulse, isActive: status == .looking)
+            .contentTransition(.opacity)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+            .glassEffect(.regular, in: .capsule)
+    }
+
+    private var hintTitle: String {
+        BarcodeScanner.isAvailable ? "Aponte pro código de barras" : "Câmera indisponível neste aparelho"
+    }
+
+    private var problemPanel: some View {
+        ScanPanel {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(problemTitle)
+                    .font(.system(size: 20, weight: .semibold))
+                Text(problemDetail)
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            HStack(spacing: 10) {
+                Button {
+                    dismiss()
+                    onWriteInstead()
+                } label: {
+                    Text("Escrever o nome").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.glass)
+                Button(action: scanAgain) {
+                    Text("Tentar de novo").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.glassProminent)
+                .tint(.indigo)
+            }
+            .font(.system(size: 16, weight: .semibold))
+            .controlSize(.large)
         }
-        .frame(maxWidth: .infinity)
-        .padding(20)
-        .glassEffect(.regular, in: .rect(cornerRadius: 28))
     }
 
-    private var icon: String {
+    private var problemTitle: String {
         switch status {
-        case .scanning: "barcode.viewfinder"
-        case .looking: "magnifyingglass"
-        case .noNutrition: "list.bullet.rectangle"
-        case .notFound: "questionmark"
-        case .offline: "wifi.slash"
-        case .found: "checkmark"
+        case .noNutrition: "Achei, mas sem tabela"
+        case .offline: "Sem conexão"
+        default: "Não achei esse produto"
         }
     }
 
-    private var title: String {
-        guard BarcodeScanner.isAvailable else { return "Câmera indisponível neste aparelho" }
-        switch status {
-        case .scanning: return "Aponte pro código de barras"
-        case .looking: return "Procurando o produto…"
-        case .noNutrition: return "Achei, mas sem tabela"
-        case .notFound: return "Não achei esse produto"
-        case .offline: return "Sem conexão pra buscar"
-        case .found: return ""
-        }
-    }
-
-    private var detail: String? {
+    private var problemDetail: String {
         switch status {
         case .noNutrition(let name): "\(name) ainda não tem calorias cadastradas no Open Food Facts."
-        case .notFound: "Esse código ainda não está no Open Food Facts."
         case .offline: "Confere a internet e tenta de novo."
-        default: nil
+        default: "Esse código ainda não está no Open Food Facts."
         }
     }
 
@@ -201,19 +208,34 @@ struct ScanSheet: View {
     }
 }
 
-// MARK: - Produto encontrado
+// MARK: - Painel
 
-/// O produto lido. Primeiro mostra o que é; ao tocar em Adicionar, pergunta quanto a pessoa
-/// comeu (porção, colher, copo, embalagem, gramas) e já mostra as calorias dessa quantidade.
-private struct ProductCard: View {
+/// O painel de vidro de baixo, com cantos que acompanham os da tela.
+private struct ScanPanel<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) { content }
+            .padding(24)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .clipShape(.rect(cornerRadius: 40))
+            .glassEffect(.regular, in: .rect(cornerRadius: 40))
+            .padding(.horizontal, 10)
+            .padding(.bottom, 10)
+    }
+}
+
+/// Produto lido: o que é, quanto a pessoa comeu (medida + − e +) e quanto isso dá.
+/// Tudo muda junto: trocar a medida ou a quantidade já mexe nas calorias e no botão.
+private struct ProductPanel: View {
     let product: BrandProductInfo
     var onAdd: (_ line: String) -> Void
     var onAnother: () -> Void
 
     @State private var shown = false
-    @State private var askingAmount = false
     @State private var unit: AmountUnit
     @State private var count: Double = 1
+    @Namespace private var selection
     private let units: [AmountUnit]
 
     init(product: BrandProductInfo, onAdd: @escaping (String) -> Void, onAnother: @escaping () -> Void) {
@@ -229,70 +251,22 @@ private struct ProductCard: View {
     private var nutrition: Nutrition { product.per100.scaled(by: grams / 100) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(product.name)
-                    .font(.system(size: 19, weight: .semibold))
-                    .lineLimit(2)
-                    .reveal(shown, order: 0)
-                Text([product.brand, product.quantity].compactMap { $0 }.joined(separator: " · "))
-                    .font(.system(size: 14))
-                    .foregroundStyle(.secondary)
-                    .reveal(shown, order: 1)
+        ScanPanel {
+            header.reveal(shown, order: 0)
+            unitPicker.reveal(shown, order: 1)
+            stepper.reveal(shown, order: 2)
+            summary.reveal(shown, order: 3)
+            Button { onAdd(unit.line(count: count, name: product.name)) } label: {
+                Text("Adicionar à nota")
+                    .font(.system(size: 17, weight: .semibold))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 28)
             }
-
-            if askingAmount {
-                amountPicker
-                    .transition(.emerge)
-            }
-
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text("🔥").font(.system(size: 20))
-                Text(Int(nutrition.kcal.rounded()).formatted())
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .contentTransition(.numericText(value: nutrition.kcal))
-                Text(askingAmount ? "cal" : "cal por \(unit.label(count: 1))")
-                    .font(.system(size: 14))
-                    .foregroundStyle(.secondary)
-                    .contentTransition(.opacity)
-            }
-            .reveal(shown, order: 2)
-
-            HStack(spacing: 14) {
-                macro("C", nutrition.carbs, Theme.carbs)
-                macro("P", nutrition.protein, Theme.protein)
-                macro("G", nutrition.fat, Theme.fat)
-            }
-            .reveal(shown, order: 3)
-
-            HStack(spacing: 10) {
-                Button(askingAmount ? "Voltar" : "Escanear outro") {
-                    if askingAmount {
-                        withAnimation(Motion.surface) { askingAmount = false }
-                    } else {
-                        onAnother()
-                    }
-                }
-                .buttonStyle(.glass)
-                Button(askingAmount ? "Adicionar à nota" : "Adicionar") {
-                    if askingAmount {
-                        onAdd(unit.line(count: count, name: product.name))
-                    } else {
-                        withAnimation(Motion.surface) { askingAmount = true }
-                    }
-                }
-                .buttonStyle(.glassProminent)
-                .frame(maxWidth: .infinity)
-                .contentTransition(.opacity)
-            }
-            .font(.system(size: 16, weight: .semibold))
+            .buttonStyle(.glassProminent)
+            .tint(.indigo)
             .controlSize(.large)
             .reveal(shown, order: 4)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(22)
-        .glassEffect(.regular, in: .rect(cornerRadius: 28))
         .animation(Motion.quick, value: count)
         .animation(Motion.quick, value: unit)
         .sensoryFeedback(.selection, trigger: count)
@@ -300,60 +274,121 @@ private struct ProductCard: View {
         .onAppear { shown = true }
     }
 
-    /// Medida em fichas + quantidade com − e +, do jeito que se fala: "2 colheres de sopa".
-    private var amountPicker: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Quanto você comeu?")
-                .font(.system(size: 15, weight: .semibold))
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(units) { option in
-                        Button {
-                            unit = option
-                            count = option.defaultCount
-                        } label: {
-                            Text(option.chip)
-                                .font(.system(size: 14, weight: .semibold))
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 9)
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(unit == option ? Color.white : Color.primary)
-                        .glassEffect(unit == option ? .regular.tint(.indigo).interactive() : .regular.interactive(),
-                                     in: .capsule)
+    private var header: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(product.name)
+                    .font(.system(size: 18, weight: .semibold))
+                    .lineLimit(2)
+                Text([product.brand.map(\.titleCasedIfShouting), product.quantity].compactMap { $0 }.joined(separator: " · "))
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+            Button("Escanear outro", systemImage: "barcode.viewfinder", action: onAnother)
+                .labelStyle(.iconOnly)
+                .font(.system(size: 20, weight: .medium))
+                .foregroundStyle(.secondary)
+                .buttonStyle(.plain)
+                .frame(width: 32, height: 32)
+        }
+    }
+
+    /// Medidas lado a lado; a escolhida tem o fundo que desliza de uma pra outra.
+    private var unitPicker: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 6) {
+                ForEach(units) { option in
+                    let selected = option == unit
+                    Button {
+                        unit = option
+                        count = option.defaultCount
+                    } label: {
+                        Text(option.chip)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(selected ? Color.white : Color.primary)
+                            .padding(.horizontal, 16)
+                            .frame(height: 38)
+                            .background {
+                                if selected {
+                                    Capsule().fill(.indigo).matchedGeometryEffect(id: "unit", in: selection)
+                                } else {
+                                    Capsule().fill(Color.primary.opacity(0.06))
+                                }
+                            }
                     }
+                    .buttonStyle(.plain)
                 }
             }
-            .scrollClipDisabled()
+        }
+        .scrollIndicators(.hidden)
+        .contentMargins(.horizontal, 24, for: .scrollContent)
+        .padding(.horizontal, -24)
+    }
 
-            HStack(spacing: 18) {
-                stepButton("Menos", "minus") { count = max(unit.step, count - unit.step) }
-                    .disabled(count <= unit.step)
+    /// − quantidade +, numa faixa só, sem bolinha atrás dos ícones.
+    private var stepper: some View {
+        HStack(spacing: 0) {
+            stepButton("Menos", "minus") { count = max(unit.step, count - unit.step) }
+                .disabled(count <= unit.step)
+            VStack(spacing: 2) {
                 Text(unit.label(count: count))
-                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .font(.system(size: 19, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .contentTransition(.numericText(value: count))
-                    .frame(maxWidth: .infinity)
-                stepButton("Mais", "plus") { count += unit.step }
+                if unit.kind != .grams {
+                    Text("\(AmountUnit.amount(grams)) \(unit.isLiquid ? "ml" : "g")")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                        .contentTransition(.numericText(value: grams))
+                }
             }
+            .frame(maxWidth: .infinity)
+            stepButton("Mais", "plus") { count += unit.step }
         }
+        .padding(4)
+        .frame(height: 64)
+        .background(Capsule().fill(Color.primary.opacity(0.06)))
     }
 
     private func stepButton(_ title: String, _ icon: String, action: @escaping () -> Void) -> some View {
         Button(title, systemImage: icon, action: action)
             .labelStyle(.iconOnly)
-            .font(.system(size: 17, weight: .bold))
-            .frame(width: 44, height: 44)
+            .font(.system(size: 18, weight: .semibold))
+            .foregroundStyle(.primary)
+            .frame(width: 56, height: 56)
+            .contentShape(Rectangle())
             .buttonStyle(.plain)
-            .glassEffect(.regular.interactive(), in: .circle)
+    }
+
+    /// Calorias grandes à esquerda, macros à direita, na mesma linha de base.
+    private var summary: some View {
+        HStack(alignment: .lastTextBaseline) {
+            HStack(alignment: .lastTextBaseline, spacing: 4) {
+                Text(Int(nutrition.kcal.rounded()).formatted())
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .contentTransition(.numericText(value: nutrition.kcal))
+                Text("cal")
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 12)
+            HStack(spacing: 14) {
+                macro("C", nutrition.carbs, Theme.carbs)
+                macro("P", nutrition.protein, Theme.protein)
+                macro("G", nutrition.fat, Theme.fat)
+            }
+        }
     }
 
     private func macro(_ letter: String, _ grams: Double, _ color: Color) -> some View {
-        HStack(spacing: 4) {
+        HStack(alignment: .lastTextBaseline, spacing: 3) {
             Text(letter)
                 .font(.system(size: 13, weight: .bold, design: .rounded))
                 .foregroundStyle(color)
-            Text("\(grams.formatted(.number.precision(.fractionLength(0...1)))) g")
+            Text("\(AmountUnit.amount(grams)) g")
                 .font(.system(size: 15, weight: .semibold, design: .rounded))
                 .monospacedDigit()
                 .contentTransition(.numericText(value: grams))
@@ -395,9 +430,9 @@ private struct AmountUnit: Identifiable, Equatable {
 
     var chip: String {
         switch kind {
-        case .portion: "Porção · \(Self.amount(grams)) \(isLiquid ? "ml" : "g")"
+        case .portion: "Porção"
         case .measure(let key): Self.names[key]?.0.capitalizedFirst ?? key
-        case .package: "Embalagem · \(Self.amount(grams)) \(isLiquid ? "ml" : "g")"
+        case .package: "Embalagem"
         case .grams: isLiquid ? "Mililitros" : "Gramas"
         }
     }
@@ -424,7 +459,7 @@ private struct AmountUnit: Identifiable, Equatable {
         }
     }
 
-    private static func amount(_ value: Double) -> String {
+    static func amount(_ value: Double) -> String {
         value.formatted(.number.precision(.fractionLength(0...1)).locale(Locale(identifier: "pt_BR")))
     }
 
@@ -439,6 +474,8 @@ private struct AmountUnit: Identifiable, Equatable {
 
 private extension String {
     var capitalizedFirst: String { prefix(1).uppercased() + dropFirst() }
+    /// "BR SPICES" → "Br Spices"; nomes normais ficam como estão.
+    var titleCasedIfShouting: String { self == uppercased() && self != lowercased() ? capitalized : self }
 }
 
 private extension BrandProductInfo {

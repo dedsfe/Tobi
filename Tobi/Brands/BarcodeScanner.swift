@@ -13,6 +13,8 @@ struct BarcodeScanner: UIViewControllerRepresentable {
         let scanner = DataScannerViewController(
             recognizedDataTypes: [.barcode(symbologies: [.ean13, .ean8, .upce])],
             qualityLevel: .balanced,
+            // Sem o "Slow down." da Apple por cima da nossa mira.
+            isGuidanceEnabled: false,
             // A mira é nossa (ScanSheet); o destaque amarelo do sistema briga com ela.
             isHighlightingEnabled: false
         )

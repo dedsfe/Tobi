@@ -58,7 +58,7 @@ struct DayView: View {
         // Ajustes pode apagar tudo: relê o dia ao voltar.
         .sheet(isPresented: $showingSettings, onDismiss: load) { SettingsView() }
         .sheet(isPresented: $showingCalendar) { calendar }
-        .sheet(isPresented: $showingScanner) {
+        .fullScreenCover(isPresented: $showingScanner) {
             ScanSheet(onProduct: addScanned, onWriteInstead: { editor.focus() })
         }
         .onChange(of: brandProducts.map(\.barcode), initial: true) {
