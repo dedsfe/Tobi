@@ -321,8 +321,8 @@ struct PaywallStep: View {
 enum PaywallLinks {
     /// Termos padrão da Apple pra assinaturas (EULA).
     static let terms = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
-    /// Ainda sem página. Precisa existir antes de mandar pra revisão da Apple.
-    static let privacy: URL? = nil
+    /// Página provisória na Vercel até o Tobi ter domínio próprio.
+    static let privacy: URL? = URL(string: "https://tobicalorias.vercel.app/privacidade")
 }
 
 // MARK: - Peças
