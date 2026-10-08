@@ -3,6 +3,10 @@ import SwiftData
 
 /// A tela principal: um bloco de notas do dia, com as calorias de cada linha do lado.
 struct DayView: View {
+    /// Só no onboarding (tela "Primeira refeição"): a mesma tela, com um convite no topo e o
+    /// "Continuar" aparecendo assim que a primeira linha ganha calorias.
+    var onFirstMealDone: (() -> Void)?
+
     @Environment(\.modelContext) private var context
     @AppStorage("dailyGoal") private var goal = 2000
     @Query private var notes: [DayNote]
@@ -47,7 +51,7 @@ struct DayView: View {
                 LineMark(estimate: estimate(line), isSearching: searching.contains(index))
             },
             controller: editor,
-            placeholder: "Comece a registrar suas refeições",
+            placeholder: onFirstMealDone == nil ? "Comece a registrar suas refeições" : "Ex.: arroz, feijão e bife",
             onCaretLine: { caretMoved(from: $0, to: $1) }
         )
         .background { Theme.background }
@@ -66,6 +70,12 @@ struct DayView: View {
             estimateCache.removeAll()
         }
         .task(id: day) { load() }
+        .task {
+            // Na primeira refeição o teclado já sobe: a pessoa só precisa escrever.
+            guard onFirstMealDone != nil else { return }
+            try? await Task.sleep(for: .seconds(0.6))
+            editor.focus()
+        }
         .onChange(of: text) { save() }
         .onChange(of: dictation.transcript) { _, spoken in applyDictation(spoken) }
     }
@@ -77,6 +87,17 @@ struct DayView: View {
     private var bottomBar: some View {
         GlassEffectContainer(spacing: 6) {
             VStack(spacing: 10) {
+                if let onFirstMealDone, total.kcal > 0 {
+                    Button(action: onFirstMealDone) {
+                        Text("Continuar")
+                            .font(.system(size: 18, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                    }
+                    .buttonStyle(.glassProminent)
+                    .tint(.indigo)
+                    .transition(.emerge)
+                }
                 if showingGoals {
                     GoalsCard(total: total, goal: goal, isOpen: goalsOpen)
                         .onTapGesture { toggleGoals() }
@@ -112,6 +133,7 @@ struct DayView: View {
             }
         }
         .animation(Motion.surface, value: dictation.isRecording)
+        .animation(Motion.surface, value: total.kcal > 0)
         .sensoryFeedback(.impact(weight: .light), trigger: showingGoals)
         .sensoryFeedback(trigger: dictation.isRecording) { _, recording in recording ? .start : .stop }
     }
@@ -184,10 +206,28 @@ struct DayView: View {
             .buttonStyle(.glass)
             .foregroundStyle(.primary)
         }
+        .overlay(alignment: .bottom) {
+            if onFirstMealDone != nil {
+                firstMealHint
+                    .alignmentGuide(.bottom) { $0[.top] - 12 }
+            }
+        }
         .padding(.horizontal, 20)
         .padding(.top, 4)
-        .padding(.bottom, 12)
+        .padding(.bottom, onFirstMealDone == nil ? 12 : 64)
         .background { EdgeFade(edge: .top) }
+    }
+
+    /// Convite da primeira refeição; vira um "pronto" quando o Tobi calcula a primeira linha.
+    private var firstMealHint: some View {
+        let done = total.kcal > 0
+        return Text(done ? "Pronto! O Tobi calculou na hora ✨" : "Escreve o que você comeu hoje ✍️")
+            .font(.system(size: 15, weight: .semibold))
+            .contentTransition(.opacity)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .glassEffect(.regular, in: .capsule)
+            .animation(Motion.quick, value: done)
     }
 
     private var calendar: some View {

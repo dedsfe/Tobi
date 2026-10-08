@@ -13,7 +13,7 @@ Código em `Tobi/Onboarding/OnboardingView.swift`. Toda tela tem o palco do Tobi
 - [x] 7. Nível de atividade
 - [x] 8. Em quanto tempo: Tranquilo, Recomendado, Rápido (perder 0,25/0,5/0,75 kg por semana, no máximo 1% do peso; ganhar 0,15/0,25/0,5) e Personalizado (data; até 1,5% do peso e 2 kg por semana pra perder, 0,5 kg pra ganhar; aviso amarelo acima de 1% / 0,55%, vermelho acima de 1,5 kg). Pula pra quem quer manter.
 - [x] 9. Suas metas: Mifflin-St Jeor × atividade ± o déficit/superávit do prazo. "Como calculei" e "Mudar meta" (edita todas as respostas e as calorias numa folha só). Salva meta e fatias dos macros no app
-- [ ] 10. Primeira refeição: a nota real, a pessoa digita o que comeu e vê as calorias
+- [x] 10. Primeira refeição: a própria DayView (idêntica ao app), teclado já aberto, convite no topo e "Continuar" quando a primeira linha ganha calorias. A refeição já fica salva no dia.
 - [ ] 11. Comemoração e pedido de avaliação na App Store
 - [ ] 12. Notificações: explica pra que serve, depois pede a permissão
 - [ ] 13. Paywall: planos e linha do tempo do teste grátis

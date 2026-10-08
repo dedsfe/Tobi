@@ -11,13 +11,14 @@ enum OnboardingStep: Int, CaseIterable {
     case activity
     case pace
     case goals
+    case firstMeal
 
     /// Total de telas planejadas (ver TODO.md), pra barra de progresso não pular quando entrar tela nova.
     static let planned = 13
 
     #if DEBUG
     /// Tela em revisão: o atalho do Debug nos Ajustes abre direto nela. Trocar aqui quando a revisão mudar.
-    static let debugJump: OnboardingStep = .pace
+    static let debugJump: OnboardingStep = .firstMeal
 
     var debugName: String {
         switch self {
@@ -30,6 +31,7 @@ enum OnboardingStep: Int, CaseIterable {
         case .activity: "Atividade"
         case .pace: "Em quanto tempo"
         case .goals: "Suas metas"
+        case .firstMeal: "Primeira refeição"
         }
     }
     #endif
@@ -241,6 +243,20 @@ struct OnboardingView: View {
     }
 
     var body: some View {
+        ZStack {
+            if step == .firstMeal {
+                // A tela de verdade do app, não uma cópia: a primeira refeição já fica salva no dia.
+                DayView(onFirstMealDone: advance)
+                    .transition(.emerge)
+            } else {
+                questions
+                    .transition(.opacity)
+            }
+        }
+        .animation(Motion.surface, value: step == .firstMeal)
+    }
+
+    private var questions: some View {
         VStack(spacing: 0) {
             TobiStage()
                 .overlay(alignment: .top) {
@@ -282,6 +298,8 @@ struct OnboardingView: View {
                         advance()
                     }
                     .transition(.opacity)
+                case .firstMeal:
+                    EmptyView()
                 }
             }
             .frame(maxHeight: .infinity)
