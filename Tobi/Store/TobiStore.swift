@@ -61,8 +61,16 @@ final class TobiStore {
     /// Pode usar o app: assinou ou está nas 24 horas.
     var hasAccess: Bool { subscribed != false || freePassActive }
 
-    /// `trial`: a compra começou o teste grátis, sem cobrança hoje.
-    enum Outcome { case purchased(trial: Bool), cancelled, pending }
+    /// O que a compra deu, pra tela de alegria contar com as datas de verdade.
+    struct Purchase: Equatable {
+        let plan: TobiPlan
+        /// Começou o teste grátis, sem cobrança hoje.
+        let trial: Bool
+        /// Fim do teste (a primeira cobrança) ou a próxima renovação.
+        let renews: Date?
+    }
+
+    enum Outcome { case purchased(Purchase), cancelled, pending }
     enum Failure: Error { case unavailable, unverified }
 
     private init() {
@@ -122,16 +130,29 @@ final class TobiStore {
     // MARK: Compra
 
     func purchase(_ plan: TobiPlan) async throws -> Outcome {
+        #if DEBUG
+        // No aparelho sem o Xcode a App Store não tem os planos: finge a compra pra dar pra ver a tela de alegria.
+        if products[plan] == nil {
+            try? await Task.sleep(for: .seconds(0.8))
+            subscribed = true
+            let trial = trialEligible
+            let renews = Calendar.current.date(byAdding: trial ? .day : plan == .annual ? .year : .weekOfYear,
+                                               value: trial ? TobiPlan.trialDays : 1, to: .now)
+            if trial, let renews { await Self.remindBeforeCharge(on: renews) }
+            return .purchased(Purchase(plan: plan, trial: trial, renews: renews))
+        }
+        #endif
         guard let product = products[plan] else { throw Failure.unavailable }
         switch try await product.purchase() {
         case .success(let result):
             guard case .verified(let transaction) = result else { throw Failure.unverified }
             await transaction.finish()
             subscribed = true
-            if transaction.offer?.type == .introductory, let charge = transaction.expirationDate {
+            let trial = transaction.offer?.paymentMode == .freeTrial
+            if trial, let charge = transaction.expirationDate {
                 await Self.remindBeforeCharge(on: charge)
             }
-            return .purchased(trial: transaction.offer?.paymentMode == .freeTrial)
+            return .purchased(Purchase(plan: plan, trial: trial, renews: transaction.expirationDate))
         case .pending:
             return .pending
         case .userCancelled:
@@ -158,11 +179,16 @@ final class TobiStore {
         return false
     }
 
+    /// Quando chega o aviso de fim do teste: um dia antes da cobrança.
+    static func reminderDate(beforeCharge charge: Date) -> Date {
+        charge.addingTimeInterval(-24 * 3600)
+    }
+
     /// A promessa da linha do tempo: um aviso um dia antes da primeira cobrança.
-    private static func remindBeforeCharge(on charge: Date) async {
+    static func remindBeforeCharge(on charge: Date) async {
         let center = UNUserNotificationCenter.current()
         guard await center.notificationSettings().authorizationStatus == .authorized else { return }
-        let fire = charge.addingTimeInterval(-24 * 3600)
+        let fire = reminderDate(beforeCharge: charge)
         guard fire > .now else { return }
         let content = UNMutableNotificationContent()
         content.title = "Tobi"

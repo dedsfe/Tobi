@@ -15,6 +15,8 @@ struct PaywallStep: View {
     }
 
     @Binding var declined: Bool
+    /// Comprou: quem mostra o X por cima do palco esconde ele.
+    var purchased: Binding<Bool> = .constant(false)
     var story = Story.onboarding
     let onFinish: () -> Void
 
@@ -30,13 +32,15 @@ struct PaywallStep: View {
     @State private var buying = false
     @State private var notice: String?
     @State private var celebrating = false
+    /// Compra feita: a oferta sai e entra a tela de alegria.
+    @State private var joy: TobiStore.Purchase?
     @State private var buyTaps = 0
     @State private var successes = 0
     @State private var warnings = 0
     @Environment(\.tobiReactions) private var tobi
     @Namespace private var selection
 
-    private var shown: Bool { visible && !declined }
+    private var shown: Bool { visible && !declined && joy == nil }
 
     var body: some View {
         ZStack {
@@ -44,6 +48,9 @@ struct PaywallStep: View {
                 .allowsHitTesting(!declined && !celebrating)
             if offering {
                 TobiLetter(onAccept: acceptFreePass, onBack: { declined = false })
+            }
+            if let joy {
+                PaywallJoy(purchase: joy, onStart: onFinish)
             }
         }
         .overlay(alignment: .bottom) {
@@ -211,10 +218,10 @@ struct PaywallStep: View {
             defer { buying = false }
             do {
                 switch try await store.purchase(plan) {
-                case .purchased(let trial):
+                case .purchased(let purchase):
                     // Teste grátis não é receita: as redes de anúncio vão precisar saber a diferença.
-                    track(trial ? "trial_started" : "paywall_purchased", ["plan": "\(plan)"])
-                    celebrate()
+                    track(purchase.trial ? "trial_started" : "paywall_purchased", ["plan": "\(plan)"])
+                    rejoice(purchase)
                 case .pending: say("Sua compra tá esperando aprovação. Assim que passar, o Tobi libera tudo.")
                 case .cancelled: break
                 }
@@ -250,6 +257,15 @@ struct PaywallStep: View {
         case .nothingWritten: "nothing_written"
         }
         Analytics.track(event, step: .paywall, properties: properties.merging(["source": source]) { a, _ in a })
+    }
+
+    /// Comprou: confete, o Tobi comemora e a tela de alegria conta o que a pessoa ganhou.
+    private func rejoice(_ purchase: TobiStore.Purchase) {
+        successes += 1
+        celebrating = true
+        purchased.wrappedValue = true
+        tobi.celebrate()
+        joy = purchase
     }
 
     /// Deu certo: confete, o Tobi comemora e o app abre.
