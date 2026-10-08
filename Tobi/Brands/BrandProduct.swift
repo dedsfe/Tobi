@@ -51,3 +51,34 @@ final class BrandProduct {
         )
     }
 }
+
+/// Limpeza única dos produtos salvos antes da IA conferir a busca por nome, quando "prato" virava
+/// "Arroz Prato Fino". Fica só o produto que alguma nota usa e que a IA confirma em todo trecho.
+enum BrandCleanup {
+    static let doneKey = "brandCleanup.v1"
+
+    /// Códigos de barras pra apagar. `confirm` diz se o trecho escrito é mesmo o produto.
+    static func rejected(products: [(barcode: String, name: String)], notes: [String], parser: FoodParser,
+                         confirm: @Sendable (String, String) async throws -> Bool) async throws -> Set<String> {
+        let names = Set(products.map(\.name))
+        var pieces: [String: Set<String>] = [:]
+        for line in notes.flatMap({ $0.split(separator: "\n") }) {
+            for item in parser.estimate(String(line)).items {
+                if let name = item.foodName, names.contains(name) { pieces[name, default: []].insert(item.text) }
+            }
+        }
+        var rejected = Set<String>()
+        for product in products {
+            let used = pieces[product.name, default: []].sorted()
+            if used.isEmpty { rejected.insert(product.barcode) }
+            for piece in used {
+                try Task.checkCancellation()
+                if try await !confirm(piece, product.name) {
+                    rejected.insert(product.barcode)
+                    break
+                }
+            }
+        }
+        return rejected
+    }
+}

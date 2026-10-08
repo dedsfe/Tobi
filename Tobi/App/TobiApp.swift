@@ -64,7 +64,11 @@ struct TobiApp: App {
             .onChange(of: shouldLock, initial: true) { _, lock in
                 if lock { withAnimation(Motion.surface) { locked = true } }
             }
-            .task { await store.refreshAccess() }
+            .task {
+                async let parser = FoodParser.prepared()
+                await store.refreshAccess()
+                _ = await parser
+            }
         }
         .modelContainer(for: [DayNote.self, BrandProduct.self], inMemory: inMemory)
     }

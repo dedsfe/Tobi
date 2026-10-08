@@ -77,7 +77,7 @@ struct Food: Sendable {
     }
 
     /// Números oficiais da TACO; aqui só entram apelidos e porções do dia a dia.
-    init(_ name: String, _ aliases: [String], taco id: Int, portion: Double, measures: [String: Double] = [:]) {
+    init(_ name: String, _ aliases: [String], taco id: Int, portion: Double, measures: [String: Double] = [:], guesses: Set<String> = []) {
         guard let taco = FoodTables.tacoByID[String(id)] else { preconditionFailure("TACO \(id) não existe") }
         self.name = name
         self.aliases = aliases
@@ -85,6 +85,7 @@ struct Food: Sendable {
         self.source = .taco(taco.id)
         self.portion = portion
         self.measures = measures
+        self.guesses = guesses
     }
 
     /// Números oficiais do USDA (id do FoodData Central), pra sal e temperos que faltam na TACO.
@@ -110,13 +111,13 @@ struct Food: Sendable {
     }
 
     init(table food: TableFood, source: FoodSource, additionalAliases: [String] = [],
-         guessedAliases: Set<String> = []) {
+         guessedAliases: Set<String> = [], measures: [String: Double]? = nil) {
         self.name = food.name
         self.aliases = food.aliases + additionalAliases
         self.per100 = food.per100
         self.source = source
         self.portion = food.portion
-        self.measures = food.measures
+        self.measures = measures ?? food.measures
         self.guesses = Set(food.guesses ?? []).union(guessedAliases)
     }
 

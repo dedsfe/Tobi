@@ -20,8 +20,12 @@ struct ItemEstimate: Equatable, Sendable {
     let grams: Double
     let nutrition: Nutrition
     let confidence: Confidence
+    /// Achou um alimento, mas sobrou palavra que o Tobi não conhece ("xis salada" → só a salada).
+    var isPartial = false
 
     var isRecognized: Bool { foodName != nil }
+    /// Sem alimento ou com palavra sobrando: o trecho fica sublinhado de vermelho.
+    var isUnclear: Bool { !isRecognized || isPartial }
 }
 
 struct LineEstimate: Equatable, Sendable {
@@ -34,6 +38,11 @@ struct LineEstimate: Equatable, Sendable {
 
     var total: Nutrition { items.map(\.nutrition).total }
     var hasUnknown: Bool { items.contains { !$0.isRecognized } }
+    /// Trechos com algo que o Tobi não entendeu, sem repetir (um trecho pode virar dois itens).
+    var unclearPieces: [String] {
+        var seen = Set<String>()
+        return items.filter(\.isUnclear).map(\.text).filter { seen.insert($0).inserted }
+    }
     /// O menos certo dos itens reconhecidos. O que não reconheceu já aparece à parte ("?", "+").
     var confidence: Confidence { items.filter(\.isRecognized).map(\.confidence).min() ?? .unknown }
 }
@@ -55,6 +64,15 @@ struct FoodParser: Sendable {
     /// Produtos salvos no aparelho pelo conjunto de palavras de todos os nomes, pra achar o
     /// produto mesmo escrito em outra ordem ou com palavra a menos.
     private var products: [(words: Set<String>, food: Food)] = []
+    /// Todos os alimentos, na ordem de prioridade (produtos salvos primeiro). Pra sugestões.
+    private var foods: [Food]
+    private struct SuggestionEntry: Sendable {
+        let food: Food
+        let name: String
+        let stems: Set<String>
+        let aliases: [Set<String>]
+    }
+    private var suggestionEntries: [SuggestionEntry]
     private let labels: Set<String>
     /// Apelidos que têm um separador dentro ("café com leite", "alho e óleo"), pela primeira palavra.
     /// Na hora de dividir a linha em itens, esses ficam inteiros.
@@ -64,6 +82,20 @@ struct FoodParser: Sendable {
     private var knownWords: Set<String>
 
     static let shared = FoodParser(foods: FoodDatabase.foods)
+    private static let preparation = Task.detached(priority: .userInitiated) { shared }
+
+    /// A primeira leitura e a construção dos índices nunca precisam bloquear a interface.
+    static func prepared() async -> FoodParser { await preparation.value }
+
+    private static func suggestionEntry(_ food: Food, tokenized: [[String]]? = nil) -> SuggestionEntry {
+        let aliases = tokenized ?? food.aliases.map(tokenize)
+        let name = tokenize(food.name)
+        let words = Set(aliases.flatMap { $0 } + name).subtracting(fillerWords)
+        let chainAliases: [Set<String>]
+        if case .chain = food.source { chainAliases = aliases.map(Set.init) } else { chainAliases = [] }
+        return SuggestionEntry(food: food, name: name.joined(separator: " "),
+                               stems: Set(words.map(stem)), aliases: chainAliases)
+    }
 
     /// A mesma base com produtos de marca salvos no aparelho por cima: eles ganham no empate.
     func adding(_ foods: [Food]) -> FoodParser {
@@ -71,6 +103,8 @@ struct FoodParser: Sendable {
         for (offset, food) in foods.enumerated() {
             let words = Set(food.aliases.flatMap(Self.tokenize)).subtracting(Self.fillerWords)
             if !words.isEmpty { copy.products.append((words, food)) }
+            copy.foods.insert(food, at: offset)
+            copy.suggestionEntries.insert(Self.suggestionEntry(food), at: offset)
             for alias in food.aliases {
                 let tokens = Self.tokenize(alias)
                 guard let first = tokens.first else { continue }
@@ -95,10 +129,14 @@ struct FoodParser: Sendable {
     }
 
     init(foods: [Food]) {
+        self.foods = foods
+        suggestionEntries = []
+        suggestionEntries.reserveCapacity(foods.count)
         var all: [Entry] = []
         for (rank, food) in foods.enumerated() {
-            for alias in food.aliases {
-                let tokens = Self.tokenize(alias)
+            let tokenized = food.aliases.map(Self.tokenize)
+            suggestionEntries.append(Self.suggestionEntry(food, tokenized: tokenized))
+            for (alias, tokens) in zip(food.aliases, tokenized) {
                 if !tokens.isEmpty {
                     all.append(Entry(tokens: tokens, food: food, rank: rank, isGuess: food.guesses.contains(alias)))
                 }
@@ -192,7 +230,34 @@ struct FoodParser: Sendable {
     /// Quantidade + comida de um pedaço. Número no fim ("arroz 3") só vale como quantidade se
     /// não fizer parte do nome: "nescau 2.0" é um produto, não dois Nescau.
     private func resolve(_ piece: String) -> Parse {
-        let (quantity, tokens, trailing) = Self.parseQuantity(piece)
+        var (quantity, tokens, trailing) = Self.parseQuantity(piece)
+        // Medida que também é começo de nome: "prato feito", "2 pratos feitos", "barra de cereal", "barra de proteína".
+        // Se com a medida o nome fecha e sem ela não, a medida era parte do nome.
+        if let measure = quantity.measure, !matchFoods(in: tokens).complete {
+            let whole = Self.tokenize(measure) + tokens
+            let wholeWithDe = Self.tokenize(measure) + ["de"] + tokens
+            if matchFoods(in: whole).complete {
+                quantity.measure = nil
+                tokens = whole
+            } else if matchFoods(in: wholeWithDe).complete {
+                quantity.measure = nil
+                tokens = wholeWithDe
+            }
+        }
+        // Medida cujo fim é uma comida quando nada veio depois: "1 xícara de café".
+        // A medida vira a medida base ("xícara") e o fim vira a comida ("café").
+        if let measure = quantity.measure, tokens.isEmpty {
+            let mTokens = Self.tokenize(measure)
+            let match = matchFoods(in: mTokens)
+            if let first = match.matches.first, first.food.name != "Sopa" {
+                let foodTokens = Self.tokenize(first.food.name)
+                if let foodStart = mTokens.firstIndex(where: { foodTokens.contains($0) }) {
+                    let measurePart = Array(mTokens[..<foodStart])
+                    quantity.measure = measurePart.isEmpty ? nil : Self.measure(in: measurePart, at: 0)?.key ?? measurePart.joined(separator: " ")
+                    tokens = Array(mTokens[foodStart...])
+                }
+            }
+        }
         if trailing {
             let whole = Self.parseQuantity(piece, allowTrailing: false)
             let match = matchFoods(in: whole.1)
@@ -266,6 +331,13 @@ struct FoodParser: Sendable {
             break
         }
 
+        // "1 pão e meio", "2 bananas e meia", "dois bifes e meio"
+        if words.count >= 2, words[words.count - 2] == "e", ["meia", "meio"].contains(words[words.count - 1]) {
+            quantity.count += 0.5
+            quantity.isWritten = true
+            words.removeLast(2)
+        }
+
         // Medida sem número no começo: "colher de leite condensado" = uma colher. Só se vier comida depois.
         if !quantity.isWritten || quantity.isRough && quantity.measure == nil,
            let measure = Self.measure(in: words, at: 0), multipliers[measure.key] == nil,
@@ -276,6 +348,24 @@ struct FoodParser: Sendable {
             end += roughWords(in: words, at: end, quantity: &quantity)
             quantity.isWritten = true
             words.removeSubrange(0..<end)
+        }
+
+        // Medida no fim da comida: "coca lata", "coca em lata", "cerveja de lata", "heineken long neck".
+        if quantity.measure == nil, words.count >= 2 {
+            for start in (1..<words.count).reversed() {
+                var mStart = start
+                if ["em", "de", "na"].contains(words[mStart]), mStart + 1 < words.count {
+                    mStart += 1
+                }
+                if let measure = Self.measure(in: words, at: mStart),
+                   mStart + measure.length == words.count,
+                   multipliers[measure.key] == nil {
+                    quantity.measure = measure.key
+                    quantity.isRough = Self.roughMeasures.contains(singularize(words[words.count - 1]))
+                    words.removeSubrange(start..<words.count)
+                    break
+                }
+            }
         }
 
         var tokens = words.map(singularize)
@@ -325,7 +415,7 @@ struct FoodParser: Sendable {
         guard index < words.count else { return nil }
         let tokens = words[index...].prefix(4).map(singularize)
         for phrase in measurePhrases where phrase.tokens.count <= tokens.count
-            && Array(tokens.prefix(phrase.tokens.count)) == phrase.tokens {
+            && tokens.prefix(phrase.tokens.count).elementsEqual(phrase.tokens) {
             return (phrase.key, phrase.tokens.count)
         }
         return nil
@@ -410,9 +500,111 @@ struct FoodParser: Sendable {
                 && (quantity.isWritten || food.countsByUnit)
                 && hasKnownMeasure(food, measure: quantity.measure) && !quantity.isRough
             return ItemEstimate(text: item, foodName: food.name, grams: grams, nutrition: food.nutrition(grams: grams),
-                                confidence: sure ? .exact : .estimated)
+                                confidence: sure ? .exact : .estimated, isPartial: !complete)
         }
     }
+
+    // MARK: - Linha que não entendeu
+
+    /// Por que um pedaço ficou sem número e o que a pessoa pode ter querido dizer.
+    struct Help: Sendable {
+        /// Só as palavras da comida, sem a quantidade ("2 colheres de xis salada" → "xis salada").
+        let foodText: String
+        /// Palavras que aparecem em algum alimento da base e as que não aparecem.
+        let knownWords: [String]
+        let unknownWords: [String]
+        /// A frase inteira vira um alimento se consertar uma letra ou outra.
+        let typoFix: Food?
+        /// Da mais provável pra menos, sem repetir nome.
+        let suggestions: [Food]
+
+        var reasons: [String] {
+            var reasons: [String] = []
+            if let fix = typoFix {
+                reasons.append("Parece erro de digitação de “\(fix.name)”.")
+            }
+            if !knownWords.isEmpty, !unknownWords.isEmpty {
+                reasons.append("Conheço “\(knownWords.joined(separator: " "))”, mas não “\(unknownWords.joined(separator: " "))”.")
+            } else if typoFix == nil {
+                reasons.append("Nenhum alimento da base tem esse nome.")
+            }
+            if typoFix == nil {
+                reasons.append("Pode ser marca, prato regional ou apelido que eu ainda não conheço.")
+                reasons.append("Se for produto de mercado, escaneie o código de barras.")
+            }
+            return reasons
+        }
+    }
+
+    /// Só as palavras da comida, sem a quantidade: da primeira à última palavra que sobra depois
+    /// de tirar a quantidade ("2 colheres de xis salada" → "xis salada").
+    func foodText(in piece: String) -> String {
+        let normalized = Self.clean(Self.normalize(piece))
+        let tokens = Self.parseQuantity(normalized).1
+        let words = normalized.split(separator: " ").map(String.init)
+        guard let first = words.firstIndex(where: { tokens.first == Self.singularize($0) }),
+              let last = words.lastIndex(where: { tokens.last == Self.singularize($0) }), first <= last else { return "" }
+        return words[first...last].joined(separator: " ")
+    }
+
+    func help(for piece: String) -> Help {
+        let normalized = Self.clean(Self.normalize(piece))
+        let tokens = Self.parseQuantity(normalized).1
+        let foodWords = foodText(in: piece).split(separator: " ").map(String.init)
+        let content = foodWords.filter { !Self.fillerWords.contains(Self.singularize($0)) }
+
+        var typoFix: Food?
+        if let fixed = corrected(tokens) {
+            let retry = matchFoods(in: fixed)
+            if retry.complete, retry.matches.count == 1 { typoFix = retry.matches[0].food }
+        }
+        // Sugestão tem que ter as palavras que o Tobi conhece: "xis salada" sugere salada, nunca
+        // salame. Se nenhuma palavra é conhecida ("tapioquinha"), vale o parecido pela raiz.
+        let required = Set(content.map(Self.singularize)).intersection(knownWords)
+        let similar = candidates(for: normalized, limit: 30).filter { food in
+            required.isSubset(of: Set((food.aliases + [food.name]).flatMap(Self.tokenize)))
+        }
+        var seen = Set<String>()
+        let suggestions = ([typoFix].compactMap { $0 } + similar).filter { seen.insert($0.name).inserted }
+        return Help(foodText: foodWords.joined(separator: " "),
+                    knownWords: content.filter { knownWords.contains(Self.singularize($0)) },
+                    unknownWords: content.filter { !knownWords.contains(Self.singularize($0)) },
+                    typoFix: typoFix,
+                    suggestions: Array(suggestions.prefix(4)))
+    }
+
+    /// Alimentos com mais palavras em comum com o pedaço, pra IA escolher entre eles. Mesmo nome
+    /// em tabelas diferentes entra uma vez só (a de maior prioridade), e item de rede só entra
+    /// se a linha citar a rede ou o nome do item.
+    func candidates(for piece: String, limit: Int = 30) -> [Food] {
+        let words = Set(Self.tokenize(piece)).subtracting(Self.fillerWords).filter { Self.parseNumber($0) == nil }
+        let stems = Set(words.map(Self.stem))
+        guard !stems.isEmpty else { return [] }
+        var seen = Set<String>()
+        var scored: [(score: Double, food: Food)] = []
+        for entry in suggestionEntries {
+            let hits = stems.intersection(entry.stems).count
+            guard hits > 0, seen.insert(entry.name).inserted else { continue }
+            if case .chain = entry.food.source, words.isDisjoint(with: Self.chainWords),
+               !entry.aliases.contains(where: { $0.isSubset(of: words) }) { continue }
+            scored.append((Double(hits) / (Double(stems.count) * Double(entry.stems.count)).squareRoot(), entry.food))
+        }
+        return scored.sorted { $0.score > $1.score }.prefix(limit).map(\.food)
+    }
+
+    /// O texto que, escrito na linha, volta a ser este alimento: o nome, se ele se lê sozinho
+    /// ("Pão com manteiga"), senão o primeiro apelido que funciona.
+    func writtenName(for food: Food) -> String? {
+        ([food.name] + food.aliases).first { text in
+            let items = estimate(text).items
+            return items.count == 1 && items[0].foodName == food.name
+        }
+    }
+
+    private static func stem(_ word: String) -> String { String(word.prefix(4)) }
+    private static let chainWords: Set<String> = [
+        "mc", "mcdonald", "mequi", "bk", "burger", "king", "kfc", "subway", "bob", "habib", "outback",
+    ]
 
     /// O produto salvo que contém todas as palavras escritas; empatando, o de nome mais curto.
     private func savedProduct(for tokens: [String]) -> Food? {
@@ -451,7 +643,7 @@ struct FoodParser: Sendable {
         var i = 0
         while i < tokens.count {
             if let entry = entries[tokens[i], default: []].first(where: { entry in
-                i + entry.tokens.count <= tokens.count && Array(tokens[i..<i + entry.tokens.count]) == entry.tokens
+                i + entry.tokens.count <= tokens.count && tokens[i..<i + entry.tokens.count].elementsEqual(entry.tokens)
             }) {
                 found.append(Match(food: entry.food, isGuess: entry.isGuess))
                 i += entry.tokens.count
@@ -504,29 +696,44 @@ struct FoodParser: Sendable {
     }
 
     /// Levenshtein com saída antecipada: passou do limite, devolve limit + 1.
+    /// Distância de edição em que trocar duas letras vizinhas conta como um erro só
+    /// ("picanah" → "picanha"), o erro de digitação mais comum no celular.
     static func editDistance(_ a: [UInt8], _ b: [UInt8], limit: Int) -> Int {
         guard abs(a.count - b.count) <= limit else { return limit + 1 }
         guard !a.isEmpty, !b.isEmpty else { return max(a.count, b.count) }
+        var beforePrevious = Array(repeating: 0, count: b.count + 1)
         var previous = Array(0...b.count)
+        var current = Array(repeating: 0, count: b.count + 1)
+        var previousMin = 0
         for i in 1...a.count {
-            var current = [i] + Array(repeating: 0, count: b.count)
+            current[0] = i
             var rowMin = i
             for j in 1...b.count {
                 let cost = a[i - 1] == b[j - 1] ? 0 : 1
                 current[j] = min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + cost)
+                if i > 1, j > 1, a[i - 1] == b[j - 2], a[i - 2] == b[j - 1] {
+                    current[j] = min(current[j], beforePrevious[j - 2] + 1)
+                }
                 rowMin = min(rowMin, current[j])
             }
-            if rowMin > limit { return limit + 1 }
-            previous = current
+            // Duas linhas seguidas acima do limite: nem a troca de vizinhas traz de volta.
+            if rowMin > limit, previousMin > limit { return limit + 1 }
+            swap(&beforePrevious, &previous)
+            swap(&previous, &current)
+            previousMin = rowMin
         }
         return previous[b.count]
     }
+
 
     // MARK: - Texto
 
     private static let stopWords: Set<String> = ["de", "da", "do", "dos", "das", "o", "a", "os", "as"]
     /// Palavras que podem sobrar sem mudar o que a pessoa comeu.
-    private static let fillerWords: Set<String> = stopWords.union(["no", "na", "nos", "nas", "em", "um", "uma", "pra", "para", "e", "com", "mais"])
+    private static let fillerWords: Set<String> = stopWords.union([
+        "no", "na", "nos", "nas", "em", "um", "uma", "pra", "para", "e", "com", "mais",
+        "completo", "completa", "completos", "completas",
+    ])
 
     private static let numberWords: [String: Double] = [
         "um": 1, "uma": 1, "dois": 2, "duas": 2, "tres": 3, "quatro": 4, "cinco": 5,
@@ -554,7 +761,7 @@ struct FoodParser: Sendable {
         var pieces: [String] = []
         var separators: [String] = []
         var start = text.startIndex
-        for match in text.matches(of: /(?i)\s+(?:e(?!\s+mei[ao]\b)|com|mais)\s+|\s*[+;,]\s*/) {
+        for match in text.matches(of: /(?i)\s+(?:e(?!\s+mei[ao](?:\s+de\b|$))|com|mais)\s+|\s*[+;,]\s*/) {
             pieces.append(String(text[start..<match.range.lowerBound]))
             separators.append(String(text[match.range]))
             start = match.range.upperBound
@@ -571,7 +778,35 @@ struct FoodParser: Sendable {
                 items.append(piece)
             }
         }
-        return items.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        return items
+            .flatMap { splitMeasureNumber($0) }
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+    }
+
+    /// Medida seguida de número sem pontuação: "Coca 2 copos 1 terço de lasanha" → ["Coca 2 copos", "1 terço de lasanha"].
+    private func splitMeasureNumber(_ piece: String) -> [String] {
+        let words = piece.split(separator: " ").map(String.init)
+        guard words.count >= 3 else { return [piece] }
+        var pieces: [String] = []
+        var start = 0
+        // Iterativo: uma nota colada com muitas medidas não cresce a pilha de chamadas.
+        for i in 1..<(words.count - 1) where i > start {
+            let current = words[i].lowercased()
+            let singular = Self.singularize(current)
+            let isMeasure = FoodDatabase.measures[singular] != nil
+                || FoodDatabase.measureSynonyms[singular] != nil
+                || FoodDatabase.portionWords.contains(singular)
+                || FoodDatabase.measures[current] != nil
+            guard isMeasure else { continue }
+            let next = words[i + 1].lowercased()
+            if Self.parseNumber(next) != nil || next.range(of: #"^\d+"#, options: .regularExpression) != nil {
+                pieces.append(words[start...i].joined(separator: " "))
+                start = i + 1
+            }
+        }
+        pieces.append(words[start...].joined(separator: " "))
+        return pieces
     }
 
     /// Algum apelido composto aparece em `joined` atravessando a emenda (e não só num dos lados)?
@@ -581,7 +816,7 @@ struct FoodParser: Sendable {
         for start in tokens.indices where start < leftCount {
             for compound in compounds[tokens[start], default: []]
             where start + compound.count > leftCount && start + compound.count <= tokens.count
-                && Array(tokens[start..<start + compound.count]) == compound {
+                && tokens[start..<start + compound.count].elementsEqual(compound) {
                 return true
             }
         }

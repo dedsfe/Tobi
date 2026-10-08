@@ -1814,3 +1814,88 @@ private struct GoalsExplanation: View {
 #Preview {
     OnboardingView {}
 }
+
+
+/// Mesmo come-come na tela 01 e no menu de animações do Debug.
+struct TobiSnackStage: View {
+    var isPlaying = true
+    var replay = 0
+    var height: CGFloat = 300
+    @State private var heldTime = 0.0
+    @State private var startedAt: Date?
+    @State private var modelFailed = false
+    @State private var modelReady = TobiFaceLibrary.shared.asset != nil
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var moving: Bool { isPlaying && scenePhase == .active && !reduceMotion && modelReady && !modelFailed }
+
+    var body: some View {
+        TimelineView(.animation(paused: startedAt == nil)) { timeline in
+            let time = heldTime + (startedAt.map { max(0, timeline.date.timeIntervalSince($0)) } ?? 0)
+            GeometryReader { geometry in
+                ZStack {
+                    if !reduceMotion && !modelFailed, let food = TobiSnackSequence.food(at: time), food.behind {
+                        foodView(food, size: geometry.size)
+                    }
+                    if !modelReady || modelFailed {
+                        Text("🐶").font(.system(size: 90))
+                    }
+                    if !modelFailed {
+                        TobiFaceView(isPlaying: moving, blinkRequest: 0, lookRequest: 0,
+                                     isActive: scenePhase == .active, reduceMotion: reduceMotion,
+                                     performance: TobiPerformance(entering: false, spontaneous: false),
+                                     eatingTime: reduceMotion ? nil : time,
+                                     onFailure: { modelFailed = true },
+                                     onReady: { modelReady = true })
+                    }
+                    if reduceMotion || modelFailed {
+                        HStack(spacing: 16) {
+                            ForEach(TobiSnackSequence.foods, id: \.self) { Text($0).font(.system(size: 36)) }
+                        }
+                        .position(x: geometry.size.width/2, y: geometry.size.height*0.83)
+                    } else {
+                        if let food = TobiSnackSequence.food(at: time), !food.behind {
+                            foodView(food, size: geometry.size)
+                        }
+                    }
+                }
+            }
+            .frame(height: height)
+        }
+        .accessibilityLabel("Tobi comendo maçã, pizza e brócolis")
+        .onAppear { syncClock() }
+        .onDisappear { freezeClock() }
+        .onChange(of: modelReady) { syncClock() }
+        .onChange(of: modelFailed) { syncClock() }
+        .onChange(of: isPlaying) { syncClock() }
+        .onChange(of: replay) {
+            heldTime = 0
+            startedAt = nil
+            syncClock()
+        }
+        .onChange(of: scenePhase) { syncClock() }
+        .onChange(of: reduceMotion) { syncClock() }
+    }
+
+    private func foodView(_ food: TobiSnackSequence.FoodFrame, size: CGSize) -> some View {
+        Text(food.emoji)
+            .font(.system(size: 42))
+            .scaleEffect(food.scale)
+            .rotationEffect(.degrees(food.rotation))
+            .opacity(food.opacity)
+            .position(x: size.width*food.x, y: size.height*food.y)
+            .accessibilityHidden(true)
+    }
+
+    private func freezeClock() {
+        if let start = startedAt {
+            heldTime += max(0, Date().timeIntervalSince(start))
+            startedAt = nil
+        }
+    }
+    private func syncClock() {
+        if moving {
+            if startedAt == nil { startedAt = Date() }
+        } else { freezeClock() }
+    }
+}

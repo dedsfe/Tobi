@@ -24,7 +24,7 @@ final class Dictation {
     private var sessionID = 0
 
     func start() async {
-        guard !isRecording else { return }
+        guard !isRecording, !Task.isCancelled else { return }
         // A tela responde no toque; permissão e áudio sobem por trás. Se não der, volta.
         isRecording = true
         problem = nil
@@ -37,7 +37,10 @@ final class Dictation {
         guard let recognizer else { return fail("sem reconhecedor pt-BR", id) }
         guard recognizer.isAvailable else { return fail("reconhecedor indisponível", id) }
         // Parou enquanto pedia permissão.
-        guard isRecording, sessionID == id else { return }
+        guard isRecording, sessionID == id, !Task.isCancelled else {
+            if sessionID == id { stop() }
+            return
+        }
 
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.shouldReportPartialResults = true
@@ -57,12 +60,15 @@ final class Dictation {
                 }
             }
             // Parou enquanto o áudio ligava.
-            guard isRecording, sessionID == id else { return }
+            guard isRecording, sessionID == id, !Task.isCancelled else {
+                if sessionID == id { stop() }
+                return
+            }
             step = "ouvindo"
 
             self.request = request
             task = Self.recognize(request, with: recognizer) { [weak self] text, isDone in
-                guard let self, self.sessionID == id else { return }
+                guard let self, self.sessionID == id, self.isRecording else { return }
                 if let text { transcript = text }
                 if isDone { stop() }
             }
@@ -89,6 +95,7 @@ final class Dictation {
     }
 
     func stop() {
+        sessionID += 1
         audio.stop()
         request?.endAudio()
         task?.cancel()
@@ -129,6 +136,7 @@ private nonisolated final class AudioEngineBox: @unchecked Sendable {
     private let engine = AVAudioEngine()
     private let queue = DispatchQueue(label: "tobi.dictation.audio", qos: .userInitiated)
     private var tapped = false
+    private var sessionActive = false
 
     func start(feeding append: @escaping @Sendable (AVAudioPCMBuffer) -> Void,
                levels: @escaping @Sendable ([Float]) -> Void) async throws {
@@ -152,9 +160,14 @@ private nonisolated final class AudioEngineBox: @unchecked Sendable {
     private func startNow(_ append: @escaping @Sendable (AVAudioPCMBuffer) -> Void,
                           _ levels: @escaping @Sendable ([Float]) -> Void) throws {
         try activateSession()
+        sessionActive = true
         let node = engine.inputNode
+        let format = node.outputFormat(forBus: 0)
+        guard format.sampleRate.isFinite, format.sampleRate > 0, format.channelCount > 0 else {
+            throw CocoaError(.featureUnsupported)
+        }
         let spectrum = VoiceSpectrum()
-        node.installTap(onBus: 0, bufferSize: 1024, format: node.outputFormat(forBus: 0)) { buffer, _ in
+        node.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
             append(buffer)
             if let spectrum { levels(spectrum.levels(of: buffer)) }
         }
@@ -188,10 +201,14 @@ private nonisolated final class AudioEngineBox: @unchecked Sendable {
     }
 
     private func stopNow() {
-        guard tapped else { return }
-        engine.stop()
-        engine.inputNode.removeTap(onBus: 0)
-        tapped = false
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        if tapped {
+            engine.stop()
+            engine.inputNode.removeTap(onBus: 0)
+            tapped = false
+        }
+        if sessionActive {
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            sessionActive = false
+        }
     }
 }

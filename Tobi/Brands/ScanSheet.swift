@@ -9,6 +9,7 @@ struct ScanSheet: View {
     /// Não achou ou não tem tabela: fecha e deixa a pessoa escrever o nome na linha.
     var onWriteInstead: () -> Void = {}
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
 
     private enum Status: Equatable {
         case scanning
@@ -30,11 +31,12 @@ struct ScanSheet: View {
     /// Troca pra recriar a câmera depois de um "não achei" ou "escanear outro".
     @State private var attempt = 0
     @State private var torchOn = false
+    @State private var lookup: Task<Void, Never>?
 
     var body: some View {
         ZStack {
             if BarcodeScanner.isAvailable {
-                BarcodeScanner { code in lookUp(code) }
+                BarcodeScanner(isScanning: status == .scanning && scenePhase == .active) { code in lookUp(code) }
                     .id(attempt)
                     .ignoresSafeArea()
                 // Com o resultado na tela, a câmera recua pra o painel ser o foco.
@@ -65,7 +67,10 @@ struct ScanSheet: View {
             case .scanning: nil
             }
         }
-        .onDisappear { Torch.set(false) }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { torchOn = false; Torch.set(false) }
+        }
+        .onDisappear { lookup?.cancel(); Torch.set(false) }
     }
 
     private var isShowingResult: Bool {
@@ -183,15 +188,19 @@ struct ScanSheet: View {
     // MARK: - Ações
 
     private func lookUp(_ code: String) {
+        lookup?.cancel()
         status = .looking
-        Task {
+        lookup = Task {
             do {
-                switch try await OpenFoodFacts.product(barcode: code) {
+                let result = try await OpenFoodFacts.product(barcode: code)
+                guard !Task.isCancelled else { return }
+                switch result {
                 case .found(let product): status = .found(product)
                 case .noNutrition(let name): status = .noNutrition(name)
                 case .notFound: status = .notFound
                 }
             } catch {
+                guard !Task.isCancelled else { return }
                 status = .offline
             }
         }
@@ -203,6 +212,8 @@ struct ScanSheet: View {
     }
 
     private func scanAgain() {
+        lookup?.cancel()
+        lookup = nil
         status = .scanning
         attempt += 1
     }
@@ -545,10 +556,14 @@ private struct ReticleCorners: Shape {
 enum Torch {
     static var isAvailable: Bool { AVCaptureDevice.default(for: .video)?.hasTorch ?? false }
 
+    private static let queue = DispatchQueue(label: "tobi.camera.torch", qos: .userInitiated)
+
     static func set(_ on: Bool) {
-        guard let device = AVCaptureDevice.default(for: .video), device.hasTorch,
-              (try? device.lockForConfiguration()) != nil else { return }
-        device.torchMode = on ? .on : .off
-        device.unlockForConfiguration()
+        queue.async {
+            guard let device = AVCaptureDevice.default(for: .video), device.hasTorch,
+                  (try? device.lockForConfiguration()) != nil else { return }
+            device.torchMode = on ? .on : .off
+            device.unlockForConfiguration()
+        }
     }
 }

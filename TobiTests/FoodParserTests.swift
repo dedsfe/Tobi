@@ -363,3 +363,41 @@ struct SavedProductAnyOrderTests {
         #expect(parser.estimate("páprica picante da kitano").items.first?.foodName != paprica.name)
     }
 }
+
+/// Ajuda da linha "?": trecho sublinhado, porquê e sugestões que voltam a ser o alimento.
+struct UnknownHelpTests {
+    let parser = FoodParser.shared
+
+    @Test func foodTextLeavesTheQuantityOut() {
+        #expect(parser.foodText(in: "2 colheres de xis salada") == "xis salada")
+        #expect(parser.foodText(in: "xablau 200g") == "xablau")
+    }
+
+    @Test func typoBecomesTheFirstSuggestion() {
+        let help = parser.help(for: "picanah")
+        #expect(help.typoFix?.name.localizedCaseInsensitiveContains("picanha") == true)
+        #expect(help.suggestions.first?.name == help.typoFix?.name)
+    }
+
+    @Test func everySuggestionReadsBackAsItself() {
+        for piece in ["pao na chapa", "suco de cupuacu", "picanah", "frango xadrez"] {
+            for food in parser.help(for: piece).suggestions {
+                if let name = parser.writtenName(for: food) {
+                    #expect(parser.estimate(name).items.first?.foodName == food.name)
+                }
+            }
+        }
+    }
+
+    @Test func candidatesSkipChainsUnlessNamed() {
+        #expect(!parser.candidates(for: "pao na chapa").contains { $0.name.contains("McDonald") })
+        #expect(parser.candidates(for: "pao na chapa do mc").contains { $0.name.contains("McDonald") })
+    }
+
+    @Test func nonsenseHasNoTypoAndSaysWhy() {
+        let help = parser.help(for: "xablau")
+        #expect(help.typoFix == nil)
+        #expect(help.unknownWords == ["xablau"])
+        #expect(!help.reasons.isEmpty)
+    }
+}

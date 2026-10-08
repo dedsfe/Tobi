@@ -3,6 +3,7 @@ import VisionKit
 
 /// Câmera que lê código de barras (EAN/UPC) e devolve o primeiro que reconhecer.
 struct BarcodeScanner: UIViewControllerRepresentable {
+    var isScanning = true
     var onCode: (String) -> Void
 
     static var isAvailable: Bool {
@@ -19,12 +20,14 @@ struct BarcodeScanner: UIViewControllerRepresentable {
             isHighlightingEnabled: false
         )
         scanner.delegate = context.coordinator
-        try? scanner.startScanning()
+        if isScanning { try? scanner.startScanning() }
         return scanner
     }
 
     func updateUIViewController(_ scanner: DataScannerViewController, context: Context) {
         context.coordinator.onCode = onCode
+        if isScanning && !scanner.isScanning { try? scanner.startScanning() }
+        if !isScanning && scanner.isScanning { scanner.stopScanning() }
     }
 
     static func dismantleUIViewController(_ scanner: DataScannerViewController, coordinator: Coordinator) {
@@ -46,6 +49,7 @@ struct BarcodeScanner: UIViewControllerRepresentable {
             for case let .barcode(barcode) in items {
                 guard let code = barcode.payloadStringValue else { continue }
                 done = true
+                scanner.stopScanning()
                 onCode(code)
                 return
             }

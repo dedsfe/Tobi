@@ -12,6 +12,14 @@ struct NoteEditor: UIViewRepresentable {
     let placeholder: String
     /// O cursor mudou de linha (nil = sem teclado). Recebe a linha de antes e a de agora.
     var onCaretLine: (_ previous: Int?, _ current: Int?) -> Void
+    /// Toque no trecho sublinhado de vermelho: linha, qual trecho dela e onde ele está na tela.
+    var onUnknownTap: (_ line: Int, _ span: Int, _ rect: CGRect) -> Void = { _, _, _ in }
+    /// Toque no "?" ou no "+" da coluna das calorias: linha e posição na tela.
+    var onMarkTap: (_ line: Int, _ rect: CGRect) -> Void = { _, _ in }
+    /// Qualquer outro toque no texto.
+    var onPlainTap: () -> Void = {}
+    /// O menu de edição do sistema tem prioridade sobre as sugestões.
+    var onEditMenuChange: (Bool) -> Void = { _ in }
 
     func makeUIView(context: Context) -> NoteTextView {
         let view = NoteTextView.make()
@@ -29,6 +37,19 @@ struct NoteEditor: UIViewRepresentable {
         controller.textView = view
         if view.text != text { view.setTextKeepingCaret(text) }
         view.marks = marks
+        view.onUnknownTap = onUnknownTap
+        view.onMarkTap = onMarkTap
+        view.onPlainTap = onPlainTap
+        view.onEditMenuChange = onEditMenuChange
+    }
+
+    static func dismantleUIView(_ view: NoteTextView, coordinator: Coordinator) {
+        view.delegate = nil
+        view.onProgrammaticChange = nil
+        view.onUnknownTap = nil
+        view.onMarkTap = nil
+        view.onPlainTap = nil
+        view.onEditMenuChange = nil
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
@@ -49,8 +70,19 @@ struct NoteEditor: UIViewRepresentable {
             reportCaret(of: textView)
         }
 
-        func textViewDidChangeSelection(_ textView: UITextView) { reportCaret(of: textView) }
+        func textViewDidChangeSelection(_ textView: UITextView) {
+            (textView as? NoteTextView)?.clearUnderlineFromTyping()
+            reportCaret(of: textView)
+        }
         func textViewDidBeginEditing(_ textView: UITextView) { reportCaret(of: textView) }
+
+        func textView(_ textView: UITextView, willPresentEditMenuWith animator: any UIEditMenuInteractionAnimating) {
+            (textView as? NoteTextView)?.editMenuWillPresent()
+        }
+
+        func textView(_ textView: UITextView, willDismissEditMenuWith animator: any UIEditMenuInteractionAnimating) {
+            (textView as? NoteTextView)?.editMenuWillDismiss(with: animator)
+        }
 
         func textViewDidEndEditing(_ textView: UITextView) {
             let previous = caretLine
@@ -74,6 +106,9 @@ struct NoteEditor: UIViewRepresentable {
 struct LineMark: Equatable {
     let estimate: LineEstimate
     var isSearching = false
+    /// Trechos que o Tobi não entendeu, como aparecem na linha (sem acento, minúsculos): ficam
+    /// sublinhados de vermelho.
+    var unknownSpans: [String] = []
 }
 
 /// Por onde o DayView mexe no texto sem ser pelo teclado: ditado, código de barras, botão +.
@@ -122,7 +157,7 @@ final class NoteEditorController {
     func focus() { textView?.becomeFirstResponder() }
 }
 
-final class NoteTextView: UITextView {
+final class NoteTextView: UITextView, UIGestureRecognizerDelegate {
     static let font = UIFont.systemFont(ofSize: 17)
     static let titleFont = UIFont.systemFont(ofSize: 17, weight: .semibold)
     /// Largura da coluna das calorias e o respiro entre ela e o texto.
@@ -131,6 +166,21 @@ final class NoteTextView: UITextView {
     static let sideMargin: CGFloat = 24
 
     var onProgrammaticChange: ((String) -> Void)?
+    var onUnknownTap: ((Int, Int, CGRect) -> Void)?
+    var onMarkTap: ((Int, CGRect) -> Void)?
+    var onPlainTap: (() -> Void)?
+    var onEditMenuChange: ((Bool) -> Void)?
+    private(set) var isEditMenuPresented = false
+    private var editMenuGeneration = 0
+    private enum HelpHit {
+        case mark(line: Int, rect: CGRect)
+        case unknown(line: Int, span: Int, rect: CGRect)
+    }
+    private var pendingHelpHit: HelpHit?
+    /// Onde está cada trecho sublinhado: linha, posição do trecho entre os da linha e a faixa no texto.
+    private var unknownRanges: [(line: Int, span: Int, range: NSRange)] = []
+    /// Linha de base de cada caloria na coluna, pra saber em qual "?" a pessoa tocou.
+    private var rowBaselines: [(index: Int, baseline: CGFloat)] = []
     var placeholder = "" { didSet { placeholderLabel.text = placeholder } }
     var marks: [LineMark] = [] {
         didSet {
@@ -139,6 +189,21 @@ final class NoteTextView: UITextView {
             setNeedsLayout()
         }
     }
+
+    private var rangeText: String?
+    private var cachedRanges: [NSRange] = []
+    private var displayedRows: [KcalGutter.Row] = []
+    private struct LineStyle: Equatable {
+        let isTitle: Bool
+        let unknown: [String]
+    }
+    private struct StyledLine {
+        let text: String
+        let style: LineStyle
+        let spans: [NSRange]
+    }
+    private var styledLines: [StyledLine] = []
+    private var invalidStyles: Set<Int> = []
 
     private let placeholderLabel = UILabel()
     private let gutter = UIHostingController(rootView: KcalGutter(rows: []))
@@ -171,6 +236,93 @@ final class NoteTextView: UITextView {
         gutter.view.isUserInteractionEnabled = false
         gutter.sizingOptions = []
         addSubview(gutter.view)
+
+        // Só o toque na ajuda é nosso. Seleção e pressão longa continuam com o sistema.
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapped))
+        tap.cancelsTouchesInView = false
+        tap.delegate = self
+        addGestureRecognizer(tap)
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                           shouldReceive touch: UITouch) -> Bool {
+        pendingHelpHit = !isEditMenuPresented && selectedRange.length == 0
+            ? helpHit(at: touch.location(in: self)) : nil
+        gestureRecognizer.cancelsTouchesInView = pendingHelpHit != nil
+        return true
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                           shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
+        pendingHelpHit == nil
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                           shouldBeRequiredToFailBy other: UIGestureRecognizer) -> Bool {
+        // No sublinhado, o toque simples da Apple espera a ajuda reconhecer ou falhar.
+        guard pendingHelpHit != nil, let tap = other as? UITapGestureRecognizer else { return false }
+        return tap.numberOfTapsRequired == 1
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                           shouldRequireFailureOf other: UIGestureRecognizer) -> Bool {
+        guard pendingHelpHit != nil else { return false }
+        return (other as? UITapGestureRecognizer).map { $0.numberOfTapsRequired > 1 } ?? false
+    }
+
+    @objc private func tapped(_ recognizer: UITapGestureRecognizer) {
+        let hit = pendingHelpHit
+        guard !isEditMenuPresented, selectedRange.length == 0 else { return }
+        switch hit {
+        case let .mark(line, rect): onMarkTap?(line, convert(rect, to: nil))
+        case let .unknown(line, span, rect): onUnknownTap?(line, span, convert(rect, to: nil))
+        case nil: onPlainTap?()
+        }
+    }
+
+    private func helpHit(at point: CGPoint) -> HelpHit? {
+        let gutterStart = bounds.width - Self.sideMargin - Self.gutterWidth
+        if point.x >= gutterStart - Self.gutterSpacing {
+            let row = rowBaselines.min { abs($0.baseline - point.y) < abs($1.baseline - point.y) }
+            if let row, abs(row.baseline - Self.font.ascender / 2 - point.y) < 24,
+               marks.indices.contains(row.index), !marks[row.index].unknownSpans.isEmpty {
+                let markRect = CGRect(x: gutterStart, y: row.baseline - Self.font.ascender,
+                                      width: Self.gutterWidth, height: Self.font.lineHeight)
+                return .mark(line: row.index, rect: markRect)
+            }
+        }
+        let inText = CGPoint(x: point.x - textContainerInset.left, y: point.y - textContainerInset.top)
+        for item in unknownRanges {
+            let glyphs = layoutManager.glyphRange(forCharacterRange: item.range, actualCharacterRange: nil)
+            let rect = layoutManager.boundingRect(forGlyphRange: glyphs, in: textContainer)
+            if rect.insetBy(dx: -4, dy: -6).contains(inText) {
+                let onScreen = rect.offsetBy(dx: textContainerInset.left, dy: textContainerInset.top)
+                return .unknown(line: item.line, span: item.span, rect: onScreen)
+            }
+        }
+        return nil
+    }
+
+    func editMenuWillPresent() {
+        editMenuGeneration += 1
+        isEditMenuPresented = true
+        onEditMenuChange?(true)
+    }
+
+    func editMenuWillDismiss(with animator: any UIEditMenuInteractionAnimating) {
+        let generation = editMenuGeneration
+        // Só libera quando o menu terminou de sair; pode abrir outro durante a transição.
+        animator.addCompletion { [weak self] in
+            guard let self, editMenuGeneration == generation else { return }
+            isEditMenuPresented = false
+            onEditMenuChange?(false)
+        }
+    }
+
+    /// Quem digita logo depois de um trecho sublinhado não herda o sublinhado.
+    func clearUnderlineFromTyping() {
+        typingAttributes[.underlineStyle] = nil
+        typingAttributes[.underlineColor] = nil
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) não usado") }
@@ -191,13 +343,17 @@ final class NoteTextView: UITextView {
 
     /// Faixa de cada linha (sem o "\n"), na ordem.
     var lineRanges: [NSRange] {
-        let string = text as NSString
+        let source = text ?? ""
+        if rangeText == source { return cachedRanges }
+        let string = source as NSString
         var ranges: [NSRange] = []
         var start = 0
         while true {
             let newline = string.range(of: "\n", options: [], range: NSRange(location: start, length: string.length - start))
             if newline.location == NSNotFound {
                 ranges.append(NSRange(location: start, length: string.length - start))
+                rangeText = source
+                cachedRanges = ranges
                 return ranges
             }
             ranges.append(NSRange(location: start, length: newline.location - start))
@@ -212,6 +368,7 @@ final class NoteTextView: UITextView {
 
     func setTextKeepingCaret(_ newText: String) {
         let selection = selectedRange
+        styledLines.removeAll(keepingCapacity: true)
         text = newText
         let length = (newText as NSString).length
         selectedRange = NSRange(location: min(selection.location, length), length: 0)
@@ -226,6 +383,7 @@ final class NoteTextView: UITextView {
         guard (text as NSString).substring(with: range) != newText || caretAtEnd else { return }
         var selection = selectedRange
         let delta = (newText as NSString).length - range.length
+        invalidStyles.insert(index)
         textStorage.replaceCharacters(in: range, with: NSAttributedString(string: newText, attributes: typingAttributes))
         if caretAtEnd {
             selection = NSRange(location: range.location + (newText as NSString).length, length: 0)
@@ -257,16 +415,56 @@ final class NoteTextView: UITextView {
         scrollRangeToVisible(selectedRange)
     }
 
-    /// Linha que é só título ("Almoço") fica em negrito, como no Notas.
+    /// Linha que é só título ("Almoço") fica em negrito, como no Notas. O que o Tobi não entendeu
+    /// ganha um sublinhado vermelho pontilhado, como erro de ortografia.
     private func applyLineFonts() {
         guard markedTextRange == nil else { return }
         let ranges = lineRanges
+        let string = text as NSString
+        var next: [StyledLine] = []
+        next.reserveCapacity(ranges.count)
+        unknownRanges.removeAll(keepingCapacity: true)
         textStorage.beginEditing()
-        for (index, range) in ranges.enumerated() where range.length > 0 {
-            let isTitle = marks.indices.contains(index) && marks[index].estimate.isLabel
-            textStorage.addAttribute(.font, value: isTitle ? Self.titleFont : Self.font, range: range)
+        for (index, range) in ranges.enumerated() {
+            let line = string.substring(with: range)
+            let style = LineStyle(isTitle: marks.indices.contains(index) && marks[index].estimate.isLabel,
+                                  unknown: marks.indices.contains(index) ? marks[index].unknownSpans : [])
+            let previous = styledLines.indices.contains(index) ? styledLines[index] : nil
+            let changed = invalidStyles.contains(index) || previous?.text != line || previous?.style != style
+            let spans = changed ? style.unknown.map { Self.locate($0, in: line) } : previous!.spans
+            next.append(StyledLine(text: line, style: style, spans: spans))
+            guard range.length > 0 else { continue }
+            // Texto inalterado conserva seus atributos, mesmo deslocado por uma edição acima.
+            if changed {
+                textStorage.removeAttribute(.underlineStyle, range: range)
+                textStorage.removeAttribute(.underlineColor, range: range)
+                textStorage.addAttribute(.font, value: style.isTitle ? Self.titleFont : Self.font, range: range)
+            }
+            for (span, local) in spans.enumerated() {
+                let target = NSRange(location: range.location + local.location, length: local.length)
+                unknownRanges.append((index, span, target))
+                if changed {
+                    textStorage.addAttributes([
+                        .underlineStyle: NSUnderlineStyle.single.rawValue | NSUnderlineStyle.patternDot.rawValue,
+                        .underlineColor: UIColor.systemRed,
+                    ], range: target)
+                }
+            }
         }
+        styledLines = next
+        invalidStyles.removeAll(keepingCapacity: true)
         textStorage.endEditing()
+        clearUnderlineFromTyping()
+    }
+
+    /// Onde o trecho (já sem acento e minúsculo) está na linha original. Se tirar o acento mudou
+    /// o tamanho do texto, não dá pra apontar a palavra: sublinha a linha inteira.
+    static func locate(_ piece: String, in line: String) -> NSRange {
+        let whole = NSRange(location: 0, length: (line as NSString).length)
+        let normalized = FoodParser.normalize(line) as NSString
+        guard !piece.isEmpty, normalized.length == whole.length else { return whole }
+        let found = normalized.range(of: piece)
+        return found.location == NSNotFound ? whole : found
     }
 
     // MARK: Layout
@@ -282,10 +480,16 @@ final class NoteTextView: UITextView {
                                         width: placeholderWidth, height: placeholderHeight)
 
         // Onde cai a primeira linha de cada parágrafo: a caloria se alinha nela.
-        layoutManager.ensureLayout(for: textContainer)
+        // Só a coluna visível, com uma margem para a rolagem não revelar rótulos atrasados.
+        let visible = CGRect(x: 0, y: max(0, bounds.minY - textContainerInset.top - 80),
+                             width: textContainer.size.width, height: bounds.height + 160)
+        layoutManager.ensureLayout(forBoundingRect: visible, in: textContainer)
+        let glyphs = layoutManager.glyphRange(forBoundingRect: visible, in: textContainer)
+        let characters = layoutManager.characterRange(forGlyphRange: glyphs, actualGlyphRange: nil)
         let string = text as NSString
         var rows: [KcalGutter.Row] = []
         for (index, range) in lineRanges.enumerated() {
+            guard range.location >= characters.location, range.location <= NSMaxRange(characters) else { continue }
             let rect: CGRect
             if range.location < string.length {
                 let glyph = layoutManager.glyphIndexForCharacter(at: range.location)
@@ -298,7 +502,11 @@ final class NoteTextView: UITextView {
             rows.append(.init(index: index, baseline: textContainerInset.top + rect.minY + font.ascender,
                               mark: marks[index]))
         }
-        gutter.rootView = KcalGutter(rows: rows)
+        rowBaselines = rows.map { ($0.index, $0.baseline) }
+        if rows != displayedRows {
+            displayedRows = rows
+            gutter.rootView = KcalGutter(rows: rows)
+        }
         let height = max(contentSize.height, bounds.height)
         gutter.view.frame = CGRect(x: bounds.width - Self.sideMargin - Self.gutterWidth, y: 0,
                                    width: Self.gutterWidth, height: height)

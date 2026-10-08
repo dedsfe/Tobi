@@ -26,7 +26,7 @@ struct SettingsView: View {
     private enum SettingsDestination: Hashable {
         case changelog, about
         #if DEBUG
-        case animationLab
+        case animationLab, bodyLab
         #endif
     }
 
@@ -112,6 +112,9 @@ struct SettingsView: View {
                     Button { destination = .animationLab } label: {
                         settingsLabel("Animações do Tobi", systemImage: "play.circle", navigates: true)
                     }
+                    Button { destination = .bodyLab } label: {
+                        settingsLabel("Tobi com corpinho", systemImage: "dog", navigates: true)
+                    }
                     Button {
                         replayOnboarding(from: .welcome)
                     } label: {
@@ -147,6 +150,7 @@ struct SettingsView: View {
                 case .about: AboutView()
                 #if DEBUG
                 case .animationLab: TobiAnimationLabView()
+                case .bodyLab: TobiAnimationLabView(bodyPreview: true)
                 #endif
                 }
             }
@@ -243,27 +247,24 @@ struct SettingsView: View {
 
 /// CSV com uma linha por comida: dia, texto e o que o Tobi estimou.
 struct NotesExport: Transferable {
-    let csv: String
+    let rows: [NoteCSV.Row]
 
     @MainActor
     init(notes: [DayNote]) {
-        let parser = FoodParser.shared
-        var rows = ["data,linha,kcal,carboidratos_g,proteina_g,gordura_g"]
-        for note in notes {
-            let day = note.day.formatted(.iso8601.year().month().day())
-            for line in note.text.split(separator: "\n") where !line.trimmingCharacters(in: .whitespaces).isEmpty {
-                let n = parser.estimate(String(line)).total
-                let text = "\"" + line.replacingOccurrences(of: "\"", with: "\"\"") + "\""
-                let numbers = [n.kcal, n.carbs, n.protein, n.fat].map { String(Int($0.rounded())) }
-                rows.append(([day, text] + numbers).joined(separator: ","))
-            }
-        }
-        csv = rows.joined(separator: "\n")
+        rows = notes.map { NoteCSV.Row(day: $0.day, text: $0.text) }
     }
 
     static var transferRepresentation: some TransferRepresentation {
-        DataRepresentation(exportedContentType: .commaSeparatedText) { Data($0.csv.utf8) }
-            .suggestedFileName("tobi.csv")
+        DataRepresentation(exportedContentType: .commaSeparatedText) { export in
+            // Só calcula ao compartilhar, fora da interface e com cancelamento.
+            let work = Task.detached(priority: .utility) { try NoteCSV.data(export.rows) }
+            return try await withTaskCancellationHandler {
+                try await work.value
+            } onCancel: {
+                work.cancel()
+            }
+        }
+        .suggestedFileName("tobi.csv")
     }
 }
 
@@ -323,7 +324,7 @@ private struct AboutView: View {
 /// Cada animação do Tobi, uma de cada vez, para conferir no aparelho.
 private enum TobiLabAnimation: String, CaseIterable, Identifiable {
     case idle, attentive, curious, presenting, celebrating
-    case acknowledge, pet, yawn, sneeze, distraction, lick, blink, look, follow
+    case acknowledge, pet, yawn, sneeze, distraction, lick, blink, look, follow, eat
 
     var id: Self { self }
 
@@ -343,25 +344,27 @@ private enum TobiLabAnimation: String, CaseIterable, Identifiable {
         case .blink: "Piscar"
         case .look: "Olhar pro lado"
         case .follow: "Seguir o dedo"
+        case .eat: "Come-come"
         }
     }
 
     var detail: String {
         switch self {
         case .idle: "Alegre, com as manias aparecendo sozinhas a cada tanto."
-        case .attentive: "Boca quase fechada e orelhas em pé. Telas sem resposta."
+        case .attentive: "Olhar focado e uma leve inclinação do rostinho. Telas sem resposta."
         case .curious: "Cabeça inclinada e olhar mais solto."
         case .presenting: "Olha pro cartão embaixo dele."
         case .celebrating: "Pulinhos e orelhas abanando, depois passa a apresentar."
         case .acknowledge: "Piscada, inclinação e ofegada quando você escolhe uma opção."
-        case .pet: "Olhos ^^, balança a cabeça e dá um pulinho. Toque no rosto dele também."
+        case .pet: "Faz uma carinha fofa. No terceiro carinho, fica bem feliz por mais tempo."
         case .yawn: "Levanta o focinho, fecha os olhos e abre a boca."
         case .sneeze: "Ah... ah... tchim! E sacode a cabeça."
-        case .distraction: "Algo chamou atenção do lado: olha, inclina a cabeça e levanta a orelha."
+        case .distraction: "Algo chamou atenção do lado: olha e inclina a cabeça."
         case .lick: "A língua entra e varre de lado."
         case .blink: "Uma piscada."
         case .look: "Olha pro lado e volta."
         case .follow: "Toque e arraste pela tela: ele olha pro dedo e vira pro lado que você puxa."
+        case .eat: "As comidas dão a volta por trás da cabeça e entram na boca. Sem parar."
         }
     }
 
@@ -370,10 +373,12 @@ private enum TobiLabAnimation: String, CaseIterable, Identifiable {
 }
 
 private struct TobiAnimationLabView: View {
+    var bodyPreview = false
     @State private var isPlaying = true
     @State private var showModel = true
     @State private var animation = TobiLabAnimation.idle
     @State private var performance = TobiPerformance()
+    @State private var snackReplay = 0
     @State private var blinkRequest = 0
     @State private var lookRequest = 0
     @State private var modelFailed = false
@@ -389,12 +394,14 @@ private struct TobiAnimationLabView: View {
                 }
                 .pickerStyle(.segmented)
 
-                if showModel && !modelFailed {
+                if showModel && animation == .eat {
+                    TobiSnackStage(isPlaying: isPlaying, replay: snackReplay)
+                } else if showModel && !modelFailed {
                     TobiFaceView(isPlaying: isPlaying, blinkRequest: blinkRequest,
                                  lookRequest: lookRequest, isActive: scenePhase == .active,
                                  reduceMotion: reduceMotion, performance: performance,
-                                 followsFinger: animation == .follow, onFailure: { modelFailed = true })
-                        .frame(height: TobiStage.height)
+                                 followsFinger: animation == .follow, showsBody: bodyPreview, onFailure: { modelFailed = true })
+                        .frame(height: bodyPreview ? 340 : TobiStage.height)
                         .contentShape(.rect)
                         .onTapGesture { if animation == .pet { play(.pet) } }
                 } else {
@@ -465,7 +472,7 @@ private struct TobiAnimationLabView: View {
             .padding(.vertical, 24)
         }
         .background { Theme.background }
-        .navigationTitle("Animações do Tobi")
+        .navigationTitle(bodyPreview ? "Tobi com corpinho" : "Animações do Tobi")
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: animation) { _, next in play(next) }
     }
@@ -474,7 +481,7 @@ private struct TobiAnimationLabView: View {
     private func play(_ next: TobiLabAnimation) {
         performance.spontaneous = next == .idle
         switch next {
-        case .idle, .acknowledge, .pet, .yawn, .sneeze, .distraction, .lick, .blink, .look, .follow:
+        case .idle, .acknowledge, .pet, .yawn, .sneeze, .distraction, .lick, .blink, .look, .follow, .eat:
             if performance.mood != .joyful { stage(.joyful) }
         case .attentive: stage(.attentive)
         case .curious: stage(.curious)
@@ -482,6 +489,7 @@ private struct TobiAnimationLabView: View {
         case .celebrating: stage(.celebrating)
         }
         switch next {
+        case .eat: snackReplay += 1
         case .acknowledge: performance.acknowledgements += 1
         case .pet: performance.pets += 1
         case .yawn: request(.yawn)
@@ -505,6 +513,8 @@ private struct TobiAnimationLabView: View {
         performance.quirks += 1
     }
 }
+
+
 #endif
 
 #Preview {

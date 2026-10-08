@@ -12,6 +12,7 @@ struct DayView: View {
     @State private var demoLineDone = 0
 
     @Environment(\.modelContext) private var context
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("dailyGoal") private var goal = 2000
     @Query private var notes: [DayNote]
     @Query private var brandProducts: [BrandProduct]
@@ -37,27 +38,77 @@ struct DayView: View {
     @State private var lineCountAtCaret = 0
 
     /// Base oficial + produtos de marca que a pessoa já usou (refeito quando um produto entra).
-    @State private var parser = FoodParser.shared
+    @State private var parser = FoodParser(foods: [])
+    @State private var parserReady = false
+    @State private var loadedNote: DayNote?
+    @State private var loadedDay: Date?
+    @State private var dictationStart: Task<Void, Never>?
     @State private var showingScanner = false
     /// Linhas procurando produto de marca no Open Food Facts (mostram ✨).
     @State private var searching: Set<Int> = []
+    private struct BrandSearch {
+        let id: UUID
+        let text: String
+        let task: Task<Void, Never>
+    }
+    @State private var brandSearches: [Int: BrandSearch] = [:]
+    /// Linha cujo "?" foi tocado: o toasterzinho explica o que não foi entendido.
+    @State private var explaining: Explaining?
+    /// Trecho sublinhado que foi tocado: as sugestões aparecem embaixo dele.
+    @State private var suggesting: Suggesting?
+    @State private var editMenuPresented = false
+
+    struct Explaining {
+        let id = UUID()
+        let line: Int
+        let lineText: String
+        let rect: CGRect
+    }
+
+    struct Suggesting {
+        let id = UUID()
+        let line: Int
+        let lineText: String
+        /// O trecho (sem acento, minúsculo) e onde ele está na tela.
+        let foodText: String
+        let rect: CGRect
+        var foods: [Food]
+        var isAsking = false
+        var message: String?
+    }
 
     /// Cada texto passa pelo parser uma vez só. Sem isso, cada palavra ditada recalculava todas as
     /// linhas duas ou três vezes por redesenho (linha, total, barra) e a fala longa engasgava.
     @State private var estimateCache = EstimateCache()
-    private func estimate(_ text: String) -> LineEstimate { estimateCache.estimate(text, with: parser) }
+    private func estimate(_ text: String) -> LineEstimate {
+        parserReady ? estimateCache.estimate(text, with: parser) : .empty
+    }
     private var estimates: [LineEstimate] { lines.map(estimate) }
 
     var body: some View {
         NoteEditor(
             text: $text,
             marks: lines.enumerated().map { index, line in
-                LineMark(estimate: estimate(line), isSearching: searching.contains(index))
+                let estimate = estimate(line)
+                return LineMark(estimate: estimate, isSearching: searching.contains(index),
+                                unknownSpans: isDemo ? [] : unknownPieces(estimate).map(parser.foodText))
             },
             controller: editor,
             placeholder: isDemo ? "" : "Comece a registrar suas refeições",
-            onCaretLine: { caretMoved(from: $0, to: $1) }
+            onCaretLine: { caretMoved(from: $0, to: $1) },
+            onUnknownTap: { line, span, rect in suggest(line: line, span: span, at: rect) },
+            onMarkTap: { line, rect in
+                guard lines.indices.contains(line) else { return }
+                withAnimation(Motion.surface) {
+                    suggesting = nil
+                    explaining = Explaining(line: line, lineText: lines[line], rect: rect)
+                }
+            },
+            onPlainTap: closeHelp,
+            onEditMenuChange: editMenuChanged
         )
+        .overlay(alignment: .topLeading) { helpCard }
+        .overlay(alignment: .topLeading) { suggestionBubble }
         // Marca invisível pros testes de interface: só existe com o banco em memória. Teste que
         // não acha a marca não digita nada (pode ser o app de verdade, com dados de verdade).
         .overlay(alignment: .topLeading) {
@@ -79,17 +130,39 @@ struct DayView: View {
         .fullScreenCover(isPresented: $showingScanner) {
             ScanSheet(onProduct: addScanned, onWriteInstead: { editor.focus() })
         }
-        .onChange(of: brandProducts.map(\.barcode), initial: true) {
-            parser = FoodParser.shared.adding(brandProducts.map(\.food))
-            estimateCache.removeAll()
+        .task(id: brandProducts.map(\.barcode)) {
+            await prepareParser()
+            await cleanUpBrandProducts()
         }
         .task(id: day) { load() }
         .task {
             guard isDemo else { return }
             await playFirstMealDemo()
         }
-        .onChange(of: text) { save() }
+        .onChange(of: text) {
+            save()
+            for (index, search) in brandSearches where lines[safe: index] != search.text {
+                search.task.cancel()
+                brandSearches[index] = nil
+                searching.remove(index)
+            }
+            // O texto mudou: a ajuda aberta pode não valer mais pra linha.
+            if let suggesting, lines[safe: suggesting.line] != suggesting.lineText { closeHelp() }
+            if let explaining, !(lines.indices.contains(explaining.line) && estimate(lines[explaining.line]).hasUnknown) { closeHelp() }
+        }
         .onChange(of: dictation.transcript) { _, spoken in applyDictation(spoken) }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active {
+                stopDictation()
+                cancelBrandSearches()
+                closeHelp()
+            }
+        }
+        .onDisappear {
+            stopDictation()
+            cancelBrandSearches()
+            closeHelp()
+        }
     }
 
     // MARK: - Barra de baixo
@@ -217,10 +290,16 @@ struct DayView: View {
         }
         guard let line = caretLine, lines.indices.contains(line) else { return }
         dictationTarget = (line, lines[line])
-        Task { await dictation.start() }
+        dictationStart?.cancel()
+        dictationStart = Task {
+            guard !Task.isCancelled else { return }
+            await dictation.start()
+        }
     }
 
     private func stopDictation() {
+        dictationStart?.cancel()
+        dictationStart = nil
         dictation.stop()
         dictationTarget = nil
     }
@@ -307,6 +386,8 @@ struct DayView: View {
     /// Escreve `FirstMealDemo.lines` letra por letra. Enquanto a linha é escrita, ela mostra o ✨
     /// (o mesmo de "procurando"); no fim da linha o ✨ vira as calorias, com uma vibração leve.
     private func playFirstMealDemo() async {
+        await prepareParser()
+        guard !Task.isCancelled else { return }
         text = ""
         try? await Task.sleep(for: .seconds(0.8))
         for (index, line) in FirstMealDemo.lines.enumerated() {
@@ -375,6 +456,8 @@ struct DayView: View {
         }
         caretLine = current
         lineCountAtCaret = count
+        if let suggesting, suggesting.line != current { closeHelp() }
+        if let explaining, explaining.line != current { closeHelp() }
         if current != nil, showingGoals { toggleGoals() }
         if (current != nil) != isEditing { withAnimation(Motion.surface) { isEditing = current != nil } }
         if current == nil, dictation.isRecording { stopDictation() }
@@ -387,23 +470,212 @@ struct DayView: View {
         searchBrands(in: index)
     }
 
+    // MARK: - Ajuda pra linha que não entendeu
+
+    private func unknownPieces(_ estimate: LineEstimate) -> [String] { estimate.unclearPieces }
+
+    /// O trecho como a pessoa escreveu, com acento e maiúscula.
+    private func written(_ foodText: String, in line: String) -> String {
+        let range = NoteTextView.locate(foodText, in: line)
+        return (line as NSString).substring(with: range).trimmingCharacters(in: .whitespaces)
+    }
+
+    @ViewBuilder private var helpCard: some View {
+        if let explaining, lines.indices.contains(explaining.line) {
+            let line = lines[explaining.line]
+            let problems = unknownPieces(estimate(line)).enumerated().map { index, piece in
+                let help = parser.help(for: piece)
+                return UnknownHelpCard.Problem(id: index, written: written(help.foodText, in: line), help: help)
+            }
+            GeometryReader { geometry in
+                let origin = geometry.frame(in: .global).origin
+                let toastWidth: CGFloat = 270
+                let x = min(max(explaining.rect.midX - origin.x - toastWidth / 2, 16), geometry.size.width - toastWidth - 16)
+                let y = (explaining.rect.minY - origin.y > 54)
+                    ? explaining.rect.minY - origin.y - 42
+                    : explaining.rect.maxY - origin.y + 6
+                UnknownHelpCard(problems: problems, onClose: closeHelp)
+                    .offset(x: x, y: y)
+                    .transition(.emerge(from: .topTrailing))
+            }
+            .id(explaining.id)
+        }
+    }
+
+    @ViewBuilder private var suggestionBubble: some View {
+        if let suggesting {
+            GeometryReader { geometry in
+                let origin = geometry.frame(in: .global).origin
+                let bubbleWidth: CGFloat = 210
+                let x = min(max(suggesting.rect.minX - origin.x, 16), geometry.size.width - bubbleWidth - 16)
+                let y = suggesting.rect.maxY - origin.y + 6
+                SuggestionBubble(suggestions: suggesting.foods, isAsking: suggesting.isAsking, message: suggesting.message) { food in
+                    pick(food, for: suggesting)
+                }
+                .offset(x: x, y: y)
+                .transition(.emerge(from: .topLeading))
+            }
+            .id(suggesting.id)
+            .task(id: suggesting.id) { await improveSuggestions(for: suggesting) }
+        }
+    }
+
+    /// A base responde na hora; a IA refina as opções sem interromper a escrita.
+    private func suggest(line: Int, span: Int, at rect: CGRect) {
+        guard parserReady, !isDemo, !editMenuPresented, scenePhase == .active, lines.indices.contains(line) else { return }
+        let pieces = unknownPieces(estimate(lines[line]))
+        guard pieces.indices.contains(span) else { return }
+        let help = parser.help(for: pieces[span])
+        var foods = help.suggestions.filter {
+            FoodCorrection.replacing(help.foodText, in: lines[line], with: $0, parser: parser) != nil
+        }
+        if foods.isEmpty {
+            foods = parser.candidates(for: help.foodText, limit: 3).filter {
+                FoodCorrection.replacing(help.foodText, in: lines[line], with: $0, parser: parser) != nil
+            }
+        }
+        let target = Suggesting(line: line, lineText: lines[line], foodText: help.foodText, rect: rect,
+                                foods: foods, isAsking: true)
+        withAnimation(Motion.surface) {
+            explaining = nil
+            suggesting = target
+        }
+    }
+
+    private func improveSuggestions(for target: Suggesting) async {
+        let base = parser
+        do {
+            // Só o trecho da comida sai do aparelho; a nota inteira não vai junto.
+            let work = Task.detached(priority: .userInitiated) {
+                var seen = Set<String>()
+                let candidates = (target.foods + base.candidates(for: target.foodText, limit: 30)).filter {
+                    seen.insert($0.name).inserted && FoodCorrection.replacing(target.foodText, in: target.lineText,
+                                                                             with: $0, parser: base) != nil
+                }
+                return try await LineResolver.suggestions(for: target.foodText, among: candidates)
+            }
+            let foods = try await withTaskCancellationHandler {
+                try await work.value
+            } onCancel: { work.cancel() }
+            guard !Task.isCancelled, suggesting?.id == target.id, lines[safe: target.line] == target.lineText,
+                  scenePhase == .active else { return }
+            suggesting?.isAsking = false
+            if !foods.isEmpty { suggesting?.foods = Array(foods.prefix(4)) }
+            else { suggesting?.message = "Não encontrei outra opção na base." }
+        } catch {
+            guard !Task.isCancelled, suggesting?.id == target.id, lines[safe: target.line] == target.lineText else { return }
+            suggesting?.isAsking = false
+            suggesting?.message = "A IA não respondeu. As opções locais continuam aqui."
+        }
+    }
+
+    /// Troca só o trecho não entendido pelo nome do alimento escolhido; a quantidade fica.
+    private func pick(_ food: Food, for target: Suggesting) {
+        guard suggesting?.id == target.id, lines[safe: target.line] == target.lineText,
+              let replaced = FoodCorrection.replacing(target.foodText, in: target.lineText, with: food, parser: parser) else { return }
+        closeHelp()
+        editor.replaceLine(target.line, with: replaced)
+    }
+
+    private func closeHelp() {
+        guard explaining != nil || suggesting != nil else { return }
+        withAnimation(Motion.exit) {
+            explaining = nil
+            suggesting = nil
+        }
+    }
+
+    private func editMenuChanged(_ presented: Bool) {
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            editMenuPresented = presented
+            if presented {
+                explaining = nil
+                suggesting = nil
+            }
+        }
+    }
+
     // MARK: - Produtos de marca
 
     /// O que a base não reconheceu, procura no Open Food Facts. Só aceita produto vendido no Brasil
-    /// com todas as palavras escritas no nome; senão a linha continua "não sei".
-    /// Ordem de quem responde: base local (redes, TACO, IBGE) → Open Food Facts → IA (quando entrar).
-    /// A IA só interpreta a frase e aponta itens da base; número inventado nunca entra.
+    /// com todas as palavras escritas no nome e que a IA confirma ser o que a pessoa escreveu;
+    /// senão a linha continua "não sei". O número sempre vem do rótulo, nunca da IA.
     private func searchBrands(in index: Int) {
-        guard lines.indices.contains(index) else { return }
-        let unknown = estimate(lines[index]).items.filter { !$0.isRecognized }.map(\.text)
+        guard lines.indices.contains(index), scenePhase == .active else { return }
+        let line = lines[index]
+        if brandSearches[index]?.text == line { return }
+        brandSearches[index]?.task.cancel()
+        let unknown = estimate(line).items.filter { !$0.isRecognized }.map(\.text)
         guard !unknown.isEmpty else { return }
+        let searchedDay = day
+        let id = UUID()
         searching.insert(index)
-        Task {
-            for text in unknown {
-                if let info = try? await OpenFoodFacts.search(text, limit: 1).first { save(info) }
+        let task = Task {
+            defer {
+                if brandSearches[index]?.id == id {
+                    brandSearches[index] = nil
+                    searching.remove(index)
+                }
             }
-            searching.remove(index)
+            for piece in unknown {
+                guard !Task.isCancelled, day == searchedDay, lines[safe: index] == line else { return }
+                do {
+                    // O Open Food Facts acha "prato" no "Arroz Prato Fino": só salva o que a IA confirmar.
+                    let found = try await OpenFoodFacts.search(piece, limit: 5)
+                    guard !found.isEmpty else { continue }
+                    let match = try await LineResolver.confirmed(piece, among: found.map(\.name))
+                    guard !Task.isCancelled, day == searchedDay, lines[safe: index] == line else { return }
+                    if let match { save(found[match]) }
+                } catch {
+                    if Task.isCancelled { return }
+                }
+            }
         }
+        brandSearches[index] = BrandSearch(id: id, text: line, task: task)
+    }
+
+    private func cancelBrandSearches() {
+        brandSearches.values.forEach { $0.task.cancel() }
+        brandSearches.removeAll()
+        searching.removeAll()
+    }
+
+    private func prepareParser() async {
+        let base = await FoodParser.prepared()
+        guard !Task.isCancelled else { return }
+        let foods = brandProducts.map(\.food)
+        let build = Task.detached(priority: .userInitiated) { base.adding(foods) }
+        let prepared = await withTaskCancellationHandler {
+            await build.value
+        } onCancel: {
+            build.cancel()
+        }
+        guard !Task.isCancelled else { return }
+        parser = prepared
+        estimateCache.removeAll()
+        parserReady = true
+    }
+
+    /// Uma vez só: apaga o produto que a busca por nome salvou errado antes da IA conferir.
+    /// Sem rede, tenta de novo na próxima abertura.
+    private func cleanUpBrandProducts() async {
+        let defaults = UserDefaults.standard
+        guard !isDemo, parserReady, !defaults.bool(forKey: BrandCleanup.doneKey) else { return }
+        let notes = ((try? context.fetch(FetchDescriptor<DayNote>())) ?? []).map(\.text)
+        let products = brandProducts.map { (barcode: $0.barcode, name: $0.name) }
+        let base = parser
+        let work = Task.detached(priority: .utility) {
+            try await BrandCleanup.rejected(products: products, notes: notes, parser: base) { piece, name in
+                try await LineResolver.confirmed(piece, among: [name]) != nil
+            }
+        }
+        guard let rejected = try? await withTaskCancellationHandler(operation: { try await work.value },
+                                                                    onCancel: { work.cancel() }),
+              !Task.isCancelled else { return }
+        for product in brandProducts where rejected.contains(product.barcode) { context.delete(product) }
+        defaults.set(true, forKey: BrandCleanup.doneKey)
     }
 
     private func save(_ info: BrandProductInfo) {
@@ -425,40 +697,81 @@ struct DayView: View {
     // MARK: - Persistência
 
     private func note(for day: Date) -> DayNote? {
-        let descriptor = FetchDescriptor<DayNote>(predicate: #Predicate { $0.day == day })
+        var descriptor = FetchDescriptor<DayNote>(predicate: #Predicate { $0.day == day })
+        descriptor.fetchLimit = 1
         return try? context.fetch(descriptor).first
     }
 
     private func load() {
         guard !isDemo else { return }
-        text = note(for: day)?.text ?? ""
+        stopDictation()
+        cancelBrandSearches()
+        closeHelp()
+        loadedNote = note(for: day)
+        loadedDay = day
+        text = loadedNote?.text ?? ""
     }
 
     private func save() {
-        guard !isDemo else { return }
-        if let note = note(for: day) {
+        guard !isDemo, loadedDay == day else { return }
+        if let note = loadedNote, note.day == day, !note.isDeleted {
             if note.text != text { note.text = text }
         } else if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            context.insert(DayNote(day: day, text: text))
+            let note = DayNote(day: day, text: text)
+            context.insert(note)
+            loadedNote = note
         }
     }
 }
 
 /// Memória do parser por texto. Esvazia quando a base muda (produto de marca novo) e quando
-/// passa de 500 textos, pra não crescer sem fim durante o ditado.
+/// limita as revisões antigas, sem esvaziar o dia inteiro durante o ditado.
 @MainActor
 final class EstimateCache {
     private var results: [String: LineEstimate] = [:]
+    private var order: [String] = []
+    private var oldest = 0
+    private let capacity: Int
+    private let byteLimit: Int
+    private var retainedBytes = 0
+
+    init(capacity: Int = 500, byteLimit: Int = 256_000) {
+        self.capacity = max(1, capacity)
+        self.byteLimit = max(1, byteLimit)
+    }
+    var count: Int { results.count }
 
     func estimate(_ text: String, with parser: FoodParser) -> LineEstimate {
         if let cached = results[text] { return cached }
-        if results.count > 500 { results.removeAll(keepingCapacity: true) }
+        let cost = text.utf8.count
+        if cost > byteLimit { return parser.estimate(text) }
+        while !results.isEmpty && (results.count >= capacity || retainedBytes + cost > byteLimit) {
+            let key = order[oldest]
+            results.removeValue(forKey: key)
+            retainedBytes -= key.utf8.count
+            oldest += 1
+            if oldest >= capacity || oldest * 2 >= order.count {
+                order.removeFirst(oldest)
+                oldest = 0
+            }
+        }
         let result = parser.estimate(text)
         results[text] = result
+        retainedBytes += cost
+        order.append(text)
         return result
     }
 
-    func removeAll() { results.removeAll() }
+    func removeAll() {
+        results.removeAll()
+        order.removeAll()
+        oldest = 0
+        retainedBytes = 0
+    }
+}
+
+private extension Array {
+    subscript(safe index: Int) -> Element? { indices.contains(index) ? self[index] : nil }
 }
 
 #Preview {

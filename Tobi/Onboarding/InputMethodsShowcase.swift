@@ -46,6 +46,9 @@ enum InputMethodsDemo {
 /// Palco de vidro que mostra o app em ação, uma forma de registrar por vez, com pílulas de story
 /// embaixo: a da vez enche enquanto a cena roda; tocar numa pílula pula pra cena dela.
 struct InputMethodsShowcase: View {
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private struct Playback: Hashable { let run: Int; let active: Bool }
     @State private var current: InputMethod = .write
     /// Muda a cada cena (mesmo repetindo a mesma), pra a cena recomeçar do zero.
     @State private var run = 0
@@ -54,10 +57,12 @@ struct InputMethodsShowcase: View {
     var body: some View {
         VStack(spacing: 14) {
             ZStack {
-                switch current {
-                case .write: WriteScene()
-                case .speak: SpeakScene()
-                case .scan: ScanScene()
+                if scenePhase == .active {
+                    switch current {
+                    case .write: WriteScene()
+                    case .speak: SpeakScene()
+                    case .scan: ScanScene()
+                    }
                 }
             }
             .id(run)
@@ -75,7 +80,8 @@ struct InputMethodsShowcase: View {
                 }
             }
         }
-        .task(id: run) {
+        .task(id: Playback(run: run, active: scenePhase == .active && !reduceMotion)) {
+            guard scenePhase == .active, !reduceMotion else { return }
             var reset = Transaction()
             reset.disablesAnimations = true
             withTransaction(reset) { progress = 0 }
@@ -134,6 +140,7 @@ struct InputMethodsShowcase: View {
 /// Uma linha da nota como no app: o texto e, do lado, o rótulo de calorias de verdade (`KcalLabel`).
 private struct NoteLinePreview: View {
     let text: String
+    @State private var estimate = LineEstimate.empty
     var isSearching = false
     var showsKcal = true
 
@@ -144,14 +151,22 @@ private struct NoteLinePreview: View {
                 .foregroundStyle(Color(uiColor: .label))
             Spacer(minLength: 12)
             if showsKcal {
-                KcalLabel(mark: LineMark(estimate: FoodParser.shared.estimate(text), isSearching: isSearching))
+                KcalLabel(mark: LineMark(estimate: estimate, isSearching: isSearching))
             }
+        }
+        .task(id: text) {
+            let parser = await FoodParser.prepared()
+            guard !Task.isCancelled else { return }
+            let value = await Task.detached(priority: .userInitiated) { parser.estimate(text) }.value
+            guard !Task.isCancelled else { return }
+            estimate = value
         }
     }
 }
 
 /// Escrever: as linhas se digitam, o ✨ aparece enquanto escreve e vira as calorias.
 private struct WriteScene: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var typed: [String] = []
     @State private var writing: Int?
 
@@ -165,6 +180,7 @@ private struct WriteScene: View {
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .task {
+            if reduceMotion { typed = InputMethodsDemo.writeLines; return }
             try? await Task.sleep(for: .milliseconds(350))
             for (index, line) in InputMethodsDemo.writeLines.enumerated() {
                 typed.append("")

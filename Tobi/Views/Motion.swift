@@ -189,7 +189,7 @@ struct TobiIdleBehavior {
     }
 
     /// Intensidade de cada canal num estado. Os estados precisam ser lidos de longe:
-    /// alegre ofega com a língua pra fora, atento fecha a boca e levanta as orelhas,
+    /// alegre ofega com a língua pra fora, atento foca o olhar e inclina o rosto,
     /// curioso inclina a cabeça de verdade.
     struct Profile {
         var cheer: Float = 0.16
@@ -226,12 +226,12 @@ struct TobiIdleBehavior {
             case .joyful:
                 break
             case .attentive:
-                // Atenção está nos olhos e no queixo erguido; as orelhas ficam caídas, como de cachorro.
+                // Atenção suave no rosto: olhos focados e uma pequena inclinação.
                 cheer = 0.02; pant = 0.3; tongueOut = 0.75; breath = 0.7
-                head = 0.45; reach = 0.75; perkLeft = 0; perkRight = 0
-                wag = 0; widen = 1; chin = -0.035
+                head = 0.65; reach = 0.8; perkLeft = 0; perkRight = 0
+                wag = 0; cock = 0.06; widen = 1; chin = -0.015
                 headDelay = 0.2; earLag = 0.12
-                lookInterval = 9.0...14.0; pantRest = 5.0...9.0; pantDuration = 1.4...2.4
+                lookInterval = 6.0...9.0; pantRest = 5.0...9.0; pantDuration = 1.4...2.4
             case .curious:
                 cheer = 0.05; pant = 0.25; tongueOut = 0.85; breath = 0.8
                 head = 1.2; reach = 1.05; perkLeft = 0.03; perkRight = 0.03
@@ -387,6 +387,8 @@ struct TobiIdleBehavior {
     private var petting = Pulse(attack: 0.22, hold: 0.55, release: 0.6)
     /// Fase própria do carinho: só anda enquanto ele está no ar, então tocar de novo não pula.
     private var petPhase = 0.0
+    private var petCount = 0
+    private var delighted = Pulse(attack: 0.22, hold: 1.0, release: 0.7)
     /// Quando a comemoração passa a vez para `presenting`.
     private var handoff: Double?
     /// Último lugar do dedo em relação ao rosto (x pra direita, y pra cima, até 1) e se ele ainda está na tela.
@@ -441,6 +443,7 @@ struct TobiIdleBehavior {
     /// e a comemoração vira apresentação.
     mutating func setMood(_ next: Mood, at time: Double, entering: Bool) {
         for index in 0..<5 { cancelPulse(index, at: time) }
+        petCount = 0
         handoff = nil
         nextShow = next == .presenting || next == .celebrating ? time + 4.5 : .infinity
         mood = next == .celebrating && !entering ? .presenting : next
@@ -472,11 +475,14 @@ struct TobiIdleBehavior {
         tapBlinkStart = time
     }
 
-    /// Carinho: fecha os olhos de contente, balança a cabeça, sacode as orelhas, dá um pulinho
-    /// e ofega. Tocar de novo emenda no gesto que já está no ar.
+    /// Carinho simples: rostinho inclinado e olhos de contente. Cada terceiro carinho prolonga a expressão feliz.
     mutating func pet(at time: Double) {
         petting.trigger(at: time)
-        pantNow(at: time)
+        petCount += 1
+        if petCount == 3 {
+            petCount = 0
+            delighted.trigger(at: time)
+        }
     }
 
     /// Segue o dedo na tela. `nil` quando ele sai: o Tobi segura o olhar um instante e volta ao idle.
@@ -611,7 +617,7 @@ struct TobiIdleBehavior {
             out.eyes = eyes
             out.gazeX = quirkSide*0.027; out.gazeY = 0.007
             out.head = head; out.headYaw = quirkSide*0.15; out.roll = quirkSide*0.09*head; out.pitch = -0.03*head
-            if quirkSide < 0 { out.leftEar = -0.1*head } else { out.rightEar = 0.1*head }
+            if quirkSide < 0 { out.leftEar = -0.05*head } else { out.rightEar = 0.05*head }
             out.blink = Self.blinkClosure(age: t-(d-0.55))
         }
         out.eyes *= weight; out.head *= weight; out.yaw *= weight; out.roll *= weight; out.pitch *= weight; out.lift *= weight
@@ -672,7 +678,7 @@ struct TobiIdleBehavior {
         }
         if quirk == nil, time >= nextQuirk {
             // Ninguém interrompe: com dedo na tela, comemoração ou carinho, a mania espera.
-            if !spontaneous || touching || focus > 0.01 || mood == .celebrating || handoff != nil || petting.level(at: time) > 0 {
+            if !spontaneous || touching || focus > 0.01 || mood == .celebrating || handoff != nil || petting.level(at: time) > 0 || delighted.level(at: time) > 0 {
                 nextQuirk = time + 2
             } else {
                 let pick = Double.random(in: 0..<1, using: &quirkRandom)
@@ -701,9 +707,10 @@ struct TobiIdleBehavior {
 
         let cheering = Float(celebration.level(at: time))
         let cheerAge = celebration.age(at: time)
-        // Panting comes in bouts; the celebration and a scratch pant whatever the mood.
+        // The soft face gesture quiets the panting; a scratch does not force a pant or a hop.
         let petted = Float(petting.level(at: time))
-        let panting = max(Float(pant.envelope*pant.strength)*profile.pant, cheering, petted*0.9)
+        let happy = max(petted, Float(delighted.level(at: time)))
+        let panting = max(Float(pant.envelope*pant.strength)*profile.pant, cheering)*(1-petted)
         let period = Motion.tobiBreathPeriod + (Motion.tobiPantPeriod-Motion.tobiBreathPeriod)*Double(panting)
         breathPhase += dt*2 * .pi/period
         let wave = Float(sin(breathPhase))
@@ -729,7 +736,7 @@ struct TobiIdleBehavior {
         }
         let wanted: Float = finger != nil && (touching || time - released < Motion.tobiFollowHold) ? 1 : 0
         focus += (wanted-focus) * (1 - exp(-Float(dt)/(wanted > focus ? 0.12 : 0.45)))
-        let follow = Float(Self.ease(Double(focus)))
+        let follow = Float(Self.ease(Double(focus)))*(1-petted)
         pose.gazeX += (eyeTarget.x*0.027 - pose.gazeX)*follow
         pose.gazeY += (eyeTarget.y*0.01 - pose.gazeY)*follow
         pose.headYaw += (headTarget.x*0.2 - pose.headYaw)*follow
@@ -738,11 +745,11 @@ struct TobiIdleBehavior {
         pose.lift = (pose.breath*0.012 + panting*0.014*wave) + hop*0.045
         let greeting = Float(welcome.level(at: time))
         let tap = Float(acknowledgement.level(at: time))
-        if petted > 0 { petPhase += dt*2 * .pi/0.5 }
+        if petted > 0 { petPhase += dt*2 * .pi/1.1 }
         let wiggle = petted * Float(sin(petPhase))
         pose.headRoll = pose.breath*0.012*(1-panting) + lookX*2.4*headAttention*(1-follow) + profile.tilt
             + greeting*0.12 + tap*0.06 + wiggle*0.08 + headTarget.x*0.07*follow
-        pose.lift += petted * Float(pow(sin(petPhase*0.5), 2)) * 0.035
+        pose.headPitch += petted*0.025
 
         // Dragging turns him toward the pull, with a little overshoot when the finger stops.
         swipeLevel += ((touching ? swipe : 0) - swipeLevel) * (1 - exp(-Float(dt)/0.08))
@@ -763,7 +770,7 @@ struct TobiIdleBehavior {
         pose.lift += profile.wag*0.005*Float(pow(sin(wagPhase), 2))
         pose.headPitch += profile.chin
 
-        let quirkPose = quirkOffsets(at: time, weight: 1-follow)
+        let quirkPose = quirkOffsets(at: time, weight: (1-follow)*(1-petted))
         pose.gazeX += (quirkPose.gazeX - pose.gazeX)*quirkPose.eyes
         pose.gazeY += (quirkPose.gazeY - pose.gazeY)*quirkPose.eyes
         pose.headYaw += (quirkPose.headYaw - pose.headYaw)*quirkPose.head + quirkPose.yaw
@@ -786,10 +793,10 @@ struct TobiIdleBehavior {
         // Something moving on screen: both ears perk up with interest.
         pose.leftEar = Self.earLimits(left: -profile.perkLeft - follow*0.06 + calm*0.018 - earRoll*0.5 + left.twitch*0.16
                                       - jiggle*0.025 - tap*0.05 - cheering*0.08 + flick*0.08
-                                      - petted*0.1 + wiggle*0.08 + quirkPose.leftEar + min(0, cock.value)*0.45)
+                                      + quirkPose.leftEar + min(0, cock.value)*0.45)
         pose.rightEar = Self.earLimits(right: profile.perkRight + follow*0.06 - calmRight*0.016 - earRoll*0.55 - right.twitch*0.145
                                        + jiggle*0.022 + tap*0.05 + cheering*0.07 - flickRight*0.07
-                                       + petted*0.09 + wiggle*0.07 + quirkPose.rightEar + max(0, cock.value)*0.45)
+                                       + quirkPose.rightEar + max(0, cock.value)*0.45)
 
         // Floppy ears: the lower half lags behind every move of the ear, the head and the hops.
         if let last = lastEars, dt > 0 {
@@ -823,7 +830,7 @@ struct TobiIdleBehavior {
         let lickSweep = licking > 0 ? Float(sin(Double(licking) * 2 * .pi)) * lickIn * 0.22 : 0
         let swayTarget = -pose.headRoll*0.5 - yawVelocity*0.1
             + panting*0.05*Float(sin(breathPhase*0.5)) + lickSweep
-        tongueSwing.step(toward: min(0.2, max(-0.2, swayTarget)), dt: dt, frequency: 2, damping: 0.4)
+        tongueSwing.step(toward: min(0.2, max(-0.2, swayTarget)), dt: dt, frequency: 1.8, damping: 0.45)
         pose.tongueSway = min(0.25, max(-0.25, tongueSwing.value))
         // Ofegando, a boca abre atrás da língua e o queixo acompanha cada fôlego; a ponta dá petelecos.
         pose.mouthOpen = max(quirkPose.mouth, panting*(0.26 + 0.06*bounce) + lickIn*0.12)
@@ -831,9 +838,81 @@ struct TobiIdleBehavior {
         pose.tongueRetract = quirkPose.retract
         pose.eyeWiden = min(1, profile.widen + follow*0.5)
         // Petting squints the eyes almost shut, the happy "^^" of a dog being scratched.
-        pose.cheer = min(0.85, profile.cheer + panting*0.1 + cheering*0.06 + greeting*0.06 + petted*0.5
+        pose.cheer = min(0.85, profile.cheer + panting*0.1 + cheering*0.06 + greeting*0.06 + happy*0.7
                          + quirkPose.cheer)
         lastTime = time
+        return pose
+    }
+}
+
+
+/// Um único relógio para o percurso em volta da cabeça e a mordida, repetido sem fim.
+enum TobiSnackSequence {
+    static let foods = ["🍎", "🍕", "🥦"]
+    static let cycle = 4.2
+    private static let speed = 1.7
+    struct FoodFrame {
+        let emoji: String
+        let x: Double
+        let y: Double
+        let scale: Double
+        let opacity: Double
+        let rotation: Double
+        let behind: Bool
+    }
+    static func ease(_ value: Double) -> Double {
+        let t = min(1, max(0, value))
+        return t*t*(3-2*t)
+    }
+    private static func phase(_ time: Double) -> (index: Int, age: Double) {
+        let time = time*speed
+        let elapsed = max(0, time-0.35)
+        let index = Int(elapsed/cycle)
+        return (index, time-0.35-Double(index)*cycle)
+    }
+    private static func curve(_ t: Double, _ a: SIMD2<Double>, _ b: SIMD2<Double>,
+                              _ c: SIMD2<Double>, _ d: SIMD2<Double>) -> SIMD2<Double> {
+        let t = min(1, max(0, t)), u = 1-t
+        return a*(u*u*u) + b*(3*u*u*t) + c*(3*u*t*t) + d*(t*t*t)
+    }
+    static func food(at time: Double) -> FoodFrame? {
+        let (index, age) = phase(time)
+        guard age >= 0, age < 3.5 else { return nil }
+        let point: SIMD2<Double>
+        if age < 0.9 {
+            point = curve(age/0.9, [0.08,0.53], [0.15,0.48], [0.20,0.43], [0.32,0.43])
+        } else if age < 1.9 {
+            point = curve((age-0.9)/1.0, [0.32,0.43], [0.42,0.43], [0.63,0.43], [0.76,0.43])
+        } else if age < 2.75 {
+            point = curve((age-1.9)/0.85, [0.76,0.43], [0.91,0.43], [0.86,0.70], [0.68,0.68])
+        } else {
+            point = curve((age-2.75)/0.65, [0.68,0.68], [0.57,0.70], [0.51,0.65], [0.50,0.635])
+        }
+        let eaten = ease((age-3.16)/0.3)
+        let distance = 1 - 0.15*ease(age/0.8) + 0.15*ease((age-1.9)/0.35)
+        let shrink = 1 - 0.65*ease((age-2.9)/0.5)
+        return FoodFrame(emoji: foods[index % foods.count], x: point.x, y: point.y,
+                         scale: max(0.02, distance*shrink*(1-eaten)),
+                         opacity: ease(age/0.14)*(1-ease((eaten-0.8)/0.2)),
+                         rotation: 14*sin(age*1.2), behind: age < 1.9)
+    }
+    static func pose(_ base: TobiIdleBehavior.Pose, at time: Double) -> TobiIdleBehavior.Pose {
+        var pose = base
+        let (_, age) = phase(time)
+        let engaged = Float(ease((age-2.2)/0.3) * (1-ease((age-3.65)/0.4)))
+        pose.tongueRetract = max(pose.tongueRetract, engaged)
+        pose.mouthOpen = Float(ease((age-2.55)/0.35)*(1-ease((age-3.32)/0.2)))*0.9
+        let x = Float(food(at: time)?.x ?? 0.5)-0.5
+        pose.headYaw = x*0.09
+        pose.headRoll = x*0.025
+        pose.gazeX = x*0.055
+        pose.headPitch = 0
+        pose.cheer = base.cheer*(1-engaged) + 0.04*engaged
+        let chew = ease((age-3.5)/0.08)*(1-ease((age-3.85)/0.15))
+        pose.headPitch += Float(chew*sin((age-3.5) * .pi * 10))*0.025
+        let satisfied = Float(ease((age-3.5)/0.2)*(1-ease((age-3.95)/0.25)))
+        pose.cheer = max(pose.cheer, satisfied*0.78)
+        pose.headRoll += satisfied*0.045
         return pose
     }
 }

@@ -47,7 +47,14 @@ enum FoodTables {
     static let tacoByID = Dictionary(uniqueKeysWithValues: taco.map { ($0.id, $0) })
 
     private static func load(_ name: String) -> [TableFood] {
-        guard let url = Bundle(for: BundleToken.self).url(forResource: name, withExtension: "json"),
+        let bundle = Bundle(for: BundleToken.self)
+        let url = bundle.url(forResource: name, withExtension: "json")
+            ?? Bundle.main.url(forResource: name, withExtension: "json")
+            ?? (["Tobi/Resources", "../Tobi/Resources", "../../Tobi/Resources", "Resources", "/Users/andrefelipe/Programação/Tobi/Tobi/Resources"]
+                .map { URL(fileURLWithPath: "\($0)/\(name).json") }
+                .first { FileManager.default.fileExists(atPath: $0.path) })
+
+        guard let url,
               let data = try? Data(contentsOf: url),
               let foods = try? JSONDecoder().decode([TableFood].self, from: data) else {
             assertionFailure("\(name).json ausente ou inválido")

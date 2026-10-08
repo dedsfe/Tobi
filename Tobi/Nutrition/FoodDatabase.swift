@@ -73,11 +73,11 @@ enum FoodDatabase {
         + FoodTables.taco.map { Food(table: $0, source: .taco($0.id)) }
 
     /// Só acrescenta grafias aos preparos existentes do IBGE; preserva nutrientes e medidas.
-    private static func ibge(_ id: String, aliases: [String], guesses: Set<String> = []) -> Food {
+    private static func ibge(_ id: String, aliases: [String], guesses: Set<String> = [], measures: [String: Double]? = nil) -> Food {
         guard let food = FoodTables.ibge.first(where: { $0.id == id }) else {
             preconditionFailure("IBGE \(id) não existe")
         }
-        return Food(table: food, source: .ibge(id), additionalAliases: aliases, guessedAliases: guesses)
+        return Food(table: food, source: .ibge(id), additionalAliases: aliases, guessedAliases: guesses, measures: measures)
     }
 
     /// Colheres de tempero seco: "pimenta em pó" da Tabela de Medidas Referidas (POF 2008-2009, IBGE).
@@ -89,7 +89,17 @@ enum FoodDatabase {
     /// (prato pronto que a TACO não tem). Ganham da TACO automática quando o apelido empata.
     static let curated: [Food] = [
         // IBGE POF 2008–2009: mesmos preparos e porções, sem novos números nutricionais.
-        ibge("8570328-99", aliases: ["pao frances com manteiga"]),
+        ibge("8570328-99", aliases: ["pao frances com manteiga", "pao na chapa", "pao chapado", "pao na chapa com manteiga",
+                                     "pao frances na chapa", "paozinho na chapa"]),
+        ibge("8501303-99", aliases: ["cafe com leite", "pingado", "medio com leite", "cafe com leite pingado"]),
+        ibge("7903102-99", aliases: ["leite com chocolate", "leite com achocolatado", "leite com nescau", "leite com toddy"]),
+        // Marca vira o genérico do IBGE: o número é aproximado, sai com "~".
+        ibge("6900821-99", aliases: ["nescau", "toddy"], guesses: ["nescau", "toddy"]),
+        ibge("7900601-99", aliases: ["leite em po", "leite em po integral", "leite ninho", "ninho", "leite ninho integral"],
+             measures: ["colher": 16, "colher de sopa": 16, "colher de sobremesa": 9, "colher de cha": 4.5]),
+        ibge("7900710-99", aliases: ["leite em po desnatado", "leite ninho desnatado", "ninho desnatado"],
+             measures: ["colher": 10, "colher de sopa": 10, "colher de sobremesa": 6, "colher de cha": 3.5]),
+        ibge("8003702-99", aliases: ["bolinho de chuva"]),
         ibge("6907501-99", aliases: ["milkshake"]),
         ibge("7107204-99", aliases: ["buchada"], guesses: ["buchada"]),
         // Arroz, feijão e acompanhamentos
@@ -118,9 +128,10 @@ enum FoodDatabase {
         Food("Sopa", ["sopa", "caldo", "canja"], kcal: 50, p: 3, c: 6, f: 1.5, portion: 300),
 
         // Carnes, ovos e proteínas
-        Food("Bife", ["bife", "carne", "carne bovina", "alcatra", "contrafile", "patinho", "maminha", "fraldinha"], taco: 346, portion: 120),
+        Food("Bife", ["bife", "bife acebolado", "carne", "carne bovina", "alcatra", "contrafile", "patinho", "maminha", "fraldinha"], taco: 346, portion: 120, guesses: ["bife acebolado"]),
+        Food("Bife à milanesa", ["bife a milanesa", "carne a milanesa", "file a milanesa"], taco: 340, portion: 120),
         Food("Picanha", ["picanha"], taco: 381, portion: 150),
-        Food("Carne moída", ["carne moida"], taco: 326, portion: 100),
+        Food("Carne moída", ["carne moida", "patinho moido", "carne bovina moida"], taco: 326, portion: 100),
         Food("Frango grelhado", ["frango", "frango grelhado", "peito de frango", "file de frango", "frango desfiado"], taco: 410, portion: 120),
         Food("Frango frito", ["frango frito", "coxa de frango", "sobrecoxa", "frango assado"], taco: 396, portion: 120),
         Food("Parmegiana", ["parmegiana", "file a parmegiana", "bife a parmegiana", "frango a parmegiana"], kcal: 230, p: 18, c: 8, f: 14, portion: 250),
@@ -135,14 +146,21 @@ enum FoodDatabase {
         Food("Ovo frito", ["ovo frito"], taco: 490, portion: 50),
         Food("Ovo mexido", ["ovo mexido"], kcal: 180, p: 12, c: 1.5, f: 14, portion: 60),
         Food("Omelete", ["omelete", "omelet"], kcal: 180, p: 12, c: 1.5, f: 14, portion: 130),
-        Food("Linguiça", ["linguica", "linguica toscana", "calabresa"], taco: 423, portion: 100),
+        Food("Omelete de 2 ovos", ["omelete de 2 ovos", "omelete de dois ovos"], kcal: 180, p: 12, c: 1.5, f: 14, portion: 110),
+        Food("Omelete de 3 ovos", ["omelete de 3 ovos", "omelete de tres ovos"], kcal: 180, p: 12, c: 1.5, f: 14, portion: 160),
+        Food("Omelete de 4 ovos", ["omelete de 4 ovos", "omelete de quatro ovos"], kcal: 180, p: 12, c: 1.5, f: 14, portion: 210),
+        Food("Linguiça", ["linguica", "linguica toscana", "calabresa", "calabresa acebolada", "linguica acebolada"],
+             taco: 423, portion: 100, guesses: ["calabresa acebolada", "linguica acebolada"]),
         Food("Bacon", ["bacon"], kcal: 541, p: 37, c: 1.4, f: 42, portion: 15, measures: ["fatia": 10]),
         Food("Presunto", ["presunto"], taco: 439, portion: 30, measures: ["fatia": 15]),
         Food("Peito de peru", ["peito de peru", "blanquet"], kcal: 105, p: 18, c: 2, f: 2.5, portion: 30, measures: ["fatia": 15]),
-        Food("Whey", ["whey", "whey protein"], kcal: 400, p: 80, c: 8, f: 6, portion: 30, measures: ["scoop": 30, "dose": 30]),
+        Food("Whey", ["whey", "whey protein", "shake de whey", "shake proteico", "whey shake"], kcal: 400, p: 80, c: 8, f: 6, portion: 30, measures: ["scoop": 30, "dose": 30]),
+        Food("Barra de proteína", ["barra de proteina", "barrinha de proteina", "barra proteica", "barrinha proteica"], kcal: 380, p: 33, c: 33, f: 13, portion: 45),
+        Food("Creatina", ["creatina"], kcal: 0, p: 0, c: 0, f: 0, portion: 5, measures: ["scoop": 5, "dose": 5]),
 
         // Pães, café da manhã e laticínios
-        Food("Pão francês", ["pao", "pao frances", "pao de sal", "cacetinho"], taco: 53, portion: 50),
+        Food("Pão francês", ["pao", "pao frances", "pao de sal", "cacetinho", "carioquinha", "pao careca", "pao d agua"],
+             taco: 53, portion: 50),
         Food("Pão de forma", ["pao de forma", "pao integral", "torrada"], taco: 52, portion: 50, measures: ["fatia": 25]),
         Food("Pão de queijo", ["pao de queijo"], taco: 140, portion: 40),
         Food("Manteiga", ["manteiga", "margarina"], taco: 261, portion: 10, measures: ["colher": 10]),
@@ -150,7 +168,8 @@ enum FoodDatabase {
         Food("Queijo minas", ["queijo", "queijo minas", "queijo branco", "queijo coalho"], taco: 461, portion: 30),
         Food("Queijo prato", ["queijo prato"], taco: 467, portion: 20, measures: ["fatia": 20]),
         Food("Mussarela", ["mussarela", "mucarela", "queijo mussarela"], taco: 463, portion: 20, measures: ["fatia": 20]),
-        Food("Café", ["cafe", "cafe preto", "cafezinho", "expresso"], taco: 471, portion: 100),
+        Food("Café", ["cafe", "cafe preto", "cafezinho", "expresso"], taco: 471, portion: 100,
+             measures: ["xicara": 50, "xicara de cafe": 50, "xicara de cha": 150, "caneca": 200, "copo": 150]),
         Food("Leite", ["leite", "leite integral"], kcal: 61, p: 3.2, c: 4.7, f: 3.3, portion: 200),
         Food("Leite desnatado", ["leite desnatado"], kcal: 35, p: 3.4, c: 5.0, f: 0.1, portion: 200),
         Food("Iogurte", ["iogurte", "iogurte natural"], taco: 448, portion: 170),
@@ -162,7 +181,7 @@ enum FoodDatabase {
 
         // Lanches e salgados
         Food("Sanduíche", ["sanduiche", "sanduiche natural", "misto", "misto quente"], kcal: 250, p: 12, c: 28, f: 10, portion: 150),
-        Food("Hambúrguer", ["hamburguer", "burger", "cheeseburger", "cheese burger", "x burguer", "x salada", "x bacon", "x tudo", "x egg"], kcal: 250, p: 13, c: 24, f: 11, portion: 200),
+        Food("Hambúrguer", ["hamburguer", "burger", "cheeseburger", "cheese burger", "x burguer", "x salada", "x bacon", "x tudo", "x egg", "podrao"], kcal: 250, p: 13, c: 24, f: 11, portion: 200),
         Food("Cachorro-quente", ["cachorro quente", "hot dog", "dogao"], kcal: 240, p: 9, c: 26, f: 11, portion: 180),
         Food("Pizza", ["pizza"], kcal: 270, p: 11, c: 30, f: 11, portion: 220, measures: ["fatia": 110, "pedaco": 110]),
         Food("Coxinha", ["coxinha"], taco: 386, portion: 110),
@@ -177,7 +196,8 @@ enum FoodDatabase {
         // Frutas
         Food("Banana", ["banana", "banana prata", "banana nanica"], taco: 182, portion: 70),
         Food("Maçã", ["maca"], taco: 222, portion: 130),
-        Food("Laranja", ["laranja", "mexerica", "tangerina", "bergamota"], taco: 214, portion: 150),
+        Food("Laranja", ["laranja"], taco: 214, portion: 150),
+        Food("Tangerina", ["tangerina", "mexerica", "bergamota", "ponca", "mimosa"], taco: 251, portion: 135),
         Food("Mamão", ["mamao", "papaia"], taco: 226, portion: 150),
         Food("Melancia", ["melancia"], taco: 235, portion: 200),
         Food("Melão", ["melao"], taco: 236, portion: 200),
@@ -191,6 +211,8 @@ enum FoodDatabase {
         Food("Brigadeiro", ["brigadeiro"], kcal: 425, p: 4, c: 60, f: 18, portion: 20),
         Food("Chocolate", ["chocolate", "barra de chocolate", "bombom"], taco: 495, portion: 25),
         Food("Sorvete", ["sorvete"], kcal: 200, p: 3.5, c: 24, f: 10, portion: 120),
+        Food("Casquinha de baunilha", ["casquinha", "casquinha de baunilha", "casquinha de chocolate", "casquinha mista"], kcal: 170, p: 3.2, c: 31, f: 3.9, portion: 100),
+        Food("Batata frita do McDonald's", ["batata frita do mcdonalds", "batata frita media do mcdonalds", "batata frita do mc", "batata frita media do mc", "batata frita do mequi"], kcal: 295, p: 4.8, c: 35, f: 15, portion: 100),
         Food("Pudim", ["pudim"], kcal: 250, p: 6, c: 40, f: 7, portion: 100),
         Food("Bolo", ["bolo", "bolo de cenoura", "bolo de chocolate", "bolo de fuba"], kcal: 370, p: 5, c: 55, f: 15, portion: 80, measures: ["fatia": 80, "pedaco": 80]),
         Food("Biscoito", ["biscoito", "bolacha", "biscoito recheado", "bolacha recheada", "cookie"], taco: 9, portion: 12, measures: ["pacote": 130]),
@@ -230,7 +252,9 @@ enum FoodDatabase {
         Food("Refrigerante", ["refrigerante", "refri", "coca", "coca cola", "guarana", "fanta", "sprite"], taco: 480, portion: 350),
         Food("Refrigerante zero", ["refrigerante zero", "refri zero", "coca zero", "guarana zero", "coca cola zero"], kcal: 0.3, p: 0, c: 0, f: 0, portion: 350),
         Food("Suco", ["suco", "suco de laranja", "suco natural"], taco: 215, portion: 250),
-        Food("Cerveja", ["cerveja", "chopp", "chope", "breja"], taco: 474, portion: 350, measures: ["copo": 300]),
+        Food("Cerveja", ["cerveja", "chopp", "chope", "breja", "heineken"], taco: 474, portion: 350,
+             measures: ["copo": 300, "lata": 350, "latao": 473, "long neck": 355, "garrafa": 600, "litrao": 1000],
+             guesses: ["heineken"]),
         Food("Vinho", ["vinho"], kcal: 85, p: 0.1, c: 2.6, f: 0, portion: 150),
         Food("Água de coco", ["agua de coco"], taco: 478, portion: 300),
         Food("Água", ["agua"], kcal: 0, p: 0, c: 0, f: 0, portion: 250),

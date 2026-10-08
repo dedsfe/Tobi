@@ -13,11 +13,14 @@
 		09009AB5F6BB1966DD606F58 /* FirstMealDemo.swift in Sources */ = {isa = PBXBuildFile; fileRef = C751682A98CEC2AF35AC1405 /* FirstMealDemo.swift */; };
 		0ACEF781303B018194689133 /* TobiStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 963E22CC66A5C7545DF75EB1 /* TobiStore.swift */; };
 		108E7241B747FCAA46004206 /* NutritionPlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8734C3998A0F55F94AAD8688 /* NutritionPlanTests.swift */; };
+		170AA326F38A1AD559B3A979 /* TobiFaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D94DD3657B48F6EE45558C4C /* TobiFaceView.swift */; };
 		1843E3F9D527F80CA22E5E1C /* WelcomeFoodRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B9ABA662E17E8154754CE6 /* WelcomeFoodRouteTests.swift */; };
 		19A4554982F37800C4D916AB /* LineEditingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E951F4742B5EFD8897822E6E /* LineEditingUITests.swift */; };
 		1A8BF67A1BBADCBF8047836E /* PaywallLetter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD850D37F024E14534FF063 /* PaywallLetter.swift */; };
 		20B22F7DA26123021C214509 /* FirstMealDemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB62EBAB89589280BD3E789 /* FirstMealDemoTests.swift */; };
+		23EA2267367F2B4DABA06DFE /* NoteCSV.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578EB1D891D049FA917EE424 /* NoteCSV.swift */; };
 		28B4F8F20A95E58663E901AC /* WritingScreenUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49AFBD09578FE79F28932BBC /* WritingScreenUITests.swift */; };
+		29336CAB9B41A50D812CEB39 /* TobiFaceAssetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486E0C1E47B372ABC6B5B037 /* TobiFaceAssetTests.swift */; };
 		2DF31213B46DDD75D81E3D75 /* OpenFoodFacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693E1062F5E9612595AAFAE8 /* OpenFoodFacts.swift */; };
 		31AD92836C08C9713CE4457E /* DayNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2D449DF7D2B65CDE6700E42 /* DayNote.swift */; };
 		39601D0026D589F929E3B5E9 /* PaywallGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D86F24AC9372E0B5A9F6A25 /* PaywallGate.swift */; };
@@ -33,6 +36,7 @@
 		60CF9B735A8AAE014F543DC8 /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6565AD07DD783BF23AD3A699 /* Analytics.swift */; };
 		62734DD3F35E21CA38AFACD5 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 849BBE740074FABF951F498A /* Theme.swift */; };
 		65C464813A2DDB0CB263616C /* tobi-head@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 733787F40680C2123994FCF0 /* tobi-head@3x.png */; };
+		6BE263DB44E264E08858E8CF /* LineResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 762C73C803ADECE8C3C246BC /* LineResolver.swift */; };
 		6E31F7E803495BBDD87B2FAD /* BarcodeScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB6BC12515FB31BEA5AA5C7D /* BarcodeScanner.swift */; };
 		6E5E54034CB4F717440BAA2E /* BrandProductTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5FA395EEC1B1F95F8911D0 /* BrandProductTests.swift */; };
 		7267903BFF169BAE53EB59A7 /* BrandProduct.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12F7B90D9D89B6E13A30F181 /* BrandProduct.swift */; };
@@ -44,24 +48,31 @@
 		85A03EFDDA3D7B24646FC2DD /* TobiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5944BEFBCE0A6BC683771E /* TobiApp.swift */; };
 		876E32B23BA5977857E4C448 /* Confetti.swift in Sources */ = {isa = PBXBuildFile; fileRef = 641C53C984F6E9BE0929536C /* Confetti.swift */; };
 		89EABA6C32FBFD3B11D2A734 /* SafeLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B188110F3F161DF643F945A2 /* SafeLaunch.swift */; };
+		8B64E9ECC964C5C90F3DFD97 /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EB82E7EC337471EDD40D538 /* PerformanceTests.swift */; };
 		8CEFBEA42E2411690944065B /* WelcomeFoodBite.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45D476B718C12DF8A8B1B062 /* WelcomeFoodBite.swift */; };
 		8D24C9183E293DC3E8DC81F7 /* GoalsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 953F49314598C47639854B69 /* GoalsCard.swift */; };
 		8E3E1AA54F455F6455A96B16 /* taco.json in Resources */ = {isa = PBXBuildFile; fileRef = 3E46D592AB857DDE87A3E279 /* taco.json */; };
 		904EBA54F3766F2FFAC8D665 /* FoodCoverageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F71B97092266CA6BFFAEFA /* FoodCoverageTests.swift */; };
 		92994DBBB9C2FE837CA5670E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EF17015117CAFBD333185A7 /* SettingsView.swift */; };
+		964360C5675E68D3AF4C1E5A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB8F2431FE4D24C230D6032D /* Assets.xcassets */; };
 		988D62DB0C9E2AB97C0914A3 /* Nutrition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA65013DB3626F696AD1207 /* Nutrition.swift */; };
 		A09B974FEC943B4597B945C8 /* ProductName.swift in Sources */ = {isa = PBXBuildFile; fileRef = 309F9AA6258B1C07AABF120A /* ProductName.swift */; };
 		A17543C64D9C4306850BE85F /* DayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30CA4C9B21F8C3BEFF79C118 /* DayView.swift */; };
 		AD15A9FF6ABCCF534EFA7145 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964A550B3F84B8605839E0D /* OnboardingView.swift */; };
 		B7CFC256A15133CCE2655D22 /* KeyboardBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2751B53BA08C6765765F0715 /* KeyboardBar.swift */; };
+		BCE692C7B16CC9F12D118FD3 /* LineResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6562E987766EA6B250D0F0 /* LineResolverTests.swift */; };
 		BEC070B5CD52869753A2C583 /* ibge.json in Resources */ = {isa = PBXBuildFile; fileRef = F114B1E25377701C98EEFCF0 /* ibge.json */; };
 		C43FE44916787D7ADD1601DA /* FoodDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 330296912C2E99B26C68D398 /* FoodDatabase.swift */; };
 		C7B649C008949A3DA1A9FD57 /* NoteEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 308590FF1E48DD45DCA78605 /* NoteEditor.swift */; };
+		C8ADE9D17C878FC7AAC9AED2 /* tobi-face.json in Resources */ = {isa = PBXBuildFile; fileRef = EA37006553B03C4361C0334B /* tobi-face.json */; };
 		D1EF54B92BBDE4FAAA9E9B77 /* Paywall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FE4189A6E5925F21B89BC5 /* Paywall.swift */; };
+		D8FA67EB6FBF6DDB86E8BC12 /* BrazilianSlangAndPortionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A45D6744CE27A4B0857E86A /* BrazilianSlangAndPortionTests.swift */; };
 		DB0945C61BAA86B1575D2F49 /* FoodTables.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC10422EB949975055CDB990 /* FoodTables.swift */; };
 		DFB03B6045CB81552DD4F5C4 /* fastfood.json in Resources */ = {isa = PBXBuildFile; fileRef = 445349C7B857AF907783D17F /* fastfood.json */; };
 		E493A9B7173AFAF4F9A42F3D /* WelcomeFoodRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9155A902428D8604F628C436 /* WelcomeFoodRoute.swift */; };
 		F10047776139D6EE95053CB9 /* FoodParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A61D93B4C4C2B1562F8CBA23 /* FoodParserTests.swift */; };
+		F2C99AD4E9968F2808061B39 /* LineHelp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75ECB48C3EDC7FA0CFE250EA /* LineHelp.swift */; };
+		F4B3AC4236FA8F00BA88FC24 /* FoodCorrection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F22E96B8622A13A7FFD27968 /* FoodCorrection.swift */; };
 		F4F03DB08A9EB42588CE07CE /* InputMethodsShowcase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E169475F08FF10FB129498E /* InputMethodsShowcase.swift */; };
 		F629E96C5891DFAA0E5AF0BC /* ConfettiCannons.swift in Sources */ = {isa = PBXBuildFile; fileRef = D776BAEAF45963A2D807E30C /* ConfettiCannons.swift */; };
 		F90651BCAF45D616918D5187 /* WelcomeFood.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49472BC1DE4C1DCD9F5E6204 /* WelcomeFood.swift */; };
@@ -95,6 +106,7 @@
 		28648EF45A52ECDE9C7C2C92 /* ProductNameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductNameTests.swift; sourceTree = "<group>"; };
 		2872FA24B522D05EF587CF3E /* VoiceGlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceGlow.swift; sourceTree = "<group>"; };
 		28C85519ACF4096B51BC3535 /* LineRewriterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineRewriterTests.swift; sourceTree = "<group>"; };
+		2F6562E987766EA6B250D0F0 /* LineResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineResolverTests.swift; sourceTree = "<group>"; };
 		308590FF1E48DD45DCA78605 /* NoteEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditor.swift; sourceTree = "<group>"; };
 		309F9AA6258B1C07AABF120A /* ProductName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductName.swift; sourceTree = "<group>"; };
 		30CA4C9B21F8C3BEFF79C118 /* DayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayView.swift; sourceTree = "<group>"; };
@@ -102,6 +114,7 @@
 		3C5944BEFBCE0A6BC683771E /* TobiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TobiApp.swift; sourceTree = "<group>"; };
 		3E169475F08FF10FB129498E /* InputMethodsShowcase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputMethodsShowcase.swift; sourceTree = "<group>"; };
 		3E46D592AB857DDE87A3E279 /* taco.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = taco.json; sourceTree = "<group>"; };
+		3EB82E7EC337471EDD40D538 /* PerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
 		3FA65013DB3626F696AD1207 /* Nutrition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nutrition.swift; sourceTree = "<group>"; };
 		3FDF8B6C5A3F40C11AB863F4 /* PaywallJoy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallJoy.swift; sourceTree = "<group>"; };
 		41C304B2749615A9C8558D00 /* Dictation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictation.swift; sourceTree = "<group>"; };
@@ -109,10 +122,13 @@
 		44FE4189A6E5925F21B89BC5 /* Paywall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Paywall.swift; sourceTree = "<group>"; };
 		45A6CD938A64353750C04F9A /* TobiTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TobiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		45D476B718C12DF8A8B1B062 /* WelcomeFoodBite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFoodBite.swift; sourceTree = "<group>"; };
+		486E0C1E47B372ABC6B5B037 /* TobiFaceAssetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TobiFaceAssetTests.swift; sourceTree = "<group>"; };
 		49472BC1DE4C1DCD9F5E6204 /* WelcomeFood.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFood.swift; sourceTree = "<group>"; };
 		4964A550B3F84B8605839E0D /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		49AFBD09578FE79F28932BBC /* WritingScreenUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WritingScreenUITests.swift; sourceTree = "<group>"; };
+		4A45D6744CE27A4B0857E86A /* BrazilianSlangAndPortionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrazilianSlangAndPortionTests.swift; sourceTree = "<group>"; };
 		50C8DB4618CA48C83CE1C987 /* VoiceSpectrum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSpectrum.swift; sourceTree = "<group>"; };
+		578EB1D891D049FA917EE424 /* NoteCSV.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCSV.swift; sourceTree = "<group>"; };
 		5BCAAA368D3AECD109559A74 /* Reminders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reminders.swift; sourceTree = "<group>"; };
 		5D86F24AC9372E0B5A9F6A25 /* PaywallGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallGate.swift; sourceTree = "<group>"; };
 		5DEA2923D51ECF843DD4BBED /* PaywallRecapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallRecapTests.swift; sourceTree = "<group>"; };
@@ -124,6 +140,8 @@
 		699D0BC35D224FF03DFF866B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		6DDD333EB71EFBF77A7476E6 /* Tobi.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tobi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		733787F40680C2123994FCF0 /* tobi-head@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "tobi-head@3x.png"; sourceTree = "<group>"; };
+		75ECB48C3EDC7FA0CFE250EA /* LineHelp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineHelp.swift; sourceTree = "<group>"; };
+		762C73C803ADECE8C3C246BC /* LineResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineResolver.swift; sourceTree = "<group>"; };
 		849BBE740074FABF951F498A /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		8734C3998A0F55F94AAD8688 /* NutritionPlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionPlanTests.swift; sourceTree = "<group>"; };
 		9155A902428D8604F628C436 /* WelcomeFoodRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFoodRoute.swift; sourceTree = "<group>"; };
@@ -135,6 +153,7 @@
 		A61D93B4C4C2B1562F8CBA23 /* FoodParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodParserTests.swift; sourceTree = "<group>"; };
 		B188110F3F161DF643F945A2 /* SafeLaunch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeLaunch.swift; sourceTree = "<group>"; };
 		B5F71B97092266CA6BFFAEFA /* FoodCoverageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCoverageTests.swift; sourceTree = "<group>"; };
+		BB8F2431FE4D24C230D6032D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C0047EB4EB0B56B8E2ED251B /* TotalsBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TotalsBar.swift; sourceTree = "<group>"; };
 		C751682A98CEC2AF35AC1405 /* FirstMealDemo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstMealDemo.swift; sourceTree = "<group>"; };
 		C8C2E089F5BB672F2BC24E98 /* ThinkingReveal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThinkingReveal.swift; sourceTree = "<group>"; };
@@ -142,12 +161,15 @@
 		CBD850D37F024E14534FF063 /* PaywallLetter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallLetter.swift; sourceTree = "<group>"; };
 		D5F15F5DFF3D1C5DFB4747B1 /* VoiceSpectrumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSpectrumTests.swift; sourceTree = "<group>"; };
 		D776BAEAF45963A2D807E30C /* ConfettiCannons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiCannons.swift; sourceTree = "<group>"; };
+		D94DD3657B48F6EE45558C4C /* TobiFaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TobiFaceView.swift; sourceTree = "<group>"; };
 		DA5FA395EEC1B1F95F8911D0 /* BrandProductTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandProductTests.swift; sourceTree = "<group>"; };
 		E1994A7BED207538543F656B /* Motion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion.swift; sourceTree = "<group>"; };
 		E75C5C4C8C0241704136815F /* WelcomeFoodFlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFoodFlight.swift; sourceTree = "<group>"; };
 		E951F4742B5EFD8897822E6E /* LineEditingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineEditingUITests.swift; sourceTree = "<group>"; };
+		EA37006553B03C4361C0334B /* tobi-face.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "tobi-face.json"; sourceTree = "<group>"; };
 		F114B1E25377701C98EEFCF0 /* ibge.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ibge.json; sourceTree = "<group>"; };
 		F22DD0603754279324293121 /* TobiUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TobiUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F22E96B8622A13A7FFD27968 /* FoodCorrection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCorrection.swift; sourceTree = "<group>"; };
 		FB6BC12515FB31BEA5AA5C7D /* BarcodeScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeScanner.swift; sourceTree = "<group>"; };
 		FC10422EB949975055CDB990 /* FoodTables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodTables.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -160,6 +182,14 @@
 				3C5944BEFBCE0A6BC683771E /* TobiApp.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		0F8A01ABFCFF9E1F95E1CABA /* Character */ = {
+			isa = PBXGroup;
+			children = (
+				D94DD3657B48F6EE45558C4C /* TobiFaceView.swift */,
+			);
+			path = Character;
 			sourceTree = "<group>";
 		};
 		1050D008790E920C10D84724 = {
@@ -175,9 +205,11 @@
 		2067EA3ADB64A7D60255A807 /* Nutrition */ = {
 			isa = PBXGroup;
 			children = (
+				F22E96B8622A13A7FFD27968 /* FoodCorrection.swift */,
 				330296912C2E99B26C68D398 /* FoodDatabase.swift */,
 				A46A98F03E2CF68A0D4D7978 /* FoodParser.swift */,
 				FC10422EB949975055CDB990 /* FoodTables.swift */,
+				762C73C803ADECE8C3C246BC /* LineResolver.swift */,
 				1C87CE0B25D3C707E51A6DBA /* LineRewriter.swift */,
 				3FA65013DB3626F696AD1207 /* Nutrition.swift */,
 			);
@@ -188,13 +220,17 @@
 			isa = PBXGroup;
 			children = (
 				DA5FA395EEC1B1F95F8911D0 /* BrandProductTests.swift */,
+				4A45D6744CE27A4B0857E86A /* BrazilianSlangAndPortionTests.swift */,
 				1FB62EBAB89589280BD3E789 /* FirstMealDemoTests.swift */,
 				B5F71B97092266CA6BFFAEFA /* FoodCoverageTests.swift */,
 				A61D93B4C4C2B1562F8CBA23 /* FoodParserTests.swift */,
+				2F6562E987766EA6B250D0F0 /* LineResolverTests.swift */,
 				28C85519ACF4096B51BC3535 /* LineRewriterTests.swift */,
 				8734C3998A0F55F94AAD8688 /* NutritionPlanTests.swift */,
 				5DEA2923D51ECF843DD4BBED /* PaywallRecapTests.swift */,
+				3EB82E7EC337471EDD40D538 /* PerformanceTests.swift */,
 				28648EF45A52ECDE9C7C2C92 /* ProductNameTests.swift */,
+				486E0C1E47B372ABC6B5B037 /* TobiFaceAssetTests.swift */,
 				D5F15F5DFF3D1C5DFB4747B1 /* VoiceSpectrumTests.swift */,
 				C9B9ABA662E17E8154754CE6 /* WelcomeFoodRouteTests.swift */,
 			);
@@ -239,6 +275,7 @@
 				30CA4C9B21F8C3BEFF79C118 /* DayView.swift */,
 				953F49314598C47639854B69 /* GoalsCard.swift */,
 				2751B53BA08C6765765F0715 /* KeyboardBar.swift */,
+				75ECB48C3EDC7FA0CFE250EA /* LineHelp.swift */,
 				E1994A7BED207538543F656B /* Motion.swift */,
 				308590FF1E48DD45DCA78605 /* NoteEditor.swift */,
 				5EF17015117CAFBD333185A7 /* SettingsView.swift */,
@@ -285,6 +322,7 @@
 			children = (
 				043BB0472D4B09E963CFC188 /* App */,
 				82B00CD4FC82EBE1B6D61523 /* Brands */,
+				0F8A01ABFCFF9E1F95E1CABA /* Character */,
 				7F67FF23429A7B508996553F /* Input */,
 				CB72E6588123A31FE3331B54 /* Models */,
 				2067EA3ADB64A7D60255A807 /* Nutrition */,
@@ -300,6 +338,7 @@
 			isa = PBXGroup;
 			children = (
 				A2D449DF7D2B65CDE6700E42 /* DayNote.swift */,
+				578EB1D891D049FA917EE424 /* NoteCSV.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -317,10 +356,12 @@
 		FA714D49D7B050751EC6D8C2 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				BB8F2431FE4D24C230D6032D /* Assets.xcassets */,
 				445349C7B857AF907783D17F /* fastfood.json */,
 				F114B1E25377701C98EEFCF0 /* ibge.json */,
 				699D0BC35D224FF03DFF866B /* PrivacyInfo.xcprivacy */,
 				3E46D592AB857DDE87A3E279 /* taco.json */,
+				EA37006553B03C4361C0334B /* tobi-face.json */,
 				733787F40680C2123994FCF0 /* tobi-head@3x.png */,
 			);
 			path = Resources;
@@ -431,10 +472,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				964360C5675E68D3AF4C1E5A /* Assets.xcassets in Resources */,
 				75921BBD618E283954DC1EF1 /* PrivacyInfo.xcprivacy in Resources */,
 				DFB03B6045CB81552DD4F5C4 /* fastfood.json in Resources */,
 				BEC070B5CD52869753A2C583 /* ibge.json in Resources */,
 				8E3E1AA54F455F6455A96B16 /* taco.json in Resources */,
+				C8ADE9D17C878FC7AAC9AED2 /* tobi-face.json in Resources */,
 				65C464813A2DDB0CB263616C /* tobi-head@3x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -447,13 +490,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				6E5E54034CB4F717440BAA2E /* BrandProductTests.swift in Sources */,
+				D8FA67EB6FBF6DDB86E8BC12 /* BrazilianSlangAndPortionTests.swift in Sources */,
 				20B22F7DA26123021C214509 /* FirstMealDemoTests.swift in Sources */,
 				904EBA54F3766F2FFAC8D665 /* FoodCoverageTests.swift in Sources */,
 				F10047776139D6EE95053CB9 /* FoodParserTests.swift in Sources */,
+				BCE692C7B16CC9F12D118FD3 /* LineResolverTests.swift in Sources */,
 				3A40FCE8DCFB7B67BC1DEB6E /* LineRewriterTests.swift in Sources */,
 				108E7241B747FCAA46004206 /* NutritionPlanTests.swift in Sources */,
 				7F1E791DA4625F1175FCADEA /* PaywallRecapTests.swift in Sources */,
+				8B64E9ECC964C5C90F3DFD97 /* PerformanceTests.swift in Sources */,
 				4F24112FDE712AF35ADB91E3 /* ProductNameTests.swift in Sources */,
+				29336CAB9B41A50D812CEB39 /* TobiFaceAssetTests.swift in Sources */,
 				5B79DA8DC5FB679ABA3BD35E /* VoiceSpectrumTests.swift in Sources */,
 				1843E3F9D527F80CA22E5E1C /* WelcomeFoodRouteTests.swift in Sources */,
 			);
@@ -482,6 +529,7 @@
 				A17543C64D9C4306850BE85F /* DayView.swift in Sources */,
 				5CF651F012F4A1CCD3A49B2E /* Dictation.swift in Sources */,
 				09009AB5F6BB1966DD606F58 /* FirstMealDemo.swift in Sources */,
+				F4B3AC4236FA8F00BA88FC24 /* FoodCorrection.swift in Sources */,
 				C43FE44916787D7ADD1601DA /* FoodDatabase.swift in Sources */,
 				FDD953D0FE09F4316F02D6DC /* FoodParser.swift in Sources */,
 				DB0945C61BAA86B1575D2F49 /* FoodTables.swift in Sources */,
@@ -489,8 +537,11 @@
 				F4F03DB08A9EB42588CE07CE /* InputMethodsShowcase.swift in Sources */,
 				52B996030ED4D7BA451F2FDD /* JourneyChart.swift in Sources */,
 				B7CFC256A15133CCE2655D22 /* KeyboardBar.swift in Sources */,
+				F2C99AD4E9968F2808061B39 /* LineHelp.swift in Sources */,
+				6BE263DB44E264E08858E8CF /* LineResolver.swift in Sources */,
 				FB452BB1ED37189C55EFF16B /* LineRewriter.swift in Sources */,
 				76D459DF5D937386DAF12206 /* Motion.swift in Sources */,
+				23EA2267367F2B4DABA06DFE /* NoteCSV.swift in Sources */,
 				C7B649C008949A3DA1A9FD57 /* NoteEditor.swift in Sources */,
 				988D62DB0C9E2AB97C0914A3 /* Nutrition.swift in Sources */,
 				3D8A8C1F589731F75AB33BCA /* NutritionPlan.swift in Sources */,
@@ -507,6 +558,7 @@
 				62734DD3F35E21CA38AFACD5 /* Theme.swift in Sources */,
 				06A1A1458BDBCEC051CD3FA4 /* ThinkingReveal.swift in Sources */,
 				85A03EFDDA3D7B24646FC2DD /* TobiApp.swift in Sources */,
+				170AA326F38A1AD559B3A979 /* TobiFaceView.swift in Sources */,
 				0ACEF781303B018194689133 /* TobiStore.swift in Sources */,
 				73A29CA35A4D4B571090FE1A /* TotalsBar.swift in Sources */,
 				00E8D8A43016F993A8DBB259 /* VoiceGlow.swift in Sources */,
@@ -625,6 +677,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Tobi;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCameraUsageDescription = "O Tobi usa a câmera pra ler o código de barras dos produtos.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "O Tobi usa o microfone pra você ditar o que comeu.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "O Tobi transforma sua fala em texto pra registrar as refeições.";
@@ -683,6 +736,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Tobi;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSCameraUsageDescription = "O Tobi usa a câmera pra ler o código de barras dos produtos.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "O Tobi usa o microfone pra você ditar o que comeu.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "O Tobi transforma sua fala em texto pra registrar as refeições.";

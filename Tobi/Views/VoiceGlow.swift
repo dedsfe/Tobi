@@ -11,6 +11,7 @@ struct VoiceGlow: View {
     @State private var display = GlowLevels()
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     /// A luz é toda desfocada, então desenhar em 1/4 da resolução e ampliar dá a mesma imagem
     /// com 16 vezes menos pixel pra borrar a cada quadro.
@@ -41,7 +42,7 @@ struct VoiceGlow: View {
 
     private var glow: some View {
         // 60 quadros bastam pra luz desfocada; 120 só gastava bateria e engasgava o vidro por cima.
-        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: reduceMotion)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: reduceMotion || scenePhase != .active || !dictation.isRecording)) { timeline in
             let time = timeline.date.timeIntervalSinceReferenceDate
             let levels = display.step(toward: dictation.levels, at: time)
             Canvas { context, size in
@@ -77,9 +78,10 @@ struct VoiceBars: View {
     let dictation: Dictation
     @State private var display = GlowLevels()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: reduceMotion)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: reduceMotion || scenePhase != .active || !dictation.isRecording)) { timeline in
             let levels = display.step(toward: dictation.levels, at: timeline.date.timeIntervalSinceReferenceDate)
             HStack(spacing: 3) {
                 ForEach(levels.indices, id: \.self) { band in

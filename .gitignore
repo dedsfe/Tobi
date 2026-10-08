@@ -5,3 +5,7 @@ DerivedData/
 .DS_Store
 build/
 .claude/settings.local.json
+.swiftpm/
+__pycache__/
+*.pyc
+xcuserdata/
