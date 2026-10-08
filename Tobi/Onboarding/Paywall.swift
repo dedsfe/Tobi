@@ -4,8 +4,16 @@ import SwiftUI
 
 /// Última tela: o que o Tobi faz, como corre o teste grátis e os dois planos.
 /// O X mora no palco (`PaywallCloseButton`) e liga `declined`; aí chega a carta do Tobi (`TobiLetter`).
+/// Com o app travado, a parte de cima vira o resumo do que a pessoa fez nas 24 horas (`RecapHero`).
 struct PaywallStep: View {
+    /// O que vende em cima dos planos: a promessa (onboarding) ou a prova (o que já foi feito).
+    enum Story: Equatable {
+        case onboarding
+        case recap(PaywallRecap)
+    }
+
     @Binding var declined: Bool
+    var story = Story.onboarding
     let onFinish: () -> Void
 
     @State private var store = TobiStore.shared
@@ -69,31 +77,11 @@ struct PaywallStep: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 0) {
-                Text(store.trialEligible ? "Teste o Tobi" : "Continue com o Tobi")
-                Text(store.trialEligible ? "\(TobiPlan.trialDays) dias de graça" : "Escolha seu plano")
-                    .foregroundStyle(.indigo)
-            }
-            .font(.system(size: 32, weight: .heavy, design: .rounded))
-            .lineLimit(1)
-            .minimumScaleFactor(0.8)
-            .reveal(shown, order: 0)
-
-            VStack(alignment: .leading, spacing: 14) {
-                BenefitRow(symbol: "pencil.and.scribble", text: "Escreve do seu jeito, ele conta tudo",
-                           isShown: shown && benefits >= 1)
-                BenefitRow(symbol: "waveform", text: "Fala ou escaneia o rótulo, e pronto",
-                           isShown: shown && benefits >= 2)
-                BenefitRow(symbol: "scope", text: "Metas sob medida pro seu objetivo",
-                           isShown: shown && benefits >= 3)
-            }
-            .padding(.top, 20)
-
-            Spacer(minLength: 14)
-
-            if store.trialEligible {
-                TrialTimeline(reached: shown ? milestones : 0)
-                    .reveal(shown, order: 2)
+            switch story {
+            case .onboarding:
+                promise
+            case .recap(let recap):
+                RecapHero(recap: recap, isShown: shown)
                 Spacer(minLength: 14)
             }
 
@@ -107,6 +95,38 @@ struct PaywallStep: View {
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 4)
+    }
+
+    /// A promessa: o que o Tobi faz e como corre o teste grátis.
+    @ViewBuilder
+    private var promise: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(store.trialEligible ? "Teste o Tobi" : "Continue com o Tobi")
+            Text(store.trialEligible ? "\(TobiPlan.trialDays) dias de graça" : "Escolha seu plano")
+                .foregroundStyle(.indigo)
+        }
+        .font(.system(size: 32, weight: .heavy, design: .rounded))
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+        .reveal(shown, order: 0)
+
+        VStack(alignment: .leading, spacing: 14) {
+            BenefitRow(symbol: "pencil.and.scribble", text: "Escreve do seu jeito, ele conta tudo",
+                       isShown: shown && benefits >= 1)
+            BenefitRow(symbol: "waveform", text: "Fala ou escaneia o rótulo, e pronto",
+                       isShown: shown && benefits >= 2)
+            BenefitRow(symbol: "scope", text: "Metas sob medida pro seu objetivo",
+                       isShown: shown && benefits >= 3)
+        }
+        .padding(.top, 20)
+
+        Spacer(minLength: 14)
+
+        if store.trialEligible {
+            TrialTimeline(reached: shown ? milestones : 0)
+                .reveal(shown, order: 2)
+            Spacer(minLength: 14)
+        }
     }
 
     // MARK: Planos
@@ -233,6 +253,14 @@ struct PaywallStep: View {
 
     private func choreograph() async {
         visible = true
+        if case .recap = story {
+            // O resumo conta sozinho; os planos chegam quando os números já assentaram.
+            try? await Task.sleep(for: .milliseconds(1900))
+            withAnimation(Motion.surface) { plansIn = true }
+            try? await Task.sleep(for: .milliseconds(320))
+            withAnimation(Motion.surface) { badgeIn = true }
+            return
+        }
         try? await Task.sleep(for: .milliseconds(260))
         for index in 1...3 {
             withAnimation(Motion.surface) { benefits = index }

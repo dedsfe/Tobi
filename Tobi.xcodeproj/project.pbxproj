@@ -36,6 +36,7 @@
 		7267903BFF169BAE53EB59A7 /* BrandProduct.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12F7B90D9D89B6E13A30F181 /* BrandProduct.swift */; };
 		73A29CA35A4D4B571090FE1A /* TotalsBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0047EB4EB0B56B8E2ED251B /* TotalsBar.swift */; };
 		76D459DF5D937386DAF12206 /* Motion.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1994A7BED207538543F656B /* Motion.swift */; };
+		7F1E791DA4625F1175FCADEA /* PaywallRecapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DEA2923D51ECF843DD4BBED /* PaywallRecapTests.swift */; };
 		84625DD8D6B6443969680CE8 /* ScanSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1131CC3800D87E1B7D9072F2 /* ScanSheet.swift */; };
 		85A03EFDDA3D7B24646FC2DD /* TobiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5944BEFBCE0A6BC683771E /* TobiApp.swift */; };
 		876E32B23BA5977857E4C448 /* Confetti.swift in Sources */ = {isa = PBXBuildFile; fileRef = 641C53C984F6E9BE0929536C /* Confetti.swift */; };
@@ -110,6 +111,7 @@
 		50C8DB4618CA48C83CE1C987 /* VoiceSpectrum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSpectrum.swift; sourceTree = "<group>"; };
 		5BCAAA368D3AECD109559A74 /* Reminders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reminders.swift; sourceTree = "<group>"; };
 		5D86F24AC9372E0B5A9F6A25 /* PaywallGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallGate.swift; sourceTree = "<group>"; };
+		5DEA2923D51ECF843DD4BBED /* PaywallRecapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallRecapTests.swift; sourceTree = "<group>"; };
 		5EF17015117CAFBD333185A7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		641C53C984F6E9BE0929536C /* Confetti.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Confetti.swift; sourceTree = "<group>"; };
 		65A29F5B27272F349425B6B0 /* JourneyChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyChart.swift; sourceTree = "<group>"; };
@@ -184,6 +186,7 @@
 				A61D93B4C4C2B1562F8CBA23 /* FoodParserTests.swift */,
 				28C85519ACF4096B51BC3535 /* LineRewriterTests.swift */,
 				8734C3998A0F55F94AAD8688 /* NutritionPlanTests.swift */,
+				5DEA2923D51ECF843DD4BBED /* PaywallRecapTests.swift */,
 				28648EF45A52ECDE9C7C2C92 /* ProductNameTests.swift */,
 				D5F15F5DFF3D1C5DFB4747B1 /* VoiceSpectrumTests.swift */,
 				C9B9ABA662E17E8154754CE6 /* WelcomeFoodRouteTests.swift */,
@@ -439,6 +442,7 @@
 				F10047776139D6EE95053CB9 /* FoodParserTests.swift in Sources */,
 				3A40FCE8DCFB7B67BC1DEB6E /* LineRewriterTests.swift in Sources */,
 				108E7241B747FCAA46004206 /* NutritionPlanTests.swift in Sources */,
+				7F1E791DA4625F1175FCADEA /* PaywallRecapTests.swift in Sources */,
 				4F24112FDE712AF35ADB91E3 /* ProductNameTests.swift in Sources */,
 				5B79DA8DC5FB679ABA3BD35E /* VoiceSpectrumTests.swift in Sources */,
 				1843E3F9D527F80CA22E5E1C /* WelcomeFoodRouteTests.swift in Sources */,
