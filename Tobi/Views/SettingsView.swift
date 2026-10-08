@@ -1,20 +1,25 @@
+import StoreKit
 import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @AppStorage("dailyGoal") private var goal = 2000
+    @AppStorage("carbsShare") private var carbsShare = 0.5
+    @AppStorage("proteinShare") private var proteinShare = 0.2
+    @AppStorage("fatShare") private var fatShare = 0.3
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
+    @Environment(\.requestReview) private var requestReview
     @Query(sort: \DayNote.day) private var notes: [DayNote]
 
     @State private var confirmingErase = false
     @State private var eraseFailed = false
-    @State private var destination: SettingsDestination?
     @State private var managingSubscription = false
     @State private var restoring = false
     @State private var restoreResult: RestoreResult?
     #if DEBUG
+    @State private var destination: DebugDestination?
     @AppStorage("debugLocked") private var debugLocked = false
     #endif
 
@@ -23,72 +28,87 @@ struct SettingsView: View {
         var id: Self { self }
     }
 
-    private enum SettingsDestination: Hashable {
-        case changelog, about
-        #if DEBUG
+    #if DEBUG
+    private enum DebugDestination: Hashable {
         case animationLab, bodyLab
-        #endif
+    }
+    #endif
+
+    private var version: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+    }
+
+    /// Proteína em gramas por dia. Mexer nela tira (ou devolve) calorias de carbo e gordura na
+    /// mesma proporção, pra divisão continuar fechando 100%.
+    private var proteinGrams: Binding<Int> {
+        Binding {
+            Int((Double(goal) * proteinShare / 4).rounded())
+        } set: { grams in
+            let share = min(max(Double(grams) * 4 / Double(goal), 0.1), 0.6)
+            let rest = carbsShare + fatShare
+            let carbsPart = rest > 0 ? carbsShare / rest : 0.6
+            proteinShare = share
+            carbsShare = (1 - share) * carbsPart
+            fatShare = (1 - share) * (1 - carbsPart)
+        }
+    }
+
+    /// De 10% a 60% das calorias: fora disso o stepper trava em vez de apertar sem mudar nada.
+    private var proteinRange: ClosedRange<Int> {
+        Int((Double(goal) * 0.1 / 4).rounded(.up))...Int((Double(goal) * 0.6 / 4).rounded(.down))
+    }
+
+    private func grams(_ share: Double, perGram kcal: Double) -> String {
+        "\(Int((Double(goal) * share / kcal).rounded())) g"
     }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Meta diária") {
-                    Stepper(value: $goal, in: 1000...5000, step: 50) {
-                        Text("\(goal.formatted()) kcal").monospacedDigit()
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 14)
-                    .glassEffect(.regular, in: .capsule)
-                }
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
-
                 Section {
+                    Stepper(value: $goal, in: 1000...5000, step: 50) {
+                        LabeledContent {
+                            Text("\(goal.formatted()) kcal").monospacedDigit()
+                        } label: {
+                            Label("Calorias", systemImage: "flame.fill")
+                        }
+                    }
+                    Stepper(value: proteinGrams, in: proteinRange, step: 5) {
+                        LabeledContent {
+                            Text("\(proteinGrams.wrappedValue) g").monospacedDigit()
+                        } label: {
+                            Label("Proteína", systemImage: "fish.fill")
+                        }
+                    }
+                } header: {
+                    Text("Metas do dia")
+                } footer: {
+                    Text("O resto vira \(grams(carbsShare, perGram: 4)) de carboidratos e \(grams(fatShare, perGram: 9)) de gordura.")
+                        .monospacedDigit()
+                }
+
+                Section("Assinatura") {
                     Button { managingSubscription = true } label: {
-                        settingsLabel("Gerenciar assinatura", systemImage: "creditcard.fill", navigates: true)
+                        Label("Gerenciar assinatura", systemImage: "creditcard.fill")
                     }
                     Button(action: restore) {
-                        HStack(spacing: 12) {
-                            settingsLabel("Restaurar compras", systemImage: "arrow.clockwise")
+                        HStack {
+                            Label("Restaurar compras", systemImage: "arrow.clockwise")
+                            Spacer()
                             if restoring { ProgressView() }
                         }
                     }
                     .disabled(restoring)
-                } header: {
-                    Text("Assinatura").foregroundStyle(.secondary)
                 }
-                .buttonStyle(.glass)
-                .controlSize(.large)
-                .foregroundStyle(.primary)
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
-
-                Section {
-                    Button { destination = .changelog } label: {
-                        settingsLabel("Histórico de alterações", systemImage: "list.bullet.rectangle.portrait.fill", navigates: true)
-                    }
-                    Button { destination = .about } label: {
-                        settingsLabel("Sobre o app", systemImage: "heart.fill", navigates: true)
-                    }
-                }
-                .buttonStyle(.glass)
-                .controlSize(.large)
-                .foregroundStyle(.primary)
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
 
                 Section {
                     ShareLink(item: NotesExport(notes: notes), preview: SharePreview("tobi.csv")) {
-                        settingsLabel("Exportar dados", systemImage: "square.and.arrow.up")
+                        Label("Exportar refeições", systemImage: "square.and.arrow.up")
                     }
                     .disabled(notes.isEmpty)
 
                     Button(role: .destructive) { confirmingErase = true } label: {
-                        settingsLabel("Apagar todos os dados", systemImage: "trash.fill")
+                        Label("Apagar refeições", systemImage: "trash.fill")
                     }
                     .foregroundStyle(.red)
                     .disabled(notes.isEmpty)
@@ -97,63 +117,72 @@ struct SettingsView: View {
                         Button("Apagar refeições", role: .destructive, action: eraseAll)
                         Button("Cancelar", role: .cancel) { }
                     } message: {
-                        Text("Apaga as refeições de todos os dias. Mantém sua meta e os produtos salvos. Não dá pra desfazer.")
+                        Text("Apaga as refeições de todos os dias. Mantém suas metas e os produtos salvos. Não dá pra desfazer.")
                     }
+                } header: {
+                    Text("Seus dados")
+                } footer: {
+                    Text("Suas refeições ficam só neste iPhone. O exportar gera uma planilha com tudo.")
                 }
-                .buttonStyle(.glass)
-                .controlSize(.large)
-                .foregroundStyle(.primary)
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
+
+                Section {
+                    Button { requestReview() } label: {
+                        Label("Avaliar o Tobi", systemImage: "star.fill")
+                    }
+                    Link(destination: PaywallLinks.terms) {
+                        Label("Termos de uso", systemImage: "doc.text.fill")
+                    }
+                    if let privacy = PaywallLinks.privacy {
+                        Link(destination: privacy) {
+                            Label("Política de privacidade", systemImage: "hand.raised.fill")
+                        }
+                    }
+                } header: {
+                    Text("Sobre")
+                } footer: {
+                    Text("Tobi \(version)")
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 16)
+                }
 
                 #if DEBUG
-                Section {
+                Section("Debug") {
                     Button { destination = .animationLab } label: {
-                        settingsLabel("Animações do Tobi", systemImage: "play.circle", navigates: true)
+                        Label("Animações do Tobi", systemImage: "play.circle")
                     }
                     Button { destination = .bodyLab } label: {
-                        settingsLabel("Tobi com corpinho", systemImage: "dog", navigates: true)
+                        Label("Tobi com corpinho", systemImage: "dog")
                     }
                     Button {
                         replayOnboarding(from: .welcome)
                     } label: {
-                        settingsLabel("Ver onboarding de novo", systemImage: "arrow.counterclockwise")
+                        Label("Ver onboarding de novo", systemImage: "arrow.counterclockwise")
                     }
                     Button {
                         replayOnboarding(from: .debugJump)
                     } label: {
-                        settingsLabel("Abrir \(OnboardingStep.debugJump.debugName)", systemImage: "arrow.forward.to.line")
+                        Label("Abrir \(OnboardingStep.debugJump.debugName)", systemImage: "arrow.forward.to.line")
                     }
                     Button(action: toggleLock) {
-                        settingsLabel(debugLocked ? "Destravar o app" : "Travar o app (fim das 24h)",
-                                      systemImage: debugLocked ? "lock.open" : "lock")
+                        Label(debugLocked ? "Destravar o app" : "Travar o app (fim das 24h)",
+                              systemImage: debugLocked ? "lock.open" : "lock")
                     }
-                } header: {
-                    Text("Debug").foregroundStyle(.secondary)
                 }
-                .buttonStyle(.glass)
-                .controlSize(.large)
-                .foregroundStyle(.primary)
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
                 #endif
             }
+            .foregroundStyle(.primary)
             .scrollContentBackground(.hidden)
             .background { Theme.background }
             .navigationTitle("Ajustes")
             .navigationBarTitleDisplayMode(.inline)
+            #if DEBUG
             .navigationDestination(item: $destination) { destination in
                 switch destination {
-                case .changelog: ChangelogView()
-                case .about: AboutView()
-                #if DEBUG
                 case .animationLab: TobiAnimationLabView()
                 case .bodyLab: TobiAnimationLabView(bodyPreview: true)
-                #endif
                 }
             }
+            #endif
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("OK") { dismiss() }
@@ -193,22 +222,6 @@ struct SettingsView: View {
             restoring = false
             restoreResult = restored ? .restored : .nothing
         }
-    }
-
-    private func settingsLabel(_ title: String, systemImage: String, navigates: Bool = false) -> some View {
-        HStack(spacing: 12) {
-            Label(title, systemImage: systemImage)
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 8)
-            if navigates {
-                Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .frame(maxWidth: .infinity, minHeight: 28, alignment: .leading)
-        .padding(.horizontal, 6)
     }
 
     #if DEBUG
@@ -265,58 +278,6 @@ struct NotesExport: Transferable {
             }
         }
         .suggestedFileName("tobi.csv")
-    }
-}
-
-private struct ChangelogView: View {
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                Text("0.1.0")
-                    .font(.system(size: 30, weight: .heavy, design: .rounded))
-                Text("Escreva o que comeu como numa nota e veja as calorias de cada linha.")
-                Text("Metas do dia com carboidratos, proteína, gordura e mais.")
-                Text("Ditado por voz em português.")
-                Text("Sequência de dias registrando.")
-            }
-            .tobiGlassSurface()
-            .padding(.horizontal, 20)
-            .padding(.vertical, 24)
-        }
-        .background { Theme.background }
-        .navigationTitle("Histórico de alterações")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-private struct AboutView: View {
-    private var version: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
-    }
-
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                TobiStage()
-                VStack(spacing: 12) {
-                    Text("tobi")
-                        .font(.system(size: 44, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.indigo)
-                    Text("Contar calorias do jeito mais simples: escrevendo.")
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(.secondary)
-                    Text("Versão \(version)")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-                .tobiGlassSurface(alignment: .center)
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 24)
-        }
-        .background { Theme.background }
-        .navigationTitle("Sobre o app")
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
