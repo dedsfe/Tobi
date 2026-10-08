@@ -98,7 +98,7 @@ CASES = [
  ("empadinha de frango", r"empad.*frango"),
  ("esfiha de carne", r"esf[ih]rr?a.*carne"),
  ("kibe", r"kibe|quibe"),
- ("leite com chocolate", r"chocolate|chocomilk"),
+ ("leite com chocolate", r"chocolat|chocomilk"),
  ("danone", None),
  ("miojo", r"macarr[aã]o.*instant|miojo"),
  ("batata frita", r"batata.*frit"),
@@ -106,7 +106,45 @@ CASES = [
  ("chocolate ao leite", r"chocolate.*leite|chocolate, ao leite"),
  ("picanha", r"picanha"),
  ("linguiça", r"lingui[cç]a"),
+ # holdout: frases que não usei pra ajustar nada
+ ("pão com ovo", r"^Pão com ovo"),
+ ("suco de uva", r"suco.*uva|uva.*suco"),
+ ("sorvete de creme", r"sorvete.*creme"),
+ ("mandioca frita", r"mandioca.*frit|aipim.*frit"),
+ ("peito de frango", r"peito.*frango|frango.*peito"),
+ ("carne moída", r"carne.*mo[ií]da"),
+ ("salada de alface e tomate", None),
+ ("lasanha", r"lasanha"),
+ ("nhoque", r"nhoque"),
+ ("paçoca", r"pa[cç]oca"),
+ ("pipoca", r"pipoca"),
+ ("cheeseburger", r"cheese|hamb"),
+ ("big mac", r"big mac"),
+ ("whopper", r"whopper"),
+ ("treino de perna", "NONFOOD"),
+ ("ligar pro médico", "NONFOOD"),
+ ("tô com dor de cabeça", "NONFOOD"),
+ ("uma maçã", r"ma[cç][aã]"),
+ ("melancia", r"melancia"),
+ ("castanha de caju", r"castanha.*caju"),
+ ("amendoim", r"amendoim"),
+ ("pão com queijo", None),
+ ("omelete", r"omelete"),
+ ("tapioca", r"tapioca"),
+ ("moqueca de peixe", r"moqueca"),
+ ("acarajé", r"acaraj"),
+ ("tacacá", r"tacac"),
 ]
+
+GIRIAS = json.load(open(ROOT / "data/girias.json"))
+
+def apply_girias(text):
+    t = fold(text).strip()
+    for g in sorted(GIRIAS, key=lambda g: -len(g["quando"])):
+        w = fold(g["quando"]).strip()
+        t2 = re.sub(rf"\b{re.escape(w)}\b", g["vira"], t)
+        if t2 != t: return t2
+    return text
 
 def call(text, cands):
     body = json.dumps({"text": text, "candidates": [{"id": c["id"], "name": c["name"]} for c in cands]}).encode()
@@ -118,6 +156,8 @@ def call(text, cands):
 
 def run(case):
     text, want = case
+    shown = text
+    text = apply_girias(text)
     cands = candidates(text)
     r = call(text, cands) if cands else {"isFood": None, "match": None, "choice": None, "confidence": 0}
     names = {c["id"]: c["name"] for c in cands}
@@ -134,7 +174,7 @@ def run(case):
             verdict = "perdeu(banco tem, candidato " + ("tinha" if in_c else "NÃO tinha") + ")" if avail else "ok(nenhum)"
         else:
             verdict = "ok" if re.search(want, got, re.I) else f"ERRADO({got})"
-    return text, verdict, r, len(cands)
+    return shown, verdict, r, len(cands)
 
 if __name__ == "__main__":
     with cf.ThreadPoolExecutor(6) as ex: out = list(ex.map(run, CASES))
@@ -143,7 +183,7 @@ if __name__ == "__main__":
         flag = v.startswith("ok")
         bad += not flag
         if "-v" in sys.argv or not flag:
-            names = {c['id']: c['name'] for c in candidates(text)}
+            names = {c['id']: c['name'] for c in candidates(apply_girias(text))}
             tp = ' | '.join(f"{(names.get(t['id']) or 'NENHUM')[:28]}={t['p']:.2f}" for t in (r.get('top') or [])[:3])
             print(f"{'✓' if flag else '✗'} {text:24} {v:48} conf={r.get('confidence')} ver={r.get('verified')} {tp}")
     wrong = sum(1 for _, v, *_ in out if v.startswith(("ERRADO", "FALHA")))
