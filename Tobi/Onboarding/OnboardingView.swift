@@ -22,7 +22,7 @@ enum OnboardingStep: Int, CaseIterable {
 
     #if DEBUG
     /// Tela em revisão: o atalho do Debug nos Ajustes abre direto nela. Trocar aqui quando a revisão mudar.
-    static let debugJump: OnboardingStep = .notifications
+    static let debugJump: OnboardingStep = .celebration
 
     var debugName: String {
         switch self {
@@ -423,6 +423,8 @@ private struct QuestionStep<Content: View>: View {
     let subtitle: String
     let canContinue: Bool
     var buttonTitle = "Continuar"
+    /// Falso segura o botão até a coreografia da tela terminar.
+    var showsButton = true
     /// Saída discreta embaixo do botão (ex.: "Agora não").
     var secondary: (title: String, action: () -> Void)?
     let onContinue: () -> Void
@@ -459,7 +461,7 @@ private struct QuestionStep<Content: View>: View {
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 12)
-            .reveal(visible, order: 6)
+            .reveal(visible && showsButton, order: 6)
         }
         .onAppear { visible = true }
     }
@@ -1046,8 +1048,9 @@ private struct InputsStep: View {
 
 // MARK: - 12 · Tudo pronto
 
-/// Comemoração: o resumo do plano, confete e, logo depois, o pedido de avaliação da Apple
-/// (quem decide se ele aparece de fato é o sistema).
+/// O plano pronto como uma jornada: a promessa no título, a curva do peso se desenhando até a meta
+/// (marcos vibrando pelo caminho, estouro de confete na chegada) e os números do dia contando.
+/// Depois, o pedido de avaliação da Apple (quem decide se aparece é o sistema).
 private struct CelebrationStep: View {
     let answers: OnboardingAnswers
     let onContinue: () -> Void
@@ -1055,61 +1058,173 @@ private struct CelebrationStep: View {
     /// A meta salva em "Suas metas" (inclui o que a pessoa mudou na mão).
     @AppStorage("dailyGoal") private var dailyGoal = 2000
     @Environment(\.requestReview) private var requestReview
-    @State private var celebrated = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    @State private var progress: CGFloat = 0
+    @State private var reached = false
+    @State private var tiles = false
+    @State private var milestoneTicks = 0
 
     private var plan: NutritionPlan? {
         NutritionPlan(answers: answers).map { $0.adjusted(kcal: dailyGoal) }
     }
 
-    /// "65 kg em mar. de 2027", ou "Manter os 70 kg".
-    private var goalLine: String? {
-        guard let plan else { return nil }
-        let goal = plan.goalWeightKg.formatted(.number.precision(.fractionLength(0...1)))
-        let weekly = abs(plan.weeklyChangeKg)
-        guard plan.objective != .maintain, weekly >= 0.05 else { return "Manter os \(goal) kg" }
-        let weeks = abs(plan.goalWeightKg - plan.weightKg) / weekly
-        let arrival = Calendar.current.date(byAdding: .day, value: Int((weeks * 7).rounded()), to: .now) ?? .now
-        return "\(goal) kg em \(arrival.formatted(.dateTime.month(.abbreviated).year()))"
+    /// Quando chega na meta, no ritmo da meta de calorias escolhida.
+    private var arrival: Date {
+        guard let plan, plan.objective != .maintain, abs(plan.weeklyChangeKg) >= 0.05 else {
+            return Calendar.current.date(byAdding: .month, value: 3, to: .now) ?? .now
+        }
+        let weeks = abs(plan.goalWeightKg - plan.weightKg) / abs(plan.weeklyChangeKg)
+        return Calendar.current.date(byAdding: .day, value: Int((weeks * 7).rounded()), to: .now) ?? .now
+    }
+
+    private var isMaintaining: Bool { plan?.objective == .maintain }
+
+    /// A promessa: "Em março, você chega nos 65 kg" (com o ano só se não for este).
+    private var title: String {
+        guard let plan else { return "Tá tudo pronto!" }
+        let goal = "\(plan.goalWeightKg.formatted(.number.precision(.fractionLength(0...1)))) kg"
+        if isMaintaining { return "Seu plano pra manter os \(goal)" }
+        let sameYear = Calendar.current.isDate(arrival, equalTo: .now, toGranularity: .year)
+        let month = arrival.formatted(sameYear ? .dateTime.month(.wide) : .dateTime.month(.wide).year())
+        return "Em \(month), você chega nos \(goal)"
     }
 
     var body: some View {
         QuestionStep(
-            title: "Tá tudo pronto!",
-            subtitle: "Seu plano já está na nota. Agora é só escrever o que comer.",
+            title: title,
+            subtitle: "Tá tudo pronto. Esse é o seu caminho, comendo \(dailyGoal.formatted()) cal por dia.",
             canContinue: true,
+            showsButton: tiles,
             onContinue: onContinue
         ) { visible in
-            VStack(alignment: .leading, spacing: 16) {
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text("🔥").font(.system(size: 28))
-                    Text((visible ? dailyGoal : 0).formatted())
-                        .font(.system(size: 46, weight: .heavy, design: .rounded))
-                        .monospacedDigit()
-                        .contentTransition(.numericText(value: Double(visible ? dailyGoal : 0)))
-                        .animation(visible ? Motion.cascade(3) : Motion.exit, value: visible)
-                    Text("cal por dia")
-                        .font(.system(size: 17))
-                        .foregroundStyle(.secondary)
-                }
-                if let goalLine {
-                    Label(goalLine, systemImage: "flag.checkered")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(Color(uiColor: .label))
-                        .reveal(visible, order: 4)
+            VStack(spacing: 12) {
+                if let plan {
+                    JourneyChart(startKg: plan.weightKg, goalKg: plan.goalWeightKg, arrival: arrival,
+                                 progress: progress, reached: reached)
+                        .frame(height: 196)
+                        .padding(14)
+                        .glassEffect(.regular, in: .rect(cornerRadius: 26))
+                        .reveal(visible, order: 2)
+
+                    HStack(spacing: 10) {
+                        PlanTile(symbol: "flame.fill", color: .orange, value: dailyGoal,
+                                 unit: "cal por dia", shown: tiles, order: 0)
+                        PlanTile(symbol: "fish.fill", color: Theme.protein, value: plan.proteinGrams,
+                                 suffix: " g", unit: "proteína", shown: tiles, order: 1)
+                        if isMaintaining {
+                            PlanTile(symbol: "equal", color: .indigo, value: Int(plan.weightKg.rounded()),
+                                     suffix: " kg", unit: "mantendo", shown: tiles, order: 2)
+                        } else {
+                            PlanTile(symbol: plan.objective == .lose ? "arrow.down.right" : "arrow.up.right",
+                                     color: .indigo, value: Int((abs(plan.weeklyChangeKg) * 100).rounded()),
+                                     unit: "kg por semana", shown: tiles, order: 2, hundredths: true)
+                        }
+                    }
                 }
             }
-            .tobiGlassSurface()
-            .reveal(visible, order: 2)
         }
-        .overlay { Confetti() }
-        .sensoryFeedback(.success, trigger: celebrated)
-        .task {
-            celebrated = true
-            // Deixa o confete cair antes de pedir a avaliação.
-            try? await Task.sleep(for: .seconds(1.6))
-            guard !Task.isCancelled else { return }
-            requestReview()
+        .sensoryFeedback(.selection, trigger: milestoneTicks)
+        .sensoryFeedback(.success, trigger: reached)
+        .task { await perform() }
+    }
+
+    /// A coreografia: espera o título entrar, desenha a curva (vibrando em cada marco),
+    /// acende a meta, conta os números e só então mostra o botão e pede a avaliação.
+    private func perform() async {
+        guard !reduceMotion else {
+            progress = 1; reached = true; tiles = true
+            return
         }
+        try? await Task.sleep(for: .milliseconds(650))
+        let drawing = 1.7
+        withAnimation(.timingCurve(0.45, 0, 0.25, 1, duration: drawing)) { progress = 1 }
+        // Os marcos acendem quando o traço passa por eles; aqui só a vibração acompanha.
+        let marks = plan.map { JourneyChart(startKg: $0.weightKg, goalKg: $0.goalWeightKg, arrival: arrival,
+                                            progress: 0, reached: false).milestones } ?? []
+        var elapsed = 0.0
+        for mark in marks {
+            let at = drawing * Self.timeFor(progress: mark.fraction)
+            try? await Task.sleep(for: .seconds(max(0, at - elapsed)))
+            elapsed = at
+            milestoneTicks += 1
+        }
+        try? await Task.sleep(for: .seconds(max(0, drawing - elapsed)))
+        withAnimation(Motion.surface) { reached = true }
+        try? await Task.sleep(for: .milliseconds(450))
+        withAnimation(Motion.surface) { tiles = true }
+        try? await Task.sleep(for: .seconds(1.8))
+        guard !Task.isCancelled else { return }
+        requestReview()
+    }
+
+    /// Inverso aproximado da curva de tempo (0.45, 0, 0.25, 1): em que fração do tempo o traço passa por `progress`.
+    private static func timeFor(progress target: CGFloat) -> Double {
+        var low = 0.0, high = 1.0
+        for _ in 0..<24 {
+            let mid = (low + high) / 2
+            if bezier(mid) < Double(target) { low = mid } else { high = mid }
+        }
+        return (low + high) / 2
+    }
+
+    /// y(t) da curva cúbica de tempo, achando o parâmetro pelo x (tempo).
+    private static func bezier(_ time: Double) -> Double {
+        func coordinate(_ t: Double, _ p1: Double, _ p2: Double) -> Double {
+            3 * pow(1 - t, 2) * t * p1 + 3 * (1 - t) * pow(t, 2) * p2 + pow(t, 3)
+        }
+        var low = 0.0, high = 1.0
+        for _ in 0..<24 {
+            let mid = (low + high) / 2
+            if coordinate(mid, 0.45, 0.25) < time { low = mid } else { high = mid }
+        }
+        return coordinate((low + high) / 2, 0, 1)
+    }
+}
+
+/// Número do plano num vidro: ícone, valor que conta do zero e a legenda.
+private struct PlanTile: View {
+    let symbol: String
+    let color: Color
+    let value: Int
+    var suffix = ""
+    let unit: String
+    let shown: Bool
+    let order: Int
+    /// O valor vem em centésimos (ex.: 50 = "0,5").
+    var hundredths = false
+
+    private var text: String {
+        let shownValue = shown ? value : 0
+        if hundredths {
+            return (Double(shownValue) / 100).formatted(.number.precision(.fractionLength(1...2)))
+        }
+        return shownValue.formatted() + suffix
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Image(systemName: symbol)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(color)
+            Text(text)
+                .font(.system(size: 22, weight: .heavy, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(Color(uiColor: .label))
+                .contentTransition(.numericText(value: Double(shown ? value : 0)))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            Text(unit)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassEffect(.regular, in: .rect(cornerRadius: 20))
+        .reveal(shown, order: order)
+        .animation(Motion.cascade(order + 1), value: shown)
     }
 }
 
