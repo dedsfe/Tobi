@@ -25,6 +25,8 @@ struct TotalsBar: View {
                 number(kcal)
                     .foregroundStyle(isOver ? Color.orange : Color.primary)
             }
+            // Com número grande, os macros encolhem antes das calorias.
+            .layoutPriority(1)
             dot
             macro("C", total.carbs, Theme.carbs)
             dot
@@ -33,6 +35,7 @@ struct TotalsBar: View {
             macro("G", total.fat, Theme.fat)
         }
         .frame(maxWidth: .infinity)
+        .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .contentShape(.capsule)
         .animation(Motion.quick, value: total)
@@ -51,6 +54,9 @@ struct TotalsBar: View {
         Text(value.formatted())
             .font(.system(size: 16, weight: .semibold, design: .rounded))
             .monospacedDigit()
+            // Nunca quebra linha: encolhe um pouco quando o número não cabe.
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
             .contentTransition(.numericText(value: Double(value)))
     }
 
