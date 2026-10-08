@@ -1,47 +1,45 @@
 import SwiftUI
 
-/// Tocou no X do paywall: chega uma carta do Tobi. O envelope treme, a aba abre, a carta sai
-/// dobrada em três, desdobra e o Tobi escreve à mão as 24 horas de cortesia, assina e carimba.
-/// Aceitou: a carta se dobra e volta pro envelope. Tocar na carta termina de escrever na hora.
+/// Tocou no X do paywall: chega uma carta do Tobi. O envelope treme, a aba abre, o cartão sai
+/// dobrado ao meio, abre e o Tobi escreve as 24 horas de cortesia, assina e carimba a patinha.
+/// Aceitou: o cartão fecha e volta pro envelope. Tocar no cartão termina de escrever na hora.
 struct TobiLetter: View {
     let onAccept: () -> Void
     let onBack: () -> Void
 
     private static let hours = Int(TobiStore.freePassHours)
-    private static let envelope = CGSize(width: 300, height: 190)
-    /// Altura da carta aberta; cada dobra é um terço.
-    private static let sheetHeight: CGFloat = 342
-    /// Dentro do envelope a carta dobrada fica menor, pra caber.
-    private static let foldedScale: CGFloat = 0.78
-    /// Onde o envelope fica (a partir do centro) e onde a carta fica dentro dele e saindo dele.
+    /// Envelope e cartão na mesma proporção: o cartão fechado (metade da altura) cabe com folga.
+    private static let envelope = CGSize(width: 324, height: 204)
+    private static let cardHeight: CGFloat = 380
+    private static let foldedScale: CGFloat = 0.82
+    /// Posições a partir do centro: o envelope um pouco abaixo; o cartão dentro dele, saindo e aberto.
     private static let envelopeY: CGFloat = 40
-    private static let insideY: CGFloat = 50
-    private static let pulledY: CGFloat = -80
+    private static let insideY: CGFloat = -28
+    private static let pulledY: CGFloat = -176
 
-    static let paper = Color(light: .white, dark: Color(white: 0.16))
-    static let ink = Color(light: Color(red: 0.13, green: 0.13, blue: 0.24), dark: Color(white: 0.93))
+    static let paper = Color(light: .white, dark: Color(white: 0.15))
+    static let ink = Color(light: Color(red: 0.12, green: 0.12, blue: 0.22), dark: Color(white: 0.94))
 
     @State private var arrived = false
     @State private var envelopeAway = false
     @State private var flap = 0.0
-    /// Passou de 90°: a aba vai pra trás da carta.
+    /// Passou de 90°: a aba vai pra trás do cartão.
     @State private var flapBehind = false
     @State private var wiggle = 0
-    @State private var sheetY = Self.insideY
-    @State private var sheetScale = Self.foldedScale
-    @State private var sheetTilt = 0.0
-    @State private var sheetGone = false
-    /// Dobra de cima e de baixo: ±180 é fechada, 0 é aberta.
-    @State private var topFold = 180.0
-    @State private var bottomFold = -180.0
-    @State private var ink = Array(repeating: 0.0, count: 8)
-    @State private var writing: Int?
+    @State private var cardY = Self.insideY
+    @State private var cardScale = Self.foldedScale
+    @State private var cardTilt = 0.0
+    @State private var cardGone = false
+    /// Metade de cima do cartão: 180 é fechado, 0 é aberto.
+    @State private var fold = 180.0
+    /// Tinta de cada bloco: saudação, texto, despedida, assinatura e P.S.
+    @State private var ink = Array(repeating: 0.0, count: 5)
     @State private var stamped = false
     @State private var buttonsIn = false
     @State private var skipped = false
     @State private var busy = false
     @State private var until = Date.now.addingTimeInterval(TobiStore.freePassHours * 3600)
-    /// Gatilhos dos toques: chegada, batidinhas, aba, papel, dobras, assentar e caneta.
+    /// Gatilhos dos toques: chegada, batidinhas, aba, papel, dobra, assentar e caneta.
     @State private var arrivals = 0
     @State private var bumps = 0
     @State private var flips = 0
@@ -52,24 +50,13 @@ struct TobiLetter: View {
     @Environment(\.tobiReactions) private var tobi
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private var rows: [String] {
-        ["Ei, espera aí!",
-         "Vou te dar \(Self.hours) horas de graça",
-         "pra testar.",
-         "Eu pago a IA, não consigo dar",
-         "o app de graça.",
-         "Com carinho,"]
-    }
+    private static let greeting = "Ei, espera aí!"
+    private static let message = "Vou te dar \(hours) horas de graça pra testar. Eu pago a IA, não consigo dar o app de graça."
+    private static let farewell = "Com carinho,"
 
-    private var signature: Int { rows.count }
-    private var postscript: Int { rows.count + 1 }
-    private var postscriptText: String {
+    private var postscript: String {
         "P.S.: vale até amanhã às \(until.formatted(date: .omitted, time: .shortened))"
     }
-
-    /// Mão de gente: cada linha entorta e recua um tiquinho diferente.
-    private static let tilts: [Double] = [-0.8, 0.4, -0.3, 0.5, -0.4, 0.6]
-    private static let indents: [CGFloat] = [0, 2, 1, 3, 0, 8]
 
     var body: some View {
         VStack(spacing: 0) {
@@ -106,41 +93,28 @@ struct TobiLetter: View {
 
     // MARK: Cena
 
-    /// Envelope e carta numa pilha só, pra carta poder entrar e sair entre o fundo e o bolso.
+    /// Envelope e cartão numa pilha só, pro cartão entrar e sair entre o fundo e as abas da frente.
     private var scene: some View {
         let size = Self.envelope
-        let envelopeY = Self.envelopeY + (envelopeAway ? 170 : 0)
+        let envelopeY = Self.envelopeY + (envelopeAway ? 180 : 0)
         let envelopeOpacity: Double = envelopeAway ? 0 : 1
         return ZStack {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.indigo.mix(with: .black, by: 0.3))
-                .overlay { PawLining() }
-                .clipShape(.rect(cornerRadius: 16, style: .continuous))
+            EnvelopeBack()
                 .frame(width: size.width, height: size.height)
                 .offset(y: envelopeY)
                 .opacity(envelopeOpacity)
                 .zIndex(0)
 
             EnvelopeFlapView(angle: flap)
-                .frame(width: size.width, height: size.height * 0.6)
-                .offset(y: envelopeY - size.height * 0.2)
+                .frame(width: size.width, height: size.height * EnvelopeFlap.depth)
+                .offset(y: envelopeY - size.height * (1 - EnvelopeFlap.depth) / 2)
                 .opacity(envelopeOpacity)
                 .zIndex(flapBehind ? 1 : 4)
 
-            sheet
+            card
                 .zIndex(2)
 
-            EnvelopePocket()
-                .fill(Color.indigo)
-                .clipShape(.rect(cornerRadius: 16, style: .continuous))
-                .overlay(alignment: .bottomLeading) {
-                    Text("pra você")
-                        .font(.custom("Noteworthy-Bold", size: 18))
-                        .foregroundStyle(.white.opacity(0.9))
-                        .rotationEffect(.degrees(-4))
-                        .padding(.leading, 20)
-                        .padding(.bottom, 16)
-                }
+            EnvelopeFront()
                 .frame(width: size.width, height: size.height)
                 .offset(y: envelopeY)
                 .opacity(envelopeOpacity)
@@ -150,75 +124,80 @@ struct TobiLetter: View {
         .keyframeAnimator(initialValue: 0.0, trigger: wiggle) { view, angle in
             view.rotationEffect(.degrees(angle))
         } keyframes: { _ in
-            SpringKeyframe(-5, duration: 0.11)
-            SpringKeyframe(4, duration: 0.11)
-            SpringKeyframe(-2, duration: 0.1)
+            SpringKeyframe(-4, duration: 0.11)
+            SpringKeyframe(3, duration: 0.11)
+            SpringKeyframe(-1.5, duration: 0.1)
             SpringKeyframe(0, duration: 0.18)
         }
     }
 
-    // MARK: Carta dobrada em três
+    // MARK: Cartão dobrado ao meio
 
-    private var sheet: some View {
-        let third = Self.sheetHeight / 3
+    private var card: some View {
+        let halfHeight = Self.cardHeight / 2
         return VStack(spacing: 0) {
-            FoldPanel(angle: topFold, hinge: .bottom) {
-                slice(0)
+            FoldPanel(angle: fold) {
+                half(of: 0)
             } back: {
-                PaperBack(outerEdge: .top)
+                CardCover()
             }
-            .frame(height: third)
-            .zIndex(3)
+            .frame(height: halfHeight)
+            .zIndex(1)
 
-            slice(1)
-                .frame(height: third)
-                .zIndex(1)
-
-            FoldPanel(angle: bottomFold, hinge: .top) {
-                slice(2)
-            } back: {
-                PaperBack(outerEdge: .bottom)
-            }
-            .frame(height: third)
-            .zIndex(2)
+            half(of: 1)
+                .frame(height: halfHeight)
         }
         .compositingGroup()
-        .shadow(color: .black.opacity(0.08), radius: 22, y: 10)
+        .shadow(color: .black.opacity(0.06), radius: 1.5, y: 1)
+        .shadow(color: .black.opacity(0.1), radius: 24, y: 14)
         .padding(.horizontal, 16)
-        .scaleEffect(sheetScale)
-        .rotationEffect(.degrees(sheetTilt))
-        .offset(y: sheetY + (sheetGone ? 140 : 0))
-        .opacity(sheetGone ? 0 : 1)
+        .scaleEffect(cardScale)
+        .rotationEffect(.degrees(cardTilt))
+        .offset(y: cardY + (cardGone ? 160 : 0))
+        .opacity(cardGone ? 0 : 1)
         .contentShape(.rect)
         .onTapGesture(perform: finishWriting)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel((rows + ["Tobi", postscriptText]).joined(separator: " "))
+        .accessibilityLabel([Self.greeting, Self.message, Self.farewell, "Tobi", postscript].joined(separator: " "))
     }
 
-    /// Um terço da carta: a carta inteira desenhada e recortada na altura da dobra.
-    private func slice(_ index: Int) -> some View {
+    /// Uma metade do cartão: a frente inteira desenhada e recortada na dobra.
+    private func half(of index: Int) -> some View {
         face
-            .frame(height: Self.sheetHeight)
-            .offset(y: -CGFloat(index) * Self.sheetHeight / 3)
-            .frame(height: Self.sheetHeight / 3, alignment: .top)
+            .frame(height: Self.cardHeight)
+            .offset(y: -CGFloat(index) * Self.cardHeight / 2)
+            .frame(height: Self.cardHeight / 2, alignment: .top)
             .clipped()
     }
 
-    /// A frente da carta aberta.
+    /// A frente do cartão aberto: saudação, recado, despedida, assinatura com carimbo e o P.S.
     private var face: some View {
         VStack(alignment: .leading, spacing: 0) {
-            ForEach(rows.indices, id: \.self) { index in
-                InkLine(text: rows[index], ink: ink[index], isWriting: writing == index,
-                        tilt: Self.tilts[index], indent: Self.indents[index])
-            }
-            HStack(alignment: .center, spacing: 10) {
+            Text(Self.greeting)
+                .font(.system(size: 26, weight: .bold, design: .serif))
+                .foregroundStyle(Self.ink)
+                .textRenderer(InkRenderer(progress: ink[0]))
+
+            Text(Self.message)
+                .font(.system(size: 20, design: .serif))
+                .foregroundStyle(Self.ink)
+                .lineSpacing(5)
+                .fixedSize(horizontal: false, vertical: true)
+                .textRenderer(InkRenderer(progress: ink[1]))
+                .padding(.top, 14)
+
+            Spacer(minLength: 16)
+
+            Text(Self.farewell)
+                .font(.system(size: 18, design: .serif).italic())
+                .foregroundStyle(.secondary)
+                .textRenderer(InkRenderer(progress: ink[2]))
+
+            HStack(alignment: .center, spacing: 12) {
                 Text("Tobi")
-                    .font(.custom("SnellRoundhand-Bold", size: 44))
+                    .font(.custom("SnellRoundhand-Bold", size: 48))
                     .foregroundStyle(.indigo)
-                    .mask(alignment: .leading) { InkMask(progress: ink[signature]) }
-                    .overlay(alignment: .bottomLeading) {
-                        Pen(isWriting: writing == signature, progress: ink[signature])
-                    }
+                    .mask(alignment: .leading) { InkSweep(progress: ink[3]) }
                 Image(systemName: "pawprint.fill")
                     .font(.system(size: 26))
                     .foregroundStyle(.indigo)
@@ -227,29 +206,26 @@ struct TobiLetter: View {
                     .opacity(stamped ? 1 : 0)
                     .animation(Motion.surface, value: stamped)
             }
-            .padding(.leading, 6)
             .frame(height: 58)
-            InkLine(text: postscriptText, ink: ink[postscript], isWriting: writing == postscript,
-                    ruled: false, color: .indigo)
+
+            Text(postscript)
+                .font(.system(size: 15, weight: .medium, design: .serif).italic())
+                .foregroundStyle(.indigo)
+                .textRenderer(InkRenderer(progress: ink[4]))
+                .padding(.top, 10)
         }
-        .padding(.horizontal, 26)
-        .padding(.top, 14)
-        .padding(.bottom, 16)
+        .padding(.horizontal, 28)
+        .padding(.top, 30)
+        .padding(.bottom, 26)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Self.paper, in: .rect(cornerRadius: 24, style: .continuous))
+        .background(Self.paper, in: .rect(cornerRadius: 18, style: .continuous))
         .overlay {
-            // Os vincos ficam no papel depois de aberto.
-            VStack(spacing: 0) {
-                Spacer()
-                Crease()
-                Spacer()
-                Crease()
-                Spacer()
-            }
+            // O vinco do meio fica no papel depois de aberto.
+            Crease().opacity(fold < 90 ? 1 : 0)
         }
         .overlay {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(.primary.opacity(0.08))
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .strokeBorder(.primary.opacity(0.07))
         }
     }
 
@@ -259,7 +235,11 @@ struct TobiLetter: View {
         if reduceMotion {
             arrived = true
             envelopeAway = true
-            open()
+            cardY = 0
+            cardScale = 1
+            fold = 0
+            flap = 180
+            flapBehind = true
             finishWriting()
             return
         }
@@ -275,7 +255,7 @@ struct TobiLetter: View {
         try? await Task.sleep(for: .milliseconds(220))
         bumps += 1
 
-        // Abre a aba em dois tempos, pra ela passar pra trás da carta no meio do giro.
+        // Abre a aba em dois tempos, pra ela passar pra trás do cartão no meio do giro.
         try? await Task.sleep(for: .milliseconds(380))
         withAnimation(.easeIn(duration: 0.17)) { flap = 90 }
         try? await Task.sleep(for: .milliseconds(170))
@@ -283,51 +263,45 @@ struct TobiLetter: View {
         withAnimation(.easeOut(duration: 0.26)) { flap = 180 }
         flips += 1
 
-        // A carta sai meio torta, e o envelope cai enquanto ela vem pro centro.
+        // O cartão sobe meio torto; depois o envelope cai e o cartão vem pro centro.
         try? await Task.sleep(for: .milliseconds(200))
         withAnimation(Motion.surface) {
-            sheetY = Self.pulledY
-            sheetTilt = -4
+            cardY = Self.pulledY
+            cardTilt = -3
         }
         pulls += 1
-        try? await Task.sleep(for: .milliseconds(480))
+        try? await Task.sleep(for: .milliseconds(520))
         withAnimation(Motion.surface) {
             envelopeAway = true
-            sheetY = 0
-            sheetScale = 1
-            sheetTilt = 0
+            cardY = 0
+            cardScale = 1
+            cardTilt = 0
         }
 
-        // Desdobra: primeiro a de cima, depois a de baixo, e assenta.
-        try? await Task.sleep(for: .milliseconds(420))
-        withAnimation(Motion.surface) { topFold = 0 }
+        // Abre o cartão e assenta.
+        try? await Task.sleep(for: .milliseconds(440))
+        withAnimation(Motion.surface) { fold = 0 }
         folds += 1
-        try? await Task.sleep(for: .milliseconds(180))
-        withAnimation(Motion.surface) { bottomFold = 0 }
-        folds += 1
-        try? await Task.sleep(for: .milliseconds(360))
+        try? await Task.sleep(for: .milliseconds(380))
         flats += 1
         tobi.mood(.attentive)
 
-        try? await Task.sleep(for: .milliseconds(220))
-        for index in rows.indices {
-            guard await pen(index, text: rows[index]) else { return }
-        }
+        try? await Task.sleep(for: .milliseconds(200))
+        guard await write(0, characters: Self.greeting.count),
+              await write(1, characters: Self.message.count),
+              await write(2, characters: Self.farewell.count) else { return }
         withAnimation { buttonsIn = true }
-        guard await pen(signature, text: "Tobi", pace: 0.12) else { return }
-        writing = nil
+        guard await write(3, characters: 4, pace: 0.13) else { return }
         stamped = true
         tobi.celebrate()
         try? await Task.sleep(for: .milliseconds(260))
-        _ = await pen(postscript, text: postscriptText)
-        writing = nil
+        _ = await write(4, characters: postscript.count)
     }
 
-    /// Escreve uma linha no ritmo do texto, com a caneta riscando no dedo. Falso se a pessoa pulou.
-    private func pen(_ index: Int, text: String, pace: Double = 0.024) async -> Bool {
+    /// Escreve um bloco no ritmo do texto, com a caneta riscando no dedo. Falso se a pessoa pulou.
+    private func write(_ index: Int, characters: Int, pace: Double = 0.022) async -> Bool {
         guard !skipped else { return false }
-        writing = index
-        let duration = 0.12 + Double(text.count) * pace
+        let duration = 0.15 + Double(characters) * pace
         withAnimation(.linear(duration: duration)) { ink[index] = 1 }
         var elapsed = 0.0
         while elapsed < duration {
@@ -336,25 +310,13 @@ struct TobiLetter: View {
             try? await Task.sleep(for: .milliseconds(70))
             elapsed += 0.07
         }
-        try? await Task.sleep(for: .milliseconds(90))
+        try? await Task.sleep(for: .milliseconds(120))
         return !skipped
-    }
-
-    /// Carta aberta e no centro, sem animação (Reduzir Movimento).
-    private func open() {
-        sheetY = 0
-        sheetScale = 1
-        sheetTilt = 0
-        topFold = 0
-        bottomFold = 0
-        flap = 180
-        flapBehind = true
     }
 
     private func finishWriting() {
         guard !skipped, !busy else { return }
         skipped = true
-        writing = nil
         withAnimation(Motion.quick) {
             ink = ink.map { _ in 1 }
             buttonsIn = true
@@ -367,34 +329,30 @@ struct TobiLetter: View {
 
     // MARK: Saídas
 
-    /// Aceitou: a carta se dobra, volta pro envelope, a aba fecha e aí o Tobi comemora.
+    /// Aceitou: o cartão fecha, volta pro envelope, a aba fecha e aí o Tobi comemora.
     private func accept() {
         guard !busy else { return }
         busy = true
         skipped = true
-        writing = nil
         guard !reduceMotion else { return onAccept() }
         Task {
             withAnimation(Motion.exit) { buttonsIn = false }
-            withAnimation(Motion.surface) { bottomFold = -180 }
+            withAnimation(Motion.surface) { fold = 180 }
             folds += 1
-            try? await Task.sleep(for: .milliseconds(220))
-            withAnimation(Motion.surface) { topFold = 180 }
-            folds += 1
-            try? await Task.sleep(for: .milliseconds(320))
+            try? await Task.sleep(for: .milliseconds(340))
             withAnimation(Motion.surface) {
-                sheetScale = Self.foldedScale
-                sheetY = Self.pulledY
-                sheetTilt = -4
+                cardScale = Self.foldedScale
+                cardY = Self.pulledY
+                cardTilt = -3
                 envelopeAway = false
             }
-            try? await Task.sleep(for: .milliseconds(420))
+            try? await Task.sleep(for: .milliseconds(440))
             withAnimation(Motion.surface) {
-                sheetY = Self.insideY
-                sheetTilt = 0
+                cardY = Self.insideY
+                cardTilt = 0
             }
             pulls += 1
-            try? await Task.sleep(for: .milliseconds(300))
+            try? await Task.sleep(for: .milliseconds(320))
             withAnimation(.easeIn(duration: 0.15)) { flap = 90 }
             try? await Task.sleep(for: .milliseconds(150))
             flapBehind = false
@@ -406,16 +364,15 @@ struct TobiLetter: View {
         }
     }
 
-    /// Quer ver os planos: a carta desliza pra baixo e some.
+    /// Quer ver os planos: o cartão desliza pra baixo e some.
     private func leave() {
         guard !busy else { return }
         busy = true
         skipped = true
-        writing = nil
         tobi.mood(.joyful)
         withAnimation(Motion.exit) {
             buttonsIn = false
-            sheetGone = true
+            cardGone = true
         }
         Task {
             try? await Task.sleep(for: .seconds(Motion.exitDuration))
@@ -426,11 +383,10 @@ struct TobiLetter: View {
 
 // MARK: - Papel
 
-/// Uma dobra da carta. Gira pela dobradiça e mostra o verso quando passa de 90°,
+/// A metade de cima do cartão. Gira pela dobra do meio e mostra a capa quando passa de 90°,
 /// com sombra no vinco enquanto está inclinada.
 private struct FoldPanel<Front: View, Back: View>: View, Animatable {
     var angle: Double
-    let hinge: UnitPoint
     @ViewBuilder let front: Front
     @ViewBuilder let back: Back
 
@@ -444,38 +400,34 @@ private struct FoldPanel<Front: View, Back: View>: View, Animatable {
         let lean = abs(sin(angle * .pi / 180))
         ZStack {
             front.opacity(showsBack ? 0 : 1)
-            back.opacity(showsBack ? 1 : 0)
+            // Girado 180°, o verso apareceria de ponta-cabeça: desvira antes.
+            back.scaleEffect(y: -1).opacity(showsBack ? 1 : 0)
         }
         .overlay {
-            LinearGradient(colors: [.black.opacity(0.22 * lean), .clear],
-                           startPoint: hinge, endPoint: hinge == .top ? .bottom : .top)
+            LinearGradient(colors: [.black.opacity(0.2 * lean), .clear], startPoint: .bottom, endPoint: .top)
                 .allowsHitTesting(false)
         }
-        .rotation3DEffect(.degrees(angle), axis: (x: 1, y: 0, z: 0), anchor: hinge, perspective: 0.45)
+        .rotation3DEffect(.degrees(angle), axis: (x: 1, y: 0, z: 0), anchor: .bottom, perspective: 0.22)
     }
 }
 
-/// O verso da dobra: papel liso, arredondado só na borda de fora.
-private struct PaperBack: View {
-    let outerEdge: VerticalEdge
-
-    private var shape: UnevenRoundedRectangle {
-        let radius: CGFloat = 24
-        return UnevenRoundedRectangle(topLeadingRadius: outerEdge == .top ? radius : 0,
-                                      bottomLeadingRadius: outerEdge == .bottom ? radius : 0,
-                                      bottomTrailingRadius: outerEdge == .bottom ? radius : 0,
-                                      topTrailingRadius: outerEdge == .top ? radius : 0,
-                                      style: .continuous)
-    }
-
+/// A capa do cartão fechado: papel liso com a patinha do Tobi no meio.
+/// Fechado, ela fica embaixo da dobra; por isso os cantos redondos são os de baixo.
+private struct CardCover: View {
     var body: some View {
+        let shape = UnevenRoundedRectangle(bottomLeadingRadius: 18, bottomTrailingRadius: 18, style: .continuous)
         shape
             .fill(TobiLetter.paper)
-            .overlay { shape.strokeBorder(.primary.opacity(0.08)) }
+            .overlay { shape.strokeBorder(.primary.opacity(0.07)) }
+            .overlay {
+                Image(systemName: "pawprint.fill")
+                    .font(.system(size: 26))
+                    .foregroundStyle(.indigo.opacity(0.35))
+            }
     }
 }
 
-/// O vinco que fica no papel: uma sombra fina com um brilho embaixo.
+/// O vinco do meio: uma sombra fina com um brilho embaixo.
 private struct Crease: View {
     var body: some View {
         VStack(spacing: 0) {
@@ -486,65 +438,43 @@ private struct Crease: View {
     }
 }
 
-/// Uma linha escrita à mão no papel pautado. A tinta entra da esquerda pra direita, com a caneta na frente.
-private struct InkLine: View {
-    let text: String
-    let ink: Double
-    let isWriting: Bool
-    var ruled = true
-    var tilt = 0.0
-    var indent: CGFloat = 0
-    var color = TobiLetter.ink
+/// A tinta chega letra por letra: cada uma sobe um tiquinho, ganha foco e cor.
+private struct InkRenderer: TextRenderer, Animatable {
+    var progress: Double
 
-    var body: some View {
-        Text(text)
-            .font(.custom("Noteworthy-Bold", size: 20))
-            .foregroundStyle(color)
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
-            .mask(alignment: .leading) { InkMask(progress: ink) }
-            .overlay(alignment: .bottomLeading) { Pen(isWriting: isWriting, progress: ink) }
-            .rotationEffect(.degrees(tilt), anchor: .leading)
-            .padding(.leading, indent)
-            .padding(.bottom, 3)
-            .frame(maxWidth: .infinity, minHeight: 36, alignment: .bottomLeading)
-            .overlay(alignment: .bottom) {
-                if ruled {
-                    Rectangle()
-                        .fill(.indigo.opacity(0.14))
-                        .frame(height: 1)
+    nonisolated var animatableData: Double {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    /// Quantas letras a borda da tinta ocupa.
+    private static let spread = 6.0
+
+    func draw(layout: Text.Layout, in context: inout GraphicsContext) {
+        let total = layout.reduce(0) { lines, line in lines + line.reduce(0) { $0 + $1.count } }
+        let head = progress * (Double(total) + Self.spread)
+        var index = 0.0
+        for line in layout {
+            for run in line {
+                for glyph in run {
+                    let amount = min(1, max(0, (head - index) / Self.spread))
+                    index += 1
+                    guard amount > 0 else { continue }
+                    var copy = context
+                    copy.opacity = amount
+                    if amount < 1 {
+                        copy.translateBy(x: 0, y: (1 - amount) * 4)
+                        copy.addFilter(.blur(radius: (1 - amount) * 2.5))
+                    }
+                    copy.draw(glyph)
                 }
             }
-    }
-}
-
-/// A ponta da caneta na frente da tinta, tremendo um pouco como quem escreve.
-private struct Pen: View {
-    let isWriting: Bool
-    let progress: Double
-
-    var body: some View {
-        GeometryReader { proxy in
-            if isWriting {
-                Image(systemName: "pencil")
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundStyle(TobiLetter.ink)
-                    .keyframeAnimator(initialValue: 0.0, repeating: true) { pen, lift in
-                        pen.offset(y: lift)
-                    } keyframes: { _ in
-                        CubicKeyframe(-2.5, duration: 0.08)
-                        CubicKeyframe(1, duration: 0.09)
-                    }
-                    .offset(x: proxy.size.width * progress - 2, y: proxy.size.height - 24)
-                    .transition(.opacity)
-            }
         }
-        .allowsHitTesting(false)
     }
 }
 
-/// Máscara da caneta: cheia até a ponta, com a borda macia de tinta ainda chegando.
-private struct InkMask: View {
+/// A assinatura entra num traço só, da esquerda pra direita, com a borda macia.
+private struct InkSweep: View {
     let progress: Double
 
     var body: some View {
@@ -558,7 +488,69 @@ private struct InkMask: View {
 
 // MARK: - Envelope
 
-/// A aba triangular. Fechada mostra a patinha que lacra a carta; aberta mostra o forro.
+/// O fundo do envelope por dentro: escuro, com forro de patinhas.
+private struct EnvelopeBack: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .fill(Color.indigo.mix(with: .black, by: 0.35))
+            .overlay { PawLining() }
+            .clipShape(.rect(cornerRadius: 14, style: .continuous))
+    }
+}
+
+/// A frente do envelope: as abas dos lados e a de baixo, que se encontram no meio.
+private struct EnvelopeFront: View {
+    var body: some View {
+        ZStack {
+            EnvelopeSide(leading: true)
+                .fill(Color.indigo.mix(with: .white, by: 0.05))
+            EnvelopeSide(leading: false)
+                .fill(Color.indigo.mix(with: .white, by: 0.05))
+            EnvelopeBottom()
+                .fill(Color.indigo)
+                .shadow(color: .black.opacity(0.15), radius: 3, y: -1)
+                .overlay(alignment: .bottom) {
+                    Text("pra você")
+                        .font(.custom("SnellRoundhand-Bold", size: 24))
+                        .foregroundStyle(.white.opacity(0.92))
+                        .padding(.bottom, 18)
+                }
+        }
+        .clipShape(.rect(cornerRadius: 14, style: .continuous))
+    }
+}
+
+/// Aba do lado: do canto de cima ao de baixo, com a ponta no meio do envelope.
+private struct EnvelopeSide: Shape {
+    let leading: Bool
+
+    func path(in rect: CGRect) -> Path {
+        let edge = leading ? rect.minX : rect.maxX
+        let tip = CGPoint(x: rect.midX + (leading ? -6 : 6), y: rect.minY + rect.height * 0.56)
+        return Path { path in
+            path.move(to: CGPoint(x: edge, y: rect.minY))
+            path.addLine(to: tip)
+            path.addLine(to: CGPoint(x: edge, y: rect.maxY))
+            path.closeSubpath()
+        }
+    }
+}
+
+/// Aba de baixo: dos cantos de baixo até um pouco acima do meio, com a ponta arredondada.
+private struct EnvelopeBottom: Shape {
+    func path(in rect: CGRect) -> Path {
+        let tip = CGPoint(x: rect.midX, y: rect.minY + rect.height * 0.46)
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: tip.x - 26, y: tip.y + 14))
+        path.addQuadCurve(to: CGPoint(x: tip.x + 26, y: tip.y + 14), control: tip)
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.closeSubpath()
+        return path
+    }
+}
+
+/// A aba de cima. Fechada mostra a patinha que lacra; aberta mostra o forro.
 private struct EnvelopeFlapView: View, Animatable {
     var angle: Double
 
@@ -577,17 +569,34 @@ private struct EnvelopeFlapView: View, Animatable {
                     Image(systemName: "pawprint.fill")
                         .font(.system(size: 20))
                         .foregroundStyle(.white)
-                        .padding(.bottom, 16)
+                        .padding(.bottom, 18)
                 }
-                .shadow(color: .black.opacity(0.22 * closed), radius: 5, y: 3)
+                .shadow(color: .black.opacity(0.25 * closed), radius: 5, y: 3)
                 .opacity(showsInside ? 0 : 1)
             EnvelopeFlap()
-                .fill(Color.indigo.mix(with: .black, by: 0.3))
+                .fill(Color.indigo.mix(with: .black, by: 0.35))
                 .overlay { PawLining() }
                 .clipShape(EnvelopeFlap())
                 .opacity(showsInside ? 1 : 0)
         }
-        .rotation3DEffect(.degrees(angle), axis: (x: 1, y: 0, z: 0), anchor: .top, perspective: 0.5)
+        .rotation3DEffect(.degrees(angle), axis: (x: 1, y: 0, z: 0), anchor: .top, perspective: 0.3)
+    }
+}
+
+/// A aba: triângulo dos cantos de cima até a ponta arredondada, cobrindo o encontro das abas.
+private struct EnvelopeFlap: Shape {
+    /// Quanto da altura do envelope a aba cobre.
+    static let depth: CGFloat = 0.6
+
+    func path(in rect: CGRect) -> Path {
+        let tip = CGPoint(x: rect.midX, y: rect.maxY)
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.addLine(to: CGPoint(x: tip.x - 26, y: tip.y - 15))
+        path.addQuadCurve(to: CGPoint(x: tip.x + 26, y: tip.y - 15), control: tip)
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        path.closeSubpath()
+        return path
     }
 }
 
@@ -595,9 +604,9 @@ private struct EnvelopeFlapView: View, Animatable {
 private struct PawLining: View {
     var body: some View {
         VStack(spacing: 14) {
-            ForEach(0..<7, id: \.self) { row in
+            ForEach(0..<8, id: \.self) { row in
                 HStack(spacing: 22) {
-                    ForEach(0..<9, id: \.self) { column in
+                    ForEach(0..<10, id: \.self) { column in
                         Image(systemName: "pawprint.fill")
                             .font(.system(size: 11))
                             .rotationEffect(.degrees((row + column).isMultiple(of: 2) ? -20 : 18))
@@ -606,41 +615,9 @@ private struct PawLining: View {
                 .offset(x: row.isMultiple(of: 2) ? 0 : 16)
             }
         }
-        .foregroundStyle(.white.opacity(0.1))
+        .foregroundStyle(.white.opacity(0.09))
         .fixedSize()
         .allowsHitTesting(false)
         .accessibilityHidden(true)
-    }
-}
-
-/// A frente do envelope: o bolso com a dobra em V.
-private struct EnvelopePocket: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let fold = CGPoint(x: rect.midX, y: rect.minY + rect.height * 0.7)
-        path.move(to: CGPoint(x: rect.minX, y: rect.minY + rect.height * 0.38))
-        path.addQuadCurve(to: CGPoint(x: fold.x - 16, y: fold.y - 6),
-                          control: CGPoint(x: rect.width * 0.3, y: rect.minY + rect.height * 0.58))
-        path.addQuadCurve(to: CGPoint(x: fold.x + 16, y: fold.y - 6), control: fold)
-        path.addQuadCurve(to: CGPoint(x: rect.maxX, y: rect.minY + rect.height * 0.38),
-                          control: CGPoint(x: rect.width * 0.7, y: rect.minY + rect.height * 0.58))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-        path.closeSubpath()
-        return path
-    }
-}
-
-/// A aba: triângulo com a ponta arredondada.
-private struct EnvelopeFlap: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let tip = CGPoint(x: rect.midX, y: rect.maxY)
-        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
-        path.addLine(to: CGPoint(x: tip.x - 22, y: tip.y - 14))
-        path.addQuadCurve(to: CGPoint(x: tip.x + 22, y: tip.y - 14), control: tip)
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-        path.closeSubpath()
-        return path
     }
 }
