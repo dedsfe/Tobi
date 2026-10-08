@@ -7,7 +7,6 @@ struct KeyboardBar: View {
     let glass: Namespace.ID
     let onMic: () -> Void
     let onScan: () -> Void
-    let onAdd: () -> Void
     let onDismiss: () -> Void
 
     var body: some View {
@@ -33,7 +32,6 @@ struct KeyboardBar: View {
             } else {
                 action("Ditar", "mic.fill", .blue, id: "mic", onMic)
                 action("Ler código de barras", "barcode.viewfinder", .purple, id: "scan", onScan)
-                action("Nova linha", "plus", .orange, id: "add", onAdd)
             }
             action("Fechar teclado", "keyboard.chevron.compact.down", .primary, id: "close", onDismiss)
         }
@@ -78,7 +76,7 @@ struct KeyboardBar: View {
     @Previewable @Namespace var glass
     ZStack {
         Theme.background
-        KeyboardBar(kcal: 374, dictation: Dictation(), glass: glass, onMic: {}, onScan: {}, onAdd: {}, onDismiss: {})
+        KeyboardBar(kcal: 374, dictation: Dictation(), glass: glass, onMic: {}, onScan: {}, onDismiss: {})
             .padding(24)
     }
 }

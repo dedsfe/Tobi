@@ -106,6 +106,18 @@ final class NoteEditorController {
 
     func dismissKeyboard() { textView?.resignFirstResponder() }
 
+    /// "Adicionar comida": teclado aberto numa linha vazia no fim (reaproveita a última se já
+    /// estiver vazia), pronta pra escrever.
+    func startNewEntry() {
+        guard let textView else { return }
+        let lines = textView.lineRanges
+        if let last = lines.last, last.length > 0 {
+            textView.insertLine(after: lines.count - 1, text: "")
+        } else {
+            focusEnd()
+        }
+    }
+
     /// Teclado de volta, com o cursor onde estava.
     func focus() { textView?.becomeFirstResponder() }
 }

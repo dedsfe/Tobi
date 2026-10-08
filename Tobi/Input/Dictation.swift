@@ -10,6 +10,11 @@ final class Dictation {
     /// Energia da voz por faixa de frequência (0 a 1), atualizada ~40 vezes por segundo.
     /// Só a animação lê isso: quem não desenha não deve observar, pra não redesenhar a tela toda.
     private(set) var levels = [Float](repeating: 0, count: VoiceSpectrum.bandCount)
+    /// Último passo do ditado ("pedindo permissão", "sem permissão de fala"...). Os testes de
+    /// interface leem isso pra saber onde o ditado parou.
+    private(set) var step = "parado"
+    /// Por que o último ditado não ligou, em palavras pra quem usa. Some no próximo toque.
+    private(set) var problem: String?
 
     private let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "pt-BR"))
     private let audio = AudioEngineBox()
@@ -22,12 +27,15 @@ final class Dictation {
         guard !isRecording else { return }
         // A tela responde no toque; permissão e áudio sobem por trás. Se não der, volta.
         isRecording = true
+        problem = nil
+        step = "pedindo permissão"
         sessionID += 1
         let id = sessionID
-        guard await Self.requestPermissions(), let recognizer, recognizer.isAvailable else {
-            if sessionID == id { stop() }
-            return
-        }
+        let permissions = await Self.requestPermissions()
+        guard permissions.speech else { return fail("sem permissão de fala", id) }
+        guard permissions.microphone else { return fail("sem permissão de microfone", id) }
+        guard let recognizer else { return fail("sem reconhecedor pt-BR", id) }
+        guard recognizer.isAvailable else { return fail("reconhecedor indisponível", id) }
         // Parou enquanto pedia permissão.
         guard isRecording, sessionID == id else { return }
 
@@ -50,6 +58,7 @@ final class Dictation {
             }
             // Parou enquanto o áudio ligava.
             guard isRecording, sessionID == id else { return }
+            step = "ouvindo"
 
             self.request = request
             task = Self.recognize(request, with: recognizer) { [weak self] text, isDone in
@@ -58,7 +67,24 @@ final class Dictation {
                 if isDone { stop() }
             }
         } catch {
-            stop()
+            fail("áudio não ligou: \(error.localizedDescription) (\((error as NSError).code))", id)
+        }
+    }
+
+    private func fail(_ reason: String, _ id: Int) {
+        guard sessionID == id else { return }
+        stop()
+        step = reason
+        problem = switch reason {
+        case "sem permissão de fala", "sem permissão de microfone":
+            "Libere o microfone e o reconhecimento de fala em Ajustes > Tobi."
+        case "sem reconhecedor pt-BR", "reconhecedor indisponível":
+            "O ditado em português não está disponível agora."
+        case let reason where reason.contains("561017449"):
+            // AVAudioSession.ErrorCode.insufficientPriority: outro áudio tem a vez.
+            "Outro app está usando o microfone (gravação de tela, ligação ou música). Fecha ele e tenta de novo."
+        default:
+            "Não consegui ligar o microfone. Tenta de novo."
         }
     }
 
@@ -70,16 +96,17 @@ final class Dictation {
         task = nil
         isRecording = false
         levels = levels.map { _ in 0 }
+        step = "parado"
     }
 
     // As closures abaixo rodam fora da main thread, então nascem em funções nonisolated.
 
-    private nonisolated static func requestPermissions() async -> Bool {
+    private nonisolated static func requestPermissions() async -> (speech: Bool, microphone: Bool) {
         let speech = await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { continuation.resume(returning: $0 == .authorized) }
         }
-        guard speech else { return false }
-        return await AVAudioApplication.requestRecordPermission()
+        guard speech else { return (false, false) }
+        return (true, await AVAudioApplication.requestRecordPermission())
     }
 
     private nonisolated static func recognize(
@@ -124,9 +151,7 @@ private nonisolated final class AudioEngineBox: @unchecked Sendable {
 
     private func startNow(_ append: @escaping @Sendable (AVAudioPCMBuffer) -> Void,
                           _ levels: @escaping @Sendable ([Float]) -> Void) throws {
-        let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.record, mode: .measurement, options: .duckOthers)
-        try session.setActive(true, options: .notifyOthersOnDeactivation)
+        try activateSession()
         let node = engine.inputNode
         let spectrum = VoiceSpectrum()
         node.installTap(onBus: 0, bufferSize: 1024, format: node.outputFormat(forBus: 0)) { buffer, _ in
@@ -136,6 +161,30 @@ private nonisolated final class AudioEngineBox: @unchecked Sendable {
         tapped = true
         engine.prepare()
         try engine.start()
+    }
+
+    /// Ligar a sessão às vezes falha de primeira (o sistema ainda está soltando a anterior, ou
+    /// outro áudio tem prioridade). Tenta de novo com uma pausa curta e, se ainda assim não der,
+    /// cai pra gravar-e-tocar, que convive melhor com o resto do sistema.
+    private func activateSession() throws {
+        let session = AVAudioSession.sharedInstance()
+        let setups: [(AVAudioSession.Category, AVAudioSession.Mode, AVAudioSession.CategoryOptions)] = [
+            (.record, .measurement, [.duckOthers]),
+            (.record, .measurement, [.duckOthers]),
+            (.playAndRecord, .default, [.duckOthers, .defaultToSpeaker, .allowBluetoothHFP]),
+        ]
+        var lastError: Error?
+        for (attempt, setup) in setups.enumerated() {
+            do {
+                try session.setCategory(setup.0, mode: setup.1, options: setup.2)
+                try session.setActive(true, options: .notifyOthersOnDeactivation)
+                return
+            } catch {
+                lastError = error
+                Thread.sleep(forTimeInterval: 0.12 * Double(attempt + 1))
+            }
+        }
+        throw lastError ?? CocoaError(.featureUnsupported)
     }
 
     private func stopNow() {

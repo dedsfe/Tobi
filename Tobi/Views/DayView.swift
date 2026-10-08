@@ -58,6 +58,15 @@ struct DayView: View {
             placeholder: isDemo ? "" : "Comece a registrar suas refeições",
             onCaretLine: { caretMoved(from: $0, to: $1) }
         )
+        // Marca invisível pros testes de interface: só existe com o banco em memória. Teste que
+        // não acha a marca não digita nada (pode ser o app de verdade, com dados de verdade).
+        .overlay(alignment: .topLeading) {
+            if ProcessInfo.processInfo.arguments.contains("-uiTesting") {
+                Color.clear.frame(width: 1, height: 1)
+                    .accessibilityElement()
+                    .accessibilityIdentifier("uiTestingMode")
+            }
+        }
         .allowsHitTesting(!isDemo)
         .background { Theme.background }
         // Barras que o sistema reconhece: o texto que passa por baixo some num desfoque progressivo.
@@ -104,6 +113,18 @@ struct DayView: View {
                 if showingGoals {
                     GoalsCard(total: total, goal: goal, isOpen: goalsOpen)
                         .onTapGesture { toggleGoals() }
+                        .accessibilityIdentifier("goalsCard")
+                        .transition(.emerge)
+                }
+                if let problem = dictation.problem, isEditing {
+                    Text(problem)
+                        .font(.system(size: 14, weight: .medium))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .glassEffect(.regular, in: .capsule)
+                        .accessibilityIdentifier("dictationProblem")
+                        .accessibilityValue(dictation.step)
                         .transition(.emerge)
                 }
                 if isEditing {
@@ -112,12 +133,19 @@ struct DayView: View {
                         dictation: dictation,
                         glass: glass,
                         onMic: toggleDictation,
-                    onScan: { showingScanner = true },
-                        onAdd: { editor.insertLine(after: caretLine ?? lines.count - 1) },
+                        onScan: { showingScanner = true },
                         onDismiss: { editor.dismissKeyboard() }
                     )
+                } else if isDemo {
+                    TotalsBar(total: total, goal: goal, glass: glass, onTap: {})
+                } else if isEmptyDay {
+                    // Dia vazio: o convite é o botão. Quem chega aqui pela primeira vez sabe o que fazer.
+                    addButton(expanded: true)
                 } else {
-                    TotalsBar(total: total, goal: goal, glass: glass, onTap: isDemo ? {} : toggleGoals)
+                    HStack(spacing: 8) {
+                        TotalsBar(total: total, goal: goal, glass: glass, onTap: toggleGoals)
+                        addButton(expanded: false)
+                    }
                 }
             }
         }
@@ -140,6 +168,30 @@ struct DayView: View {
         .sensoryFeedback(.impact(weight: .light), trigger: demoLineDone)
         .sensoryFeedback(.impact(weight: .light), trigger: showingGoals)
         .sensoryFeedback(trigger: dictation.isRecording) { _, recording in recording ? .start : .stop }
+    }
+
+    private var isEmptyDay: Bool { text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
+    /// "+" pra começar a escrever com o teclado fechado: abre numa linha nova no fim da nota.
+    private func addButton(expanded: Bool) -> some View {
+        Button { editor.startNewEntry() } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "plus")
+                    .font(.system(size: 17, weight: .bold))
+                if expanded {
+                    Text("Adicionar comida")
+                        .font(.system(size: 17, weight: .semibold))
+                }
+            }
+            .foregroundStyle(expanded ? Color.white : Color.primary)
+            .padding(.horizontal, expanded ? 24 : 0)
+            .frame(width: expanded ? nil : 48, height: 48)
+            .contentShape(.capsule)
+        }
+        .buttonStyle(.plain)
+        .glassEffect(expanded ? .regular.tint(.indigo).interactive() : .regular.interactive(), in: .capsule)
+        .glassEffectID("add", in: glass)
+        .accessibilityLabel("Adicionar comida")
     }
 
     private func toggleGoals() {

@@ -4,9 +4,7 @@ import XCTest
 final class LineEditingUITests: XCTestCase {
     @MainActor
     func testDeletingLinesKeepsAppAliveAndKeyboardOpen() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-uiTesting"]
-        app.launch()
+        let app = XCUIApplication.launchedForTesting()
 
         let first = app.textViews.firstMatch
         XCTAssertTrue(first.waitForExistence(timeout: 5))
@@ -30,9 +28,7 @@ final class LineEditingUITests: XCTestCase {
 final class NoteSelectionUITests: XCTestCase {
     @MainActor
     func testSelectAllAndDeleteClearsEveryLine() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-uiTesting"]
-        app.launch()
+        let app = XCUIApplication.launchedForTesting()
 
         let note = app.textViews.firstMatch
         XCTAssertTrue(note.waitForExistence(timeout: 5))
@@ -55,18 +51,14 @@ final class NoteSelectionUITests: XCTestCase {
 final class KeyboardBarUITests: XCTestCase {
     @MainActor
     func testBarButtonsAnswerTheFirstTap() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-uiTesting"]
-        app.launch()
+        let app = XCUIApplication.launchedForTesting()
 
         let note = app.textViews.firstMatch
         XCTAssertTrue(note.waitForExistence(timeout: 5))
         for round in 1...3 {
             note.tap()
             XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3), "teclado não abriu (rodada \(round))")
-            note.typeText("arroz")
-            app.buttons["Nova linha"].tap()
-            note.typeText("feijão")
+            note.typeText("arroz\nfeijão")
             app.buttons["Fechar teclado"].tap()
             let closed = NSPredicate(format: "exists == false")
             expectation(for: closed, evaluatedWith: app.keyboards.firstMatch)
@@ -74,5 +66,17 @@ final class KeyboardBarUITests: XCTestCase {
         }
         // "Nova linha" funcionou nas três rodadas: o feijão sempre caiu numa linha própria.
         XCTAssertEqual((note.value as? String)?.components(separatedBy: "\nfeijão").count, 4)
+    }
+}
+
+/// Teste de interface nunca pode ver nem mexer na nota de verdade de quem usa o aparelho.
+final class TestIsolationUITests: XCTestCase {
+    @MainActor
+    func testUITestingStartsWithAnEmptyDay() {
+        let app = XCUIApplication.launchedForTesting()
+        let note = app.textViews.firstMatch
+        XCTAssertTrue(note.waitForExistence(timeout: 5))
+        let text = (note.value as? String) ?? ""
+        XCTAssertTrue(text.isEmpty || text == "Comece a registrar suas refeições", "nota real vazou pro teste: \(text.prefix(60))")
     }
 }
