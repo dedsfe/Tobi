@@ -174,7 +174,7 @@ struct RecapHero: View {
                           goal: macroGoal(fatShare, kcalPerGram: 9), color: Theme.fat,
                           isShown: isShown && tiles >= 3)
             }
-            .padding(.top, 14)
+            .padding(.top, 18)
         }
         .sensoryFeedback(.impact(weight: .light), trigger: tiles)
         .sensoryFeedback(.selection, trigger: ticks)
@@ -218,7 +218,8 @@ struct RecapHero: View {
     }
 }
 
-/// Um macro em vidro: o anel na cor do macro enche até a meta, com os gramas no meio.
+/// Um macro solto na tela (sem caixa, pra não parecer botão como os planos): o anel na cor
+/// do macro enche até a meta, com a quantidade no meio. De 1.000 g pra cima vira kg, pra caber sempre.
 private struct MacroTile: View {
     let name: String
     let grams: Double
@@ -226,39 +227,42 @@ private struct MacroTile: View {
     let color: Color
     let isShown: Bool
 
+    private var amount: (value: String, unit: String) {
+        guard grams >= 999.5 else { return (Int(grams.rounded()).formatted(), "g") }
+        return ((grams / 1000).formatted(.number.precision(.fractionLength(1))), "kg")
+    }
+
     var body: some View {
         VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .stroke(.quaternary, lineWidth: 6)
+                    .stroke(.quaternary, lineWidth: 7)
                 Circle()
                     .trim(from: 0, to: goal > 0 ? min(1, grams / goal) : 0)
-                    .stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .stroke(color, style: StrokeStyle(lineWidth: 7, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                 HStack(alignment: .firstTextBaseline, spacing: 1) {
-                    Text(Int(grams.rounded()).formatted())
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                    Text(amount.value)
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
                         .monospacedDigit()
                         .contentTransition(.numericText(value: grams))
-                    Text("g")
-                        .font(.system(size: 10, weight: .semibold))
+                    Text(amount.unit)
+                        .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(.secondary)
                 }
                 .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .padding(.horizontal, 8)
+                .minimumScaleFactor(0.6)
+                .frame(width: 50)
             }
-            .frame(width: 56, height: 56)
+            .frame(width: 66, height: 66)
 
             Text(name)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
         }
-        .padding(.vertical, 12)
         .frame(maxWidth: .infinity)
-        .glassEffect(.regular, in: .rect(cornerRadius: 22))
         .scaleEffect(isShown ? 1 : 0.82, anchor: .bottom)
         .reveal(isShown, order: 0)
         .animation(Motion.surface, value: isShown)
@@ -274,8 +278,14 @@ private struct GoalBar: View {
 
     private var percent: Int { Int((share * 100).rounded()) }
 
+    /// Até o dobro, em %; daí pra cima, em vezes ("3,1x"), que é como se lê número grande.
     private var caption: String {
-        if percent > 100 { return "\(percent - 100)% acima da meta" + (days > 1 ? ", na média" : "") }
+        let average = days > 1 ? ", na média" : ""
+        if share >= 2 {
+            let times = share.formatted(.number.precision(.fractionLength(share < 10 ? 1 : 0)))
+            return days > 1 ? "\(times)x a sua meta, na média" : "\(times)x a sua meta do dia"
+        }
+        if percent > 100 { return "\(percent - 100)% acima da meta" + average }
         return days > 1 ? "\(percent)% da sua meta, na média" : "\(percent)% da sua meta do dia"
     }
 
