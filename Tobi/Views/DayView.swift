@@ -129,7 +129,8 @@ struct DayView: View {
                 }
                 if isEditing {
                     KeyboardBar(
-                        kcal: Int(total.kcal.rounded()),
+                        total: total,
+                        goal: goal,
                         dictation: dictation,
                         glass: glass,
                         onMic: toggleDictation,
