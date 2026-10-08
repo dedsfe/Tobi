@@ -50,8 +50,6 @@ struct DayView: View {
             placeholder: "Comece a registrar suas refeições...",
             onCaretLine: { caretMoved(from: $0, to: $1) }
         )
-        // O texto passa por baixo das barras; o UITextView recebe a altura delas como margem.
-        .ignoresSafeArea(.container, edges: .vertical)
         .background { Theme.background }
         // Barras que o sistema reconhece: o texto que passa por baixo some num desfoque progressivo.
         .safeAreaBar(edge: .top) { topBar }
@@ -73,9 +71,6 @@ struct DayView: View {
     }
 
     // MARK: - Barra de baixo
-
-    /// Quanto da luz do ditado fica escondida atrás do teclado.
-    private static let glowUnderKeyboard: CGFloat = 120
 
     private var total: Nutrition { estimates.map(\.total).total }
 
@@ -109,11 +104,9 @@ struct DayView: View {
             ZStack(alignment: .bottom) {
                 EdgeFade(edge: .bottom)
                 if dictation.isRecording {
-                    // A luz nasce atrás do teclado e sobe por cima das linhas: continua por baixo
-                    // dele (aparece nos cantos arredondados), sem corte reto em lugar nenhum.
+                    // Uma nuvem de luz atrás da barra, que sobe por cima das linhas.
                     VoiceGlow(dictation: dictation)
-                        .frame(height: 260 + Self.glowUnderKeyboard)
-                        .offset(y: Self.glowUnderKeyboard)
+                        .frame(height: 260)
                         .transition(.emerge)
                 }
             }

@@ -139,7 +139,11 @@ final class NoteTextView: UITextView {
         self.textContainer.lineFragmentPadding = 0
         alwaysBounceVertical = true
         keyboardDismissMode = .interactive
-        contentInsetAdjustmentBehavior = .always
+        // O campo fica entre as barras (o SwiftUI já desconta barras e teclado), então nada de
+        // margem automática por cima. Sem cortar nas bordas: o texto continua visível passando por
+        // baixo das barras, mas o toque lá em cima e lá embaixo é dos botões, não do texto.
+        contentInsetAdjustmentBehavior = .never
+        clipsToBounds = false
         autocorrectionType = .default
 
         placeholderLabel.font = Self.font

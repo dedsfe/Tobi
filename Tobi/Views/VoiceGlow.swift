@@ -28,8 +28,12 @@ struct VoiceGlow: View {
                 .scaleEffect(Self.downscale, anchor: .topLeading)
                 .offset(x: -overscan)
         }
+        // Nuvem arredondada: some macio pra cima, pros lados e pra baixo, sem corte reto em lado nenhum.
         .mask {
-            LinearGradient(colors: [.clear, .black.opacity(0.85), .black], startPoint: .top, endPoint: .bottom)
+            EllipticalGradient(stops: [.init(color: .black, location: 0),
+                                       .init(color: .black.opacity(0.85), location: 0.55),
+                                       .init(color: .clear, location: 1)],
+                               center: UnitPoint(x: 0.5, y: 0.62), startRadiusFraction: 0, endRadiusFraction: 0.5)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)

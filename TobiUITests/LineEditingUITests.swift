@@ -50,3 +50,29 @@ final class NoteSelectionUITests: XCTestCase {
         XCTAssertEqual(app.state, .runningForeground)
     }
 }
+
+/// Os botões da barra de cima do teclado têm que responder no primeiro toque, sempre.
+final class KeyboardBarUITests: XCTestCase {
+    @MainActor
+    func testBarButtonsAnswerTheFirstTap() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting"]
+        app.launch()
+
+        let note = app.textViews.firstMatch
+        XCTAssertTrue(note.waitForExistence(timeout: 5))
+        for round in 1...3 {
+            note.tap()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 3), "teclado não abriu (rodada \(round))")
+            note.typeText("arroz")
+            app.buttons["Nova linha"].tap()
+            note.typeText("feijão")
+            app.buttons["Fechar teclado"].tap()
+            let closed = NSPredicate(format: "exists == false")
+            expectation(for: closed, evaluatedWith: app.keyboards.firstMatch)
+            waitForExpectations(timeout: 3)
+        }
+        // "Nova linha" funcionou nas três rodadas: o feijão sempre caiu numa linha própria.
+        XCTAssertEqual((note.value as? String)?.components(separatedBy: "\nfeijão").count, 4)
+    }
+}
