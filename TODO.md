@@ -21,7 +21,9 @@ Código em `Tobi/Onboarding/OnboardingView.swift`. Toda tela tem o palco do Tobi
 - [ ] Paywall: preços definitivos e os dois planos criados no App Store Connect (hoje R$ 99,90/ano e R$ 12,90/semana de reserva)
 - [ ] Paywall: link de Privacidade em `PaywallLinks.privacy` (site em construção); a Apple exige antes da revisão. Texto pronto em `docs/privacidade.md`, revisão completa em `docs/revisao-apple.md`
 - [ ] Paywall: cumprir o "Te aviso antes" pra quem negou notificação, depois testar 7 dias de teste e plano mensal (`docs/paywall-conversao.md`)
-- [ ] Anúncios: SDKs do TikTok e da Meta; falta criar os apps nos painéis e decidir sobre o pedido de rastreamento (`docs/anuncios.md`)
+- [ ] Anúncios: conectar TikTok Ads e Meta Ads (SDKs + eventos de teste grátis e compra); falta criar os apps nos painéis e decidir sobre o pedido de rastreamento (`docs/anuncios.md`)
+- [ ] RevenueCat: compras e assinaturas passam por ele (receita, renovações, cancelamentos e testes de paywall), mandando os eventos de compra pras redes de anúncio
+- [ ] PostHog: eventos do app e funil do onboarding com painel pronto (hoje o funil está no Supabase, `onboarding_funnel`)
 - [ ] Testar onboarding em formato de chat (perguntas na voz do Tobi) contra as telas atuais
 - [x] Medir abandono em cada tela: eventos anônimos no Supabase (`analytics_events`, coluna `ambiente` = debug ou producao), funil na view `onboarding_funnel`; sem rede, o evento espera no aparelho (`Tobi/App/Analytics.swift`)
 - [ ] Trocar o 🐶 do `TobiStage` pelas animações do Tobi (depende da arte)
