@@ -36,6 +36,7 @@
 		6E5E54034CB4F717440BAA2E /* BrandProductTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5FA395EEC1B1F95F8911D0 /* BrandProductTests.swift */; };
 		7267903BFF169BAE53EB59A7 /* BrandProduct.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12F7B90D9D89B6E13A30F181 /* BrandProduct.swift */; };
 		73A29CA35A4D4B571090FE1A /* TotalsBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0047EB4EB0B56B8E2ED251B /* TotalsBar.swift */; };
+		75921BBD618E283954DC1EF1 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 699D0BC35D224FF03DFF866B /* PrivacyInfo.xcprivacy */; };
 		76D459DF5D937386DAF12206 /* Motion.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1994A7BED207538543F656B /* Motion.swift */; };
 		7F1E791DA4625F1175FCADEA /* PaywallRecapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DEA2923D51ECF843DD4BBED /* PaywallRecapTests.swift */; };
 		84625DD8D6B6443969680CE8 /* ScanSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1131CC3800D87E1B7D9072F2 /* ScanSheet.swift */; };
@@ -118,6 +119,7 @@
 		6565AD07DD783BF23AD3A699 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		65A29F5B27272F349425B6B0 /* JourneyChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyChart.swift; sourceTree = "<group>"; };
 		693E1062F5E9612595AAFAE8 /* OpenFoodFacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenFoodFacts.swift; sourceTree = "<group>"; };
+		699D0BC35D224FF03DFF866B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		6DDD333EB71EFBF77A7476E6 /* Tobi.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tobi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		733787F40680C2123994FCF0 /* tobi-head@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "tobi-head@3x.png"; sourceTree = "<group>"; };
 		849BBE740074FABF951F498A /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -314,6 +316,7 @@
 			children = (
 				445349C7B857AF907783D17F /* fastfood.json */,
 				F114B1E25377701C98EEFCF0 /* ibge.json */,
+				699D0BC35D224FF03DFF866B /* PrivacyInfo.xcprivacy */,
 				3E46D592AB857DDE87A3E279 /* taco.json */,
 				733787F40680C2123994FCF0 /* tobi-head@3x.png */,
 			);
@@ -425,6 +428,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				75921BBD618E283954DC1EF1 /* PrivacyInfo.xcprivacy in Resources */,
 				DFB03B6045CB81552DD4F5C4 /* fastfood.json in Resources */,
 				BEC070B5CD52869753A2C583 /* ibge.json in Resources */,
 				8E3E1AA54F455F6455A96B16 /* taco.json in Resources */,

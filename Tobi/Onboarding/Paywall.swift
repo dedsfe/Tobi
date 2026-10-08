@@ -197,9 +197,11 @@ struct PaywallStep: View {
     /// Preço, período e renovação sempre visíveis, do plano escolhido (Apple 3.1.2).
     private var disclosure: String {
         let price = "\(store.displayPrice(plan)) por \(plan.period)"
+        // Termos de renovação completos: cobrança na conta Apple e o prazo de 24 horas pra cancelar.
+        let renewal = "Cobrado na sua conta Apple. Renova sozinho, a não ser que você cancele até 24 horas antes, nos Ajustes do iPhone."
         return store.trialEligible
-            ? "\(TobiPlan.trialDays) dias grátis, depois \(price). Renova sozinho, cancele quando quiser."
-            : "\(price). Renova sozinho, cancele quando quiser."
+            ? "\(TobiPlan.trialDays) dias grátis, depois \(price). \(renewal)"
+            : "\(price). \(renewal)"
     }
 
     private func buy() {
