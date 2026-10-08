@@ -13,7 +13,8 @@ struct BarcodeScanner: UIViewControllerRepresentable {
         let scanner = DataScannerViewController(
             recognizedDataTypes: [.barcode(symbologies: [.ean13, .ean8, .upce])],
             qualityLevel: .balanced,
-            isHighlightingEnabled: true
+            // A mira é nossa (ScanSheet); o destaque amarelo do sistema briga com ela.
+            isHighlightingEnabled: false
         )
         scanner.delegate = context.coordinator
         try? scanner.startScanning()

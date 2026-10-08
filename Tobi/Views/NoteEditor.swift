@@ -105,6 +105,9 @@ final class NoteEditorController {
     }
 
     func dismissKeyboard() { textView?.resignFirstResponder() }
+
+    /// Teclado de volta, com o cursor onde estava.
+    func focus() { textView?.becomeFirstResponder() }
 }
 
 final class NoteTextView: UITextView {

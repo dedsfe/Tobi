@@ -3,6 +3,7 @@ import Foundation
 /// Produto de marca como vem do Open Food Facts (dados do rótulo, licença ODbL).
 struct BrandProductInfo: Sendable, Equatable {
     let barcode: String
+    /// Nome pronto pra linha (ver `ProductName`).
     let name: String
     let brand: String?
     /// "350 ml", "200 g" — como está na embalagem.
@@ -18,12 +19,20 @@ enum OpenFoodFacts {
     private static let fields = "code,product_name,product_name_pt,brands,quantity,serving_quantity,nutriments,countries_tags"
     private static let userAgent = "Tobi/0.1 (iOS; contador de calorias)"
 
-    static func product(barcode: String) async throws -> BrandProductInfo? {
+    enum Lookup: Sendable, Equatable {
+        case found(BrandProductInfo)
+        /// Existe no Open Food Facts, mas ninguém cadastrou a tabela nutricional ainda.
+        case noNutrition(name: String)
+        case notFound
+    }
+
+    static func product(barcode: String) async throws -> Lookup {
         var url = URL(string: "https://world.openfoodfacts.org/api/v2/product/\(barcode).json")!
         url.append(queryItems: [URLQueryItem(name: "fields", value: fields)])
         let response: ProductResponse = try await get(url)
-        guard response.status == 1, let product = response.product else { return nil }
-        return product.info
+        guard response.status == 1, let product = response.product else { return .notFound }
+        if let info = product.info { return .found(info) }
+        return product.displayName.map { .noNutrition(name: $0) } ?? .notFound
     }
 
     /// Produtos vendidos no Brasil cujo nome tem todas as palavras buscadas.
@@ -73,10 +82,14 @@ enum OpenFoodFacts {
         let serving_quantity: Flexible?
         let nutriments: [String: Flexible]?
 
+        var displayName: String? {
+            let raw = [product_name_pt, product_name].compactMap { $0 }.first { !$0.isEmpty }
+            guard let raw else { return brands?.all.last }
+            return ProductName.clean(raw, brands: brands?.all ?? [])
+        }
+
         var info: BrandProductInfo? {
-            guard let code, let n = nutriments, let kcal = n["energy-kcal_100g"]?.value else { return nil }
-            let name = [product_name_pt, product_name].compactMap { $0 }.first { !$0.isEmpty }
-            guard let name else { return nil }
+            guard let code, let n = nutriments, let kcal = n["energy-kcal_100g"]?.value, let name = displayName else { return nil }
             let per100 = Nutrition(
                 kcal: kcal,
                 protein: n["proteins_100g"]?.value ?? 0,
@@ -87,23 +100,23 @@ enum OpenFoodFacts {
                 sodium: (n["sodium_100g"]?.value ?? 0) * 1000  // vem em gramas
             )
             let serving = serving_quantity?.value.flatMap { $0 > 0 ? $0 : nil }
-            return BrandProductInfo(barcode: code, name: name, brand: brands?.first, quantity: quantity,
+            return BrandProductInfo(barcode: code, name: name, brand: brands?.all.last, quantity: quantity,
                                     servingGrams: serving, per100: per100)
         }
     }
 
-    /// `brands` vem como "Coca-Cola, Femsa" na busca por código e como lista na busca por nome.
+    /// `brands` vem como "Nestlé, Nescau" na busca por código e como lista na busca por nome.
     private struct Brands: Decodable {
-        let first: String?
+        let all: [String]
 
         init(from decoder: Decoder) throws {
             let container = try decoder.singleValueContainer()
             if let list = try? container.decode([String].self) {
-                first = list.first
+                all = list
             } else {
-                first = try? container.decode(String.self).split(separator: ",").first.map {
-                    $0.trimmingCharacters(in: .whitespaces)
-                }
+                all = ((try? container.decode(String.self)) ?? "").split(separator: ",")
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .filter { !$0.isEmpty }
             }
         }
     }

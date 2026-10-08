@@ -59,7 +59,7 @@ struct DayView: View {
         .sheet(isPresented: $showingSettings, onDismiss: load) { SettingsView() }
         .sheet(isPresented: $showingCalendar) { calendar }
         .sheet(isPresented: $showingScanner) {
-            ScanSheet { product in addScanned(product) }
+            ScanSheet(onProduct: addScanned, onWriteInstead: { editor.focus() })
         }
         .onChange(of: brandProducts.map(\.barcode), initial: true) {
             parser = FoodParser.shared.adding(brandProducts.map(\.food))
