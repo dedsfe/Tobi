@@ -16,6 +16,7 @@ enum OnboardingStep: Int, CaseIterable {
     case inputs
     case celebration
     case notifications
+    case paywall
 
     /// Total de telas planejadas (ver TODO.md), pra barra de progresso não pular quando entrar tela nova.
     static let planned = 14
@@ -23,7 +24,7 @@ enum OnboardingStep: Int, CaseIterable {
     /// Estado do Tobi em cada tela. "Suas metas" comemora na primeira vez (ver `OnboardingView.stage`).
     var tobiMood: TobiIdleBehavior.Mood {
         switch self {
-        case .welcome, .firstMeal, .inputs: .joyful
+        case .welcome, .firstMeal, .inputs, .paywall: .joyful
         case .celebration: .celebrating
         case .sex, .birthday, .height, .weight, .pace, .notifications: .attentive
         case .objective, .activity: .curious
@@ -33,7 +34,7 @@ enum OnboardingStep: Int, CaseIterable {
 
     #if DEBUG
     /// Tela em revisão: o atalho do Debug nos Ajustes abre direto nela. Trocar aqui quando a revisão mudar.
-    static let debugJump: OnboardingStep = .celebration
+    static let debugJump: OnboardingStep = .paywall
 
     var debugName: String {
         switch self {
@@ -50,6 +51,7 @@ enum OnboardingStep: Int, CaseIterable {
         case .inputs: "Formas de registrar"
         case .celebration: "Tudo pronto"
         case .notifications: "Notificações"
+        case .paywall: "Paywall"
         }
     }
     #endif
@@ -251,6 +253,8 @@ struct OnboardingView: View {
     @State private var tobi: TobiPerformance
     /// O plano pronto é comemorado uma vez só; depois "Suas metas" só se apresenta.
     @State private var celebratedPlan = false
+    /// Tocou no X do paywall: o Tobi oferece as 24 horas.
+    @State private var paywallDeclined = false
 
     /// `start` diferente de boas-vindas só vem do atalho do Debug, que já entra com respostas de exemplo.
     init(start: OnboardingStep = .welcome, onFinish: @escaping () -> Void) {
@@ -285,7 +289,12 @@ struct OnboardingView: View {
         VStack(spacing: 0) {
             TobiStage(performance: tobi, onPet: { tobi.pets += 1 })
                 .overlay(alignment: .top) {
-                    if step != .welcome {
+                    if step == .paywall {
+                        PaywallCloseButton { paywallDeclined = true }
+                            .opacity(paywallDeclined ? 0 : 1)
+                            .allowsHitTesting(!paywallDeclined)
+                            .animation(Motion.quick, value: paywallDeclined)
+                    } else if step != .welcome {
                         OnboardingHeader(progress: progress, onBack: goBack)
                             .transition(.opacity)
                     }
@@ -334,6 +343,9 @@ struct OnboardingView: View {
                 case .notifications:
                     NotificationsStep(onContinue: advance)
                         .transition(.opacity)
+                case .paywall:
+                    PaywallStep(declined: $paywallDeclined, onFinish: onFinish)
+                        .transition(.opacity)
                 }
             }
             .frame(maxHeight: .infinity)
@@ -344,7 +356,12 @@ struct OnboardingView: View {
                     tobi.entering = false
                     tobi.acknowledgements += 1
                 },
-                present: { stage(.goals, entering: true) }
+                present: { stage(.goals, entering: true) },
+                celebrate: {
+                    tobi.mood = .celebrating
+                    tobi.entering = true
+                    tobi.scene += 1
+                }
             ))
         }
         .background { Theme.background }
@@ -466,6 +483,8 @@ struct TobiStage: View {
 struct TobiReactions {
     var acknowledge: @MainActor () -> Void = { }
     var present: @MainActor () -> Void = { }
+    /// Compra feita ou cortesia aceita: o Tobi comemora.
+    var celebrate: @MainActor () -> Void = { }
 }
 
 extension EnvironmentValues {

@@ -1,0 +1,98 @@
+{
+  "identifier" : "5C1A7E2B",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "pt_BR",
+    "_storefront" : "BRA",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "8F3D2A10",
+      "localizations" : [
+
+      ],
+      "name" : "Tobi",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "99.90",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6A1B2C01",
+          "introductoryOffer" : {
+            "internalID" : "6A1B2C11",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P3D"
+          },
+          "localizations" : [
+            {
+              "description" : "Tobi completo, cobrado por ano.",
+              "displayName" : "Tobi Anual",
+              "locale" : "pt_BR"
+            }
+          ],
+          "productID" : "com.andrefelipe.tobi.annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Tobi Anual",
+          "subscriptionGroupID" : "8F3D2A10",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "12.90",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "6A1B2C02",
+          "introductoryOffer" : {
+            "internalID" : "6A1B2C12",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P3D"
+          },
+          "localizations" : [
+            {
+              "description" : "Tobi completo, cobrado por semana.",
+              "displayName" : "Tobi Semanal",
+              "locale" : "pt_BR"
+            }
+          ],
+          "productID" : "com.andrefelipe.tobi.weekly",
+          "recurringSubscriptionPeriod" : "P1W",
+          "referenceName" : "Tobi Semanal",
+          "subscriptionGroupID" : "8F3D2A10",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

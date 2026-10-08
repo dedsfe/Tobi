@@ -11,6 +11,7 @@
 		033CCA7C68D736FE7D53D869 /* VoiceSpectrum.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50C8DB4618CA48C83CE1C987 /* VoiceSpectrum.swift */; };
 		06A1A1458BDBCEC051CD3FA4 /* ThinkingReveal.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8C2E089F5BB672F2BC24E98 /* ThinkingReveal.swift */; };
 		09009AB5F6BB1966DD606F58 /* FirstMealDemo.swift in Sources */ = {isa = PBXBuildFile; fileRef = C751682A98CEC2AF35AC1405 /* FirstMealDemo.swift */; };
+		0ACEF781303B018194689133 /* TobiStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 963E22CC66A5C7545DF75EB1 /* TobiStore.swift */; };
 		108E7241B747FCAA46004206 /* NutritionPlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8734C3998A0F55F94AAD8688 /* NutritionPlanTests.swift */; };
 		19A4554982F37800C4D916AB /* LineEditingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E951F4742B5EFD8897822E6E /* LineEditingUITests.swift */; };
 		20B22F7DA26123021C214509 /* FirstMealDemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB62EBAB89589280BD3E789 /* FirstMealDemoTests.swift */; };
@@ -47,6 +48,7 @@
 		BEC070B5CD52869753A2C583 /* ibge.json in Resources */ = {isa = PBXBuildFile; fileRef = F114B1E25377701C98EEFCF0 /* ibge.json */; };
 		C43FE44916787D7ADD1601DA /* FoodDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 330296912C2E99B26C68D398 /* FoodDatabase.swift */; };
 		C7B649C008949A3DA1A9FD57 /* NoteEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 308590FF1E48DD45DCA78605 /* NoteEditor.swift */; };
+		D1EF54B92BBDE4FAAA9E9B77 /* Paywall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FE4189A6E5925F21B89BC5 /* Paywall.swift */; };
 		DB0945C61BAA86B1575D2F49 /* FoodTables.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC10422EB949975055CDB990 /* FoodTables.swift */; };
 		DFB03B6045CB81552DD4F5C4 /* fastfood.json in Resources */ = {isa = PBXBuildFile; fileRef = 445349C7B857AF907783D17F /* fastfood.json */; };
 		F10047776139D6EE95053CB9 /* FoodParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A61D93B4C4C2B1562F8CBA23 /* FoodParserTests.swift */; };
@@ -91,6 +93,7 @@
 		3FA65013DB3626F696AD1207 /* Nutrition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nutrition.swift; sourceTree = "<group>"; };
 		41C304B2749615A9C8558D00 /* Dictation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictation.swift; sourceTree = "<group>"; };
 		445349C7B857AF907783D17F /* fastfood.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = fastfood.json; sourceTree = "<group>"; };
+		44FE4189A6E5925F21B89BC5 /* Paywall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Paywall.swift; sourceTree = "<group>"; };
 		45A6CD938A64353750C04F9A /* TobiTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TobiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4964A550B3F84B8605839E0D /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		49AFBD09578FE79F28932BBC /* WritingScreenUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WritingScreenUITests.swift; sourceTree = "<group>"; };
@@ -105,6 +108,7 @@
 		849BBE740074FABF951F498A /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		8734C3998A0F55F94AAD8688 /* NutritionPlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionPlanTests.swift; sourceTree = "<group>"; };
 		953F49314598C47639854B69 /* GoalsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsCard.swift; sourceTree = "<group>"; };
+		963E22CC66A5C7545DF75EB1 /* TobiStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TobiStore.swift; sourceTree = "<group>"; };
 		A268DB5A88EC85BC89AB5337 /* NutritionPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionPlan.swift; sourceTree = "<group>"; };
 		A2D449DF7D2B65CDE6700E42 /* DayNote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayNote.swift; sourceTree = "<group>"; };
 		A46A98F03E2CF68A0D4D7978 /* FoodParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodParser.swift; sourceTree = "<group>"; };
@@ -219,6 +223,14 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		A2AD73E97F94164FA7D2C87C /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				963E22CC66A5C7545DF75EB1 /* TobiStore.swift */,
+			);
+			path = Store;
+			sourceTree = "<group>";
+		};
 		A2B3E6E2F2BD447E2B520798 /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
@@ -227,6 +239,7 @@
 				65A29F5B27272F349425B6B0 /* JourneyChart.swift */,
 				A268DB5A88EC85BC89AB5337 /* NutritionPlan.swift */,
 				4964A550B3F84B8605839E0D /* OnboardingView.swift */,
+				44FE4189A6E5925F21B89BC5 /* Paywall.swift */,
 				5BCAAA368D3AECD109559A74 /* Reminders.swift */,
 			);
 			path = Onboarding;
@@ -242,6 +255,7 @@
 				2067EA3ADB64A7D60255A807 /* Nutrition */,
 				A2B3E6E2F2BD447E2B520798 /* Onboarding */,
 				FA714D49D7B050751EC6D8C2 /* Resources */,
+				A2AD73E97F94164FA7D2C87C /* Store */,
 				89DD1B90E614A9922E1AA155 /* Views */,
 			);
 			path = Tobi;
@@ -441,6 +455,7 @@
 				3D8A8C1F589731F75AB33BCA /* NutritionPlan.swift in Sources */,
 				AD15A9FF6ABCCF534EFA7145 /* OnboardingView.swift in Sources */,
 				2DF31213B46DDD75D81E3D75 /* OpenFoodFacts.swift in Sources */,
+				D1EF54B92BBDE4FAAA9E9B77 /* Paywall.swift in Sources */,
 				A09B974FEC943B4597B945C8 /* ProductName.swift in Sources */,
 				4AE4B12CEB2C1501BD2C3AAE /* Reminders.swift in Sources */,
 				84625DD8D6B6443969680CE8 /* ScanSheet.swift in Sources */,
@@ -448,6 +463,7 @@
 				62734DD3F35E21CA38AFACD5 /* Theme.swift in Sources */,
 				06A1A1458BDBCEC051CD3FA4 /* ThinkingReveal.swift in Sources */,
 				85A03EFDDA3D7B24646FC2DD /* TobiApp.swift in Sources */,
+				0ACEF781303B018194689133 /* TobiStore.swift in Sources */,
 				73A29CA35A4D4B571090FE1A /* TotalsBar.swift in Sources */,
 				00E8D8A43016F993A8DBB259 /* VoiceGlow.swift in Sources */,
 				033CCA7C68D736FE7D53D869 /* VoiceSpectrum.swift in Sources */,

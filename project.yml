@@ -55,5 +55,8 @@ schemes:
         Tobi: all
         TobiTests: [test]
         TobiUITests: [test]
+    run:
+      # Compras de teste ao rodar pelo Xcode. No aparelho sem o Xcode, o paywall mostra os preços de reserva.
+      storeKitConfiguration: Tobi.storekit
     test:
       targets: [TobiTests, TobiUITests]

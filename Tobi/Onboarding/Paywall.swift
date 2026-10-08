@@ -1,0 +1,645 @@
+import SwiftUI
+
+// MARK: - 14 · Paywall
+
+/// Última tela: o que o Tobi faz, como corre o teste grátis e os dois planos.
+/// O X mora no palco (`PaywallCloseButton`) e liga `declined`; aí o Tobi oferece as 24 horas.
+struct PaywallStep: View {
+    @Binding var declined: Bool
+    let onFinish: () -> Void
+
+    @State private var store = TobiStore.shared
+    @State private var plan = TobiPlan.annual
+    @State private var visible = false
+    /// Coreografia da entrada: benefícios desenhados, marcos da linha do tempo acesos, planos na tela.
+    @State private var benefits = 0
+    @State private var milestones = 0
+    @State private var plansIn = false
+    @State private var badgeIn = false
+    @State private var offering = false
+    @State private var buying = false
+    @State private var notice: String?
+    @State private var celebrating = false
+    @State private var buyTaps = 0
+    @State private var successes = 0
+    @State private var warnings = 0
+    @Environment(\.tobiReactions) private var tobi
+    @Namespace private var selection
+
+    private var shown: Bool { visible && !declined }
+
+    var body: some View {
+        ZStack {
+            content
+                .allowsHitTesting(!declined && !celebrating)
+            if offering {
+                FreePassOffer(onAccept: acceptFreePass, onBack: { declined = false })
+            }
+        }
+        .overlay {
+            if celebrating { Confetti(count: 44) }
+        }
+        .sensoryFeedback(.selection, trigger: benefits)
+        .sensoryFeedback(.impact(weight: .light), trigger: milestones)
+        .sensoryFeedback(.impact(weight: .medium, intensity: 0.7), trigger: plansIn)
+        .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.6), trigger: badgeIn)
+        .sensoryFeedback(.selection, trigger: plan)
+        .sensoryFeedback(.impact(weight: .medium), trigger: buyTaps)
+        .sensoryFeedback(.success, trigger: successes)
+        .sensoryFeedback(.warning, trigger: warnings)
+        .onChange(of: declined) { _, isDeclined in
+            if isDeclined {
+                // Primeiro a oferta sai rápida, depois o balão do Tobi nasce.
+                Task {
+                    try? await Task.sleep(for: .seconds(Motion.exitDuration))
+                    withAnimation(Motion.surface) { offering = true }
+                }
+            } else {
+                withAnimation(Motion.exit) { offering = false }
+            }
+        }
+        .task { await store.load() }
+        .task { await choreograph() }
+    }
+
+    private var content: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(store.trialEligible ? "Teste o Tobi" : "Continue com o Tobi")
+                Text(store.trialEligible ? "\(TobiPlan.trialDays) dias de graça" : "Escolha seu plano")
+                    .foregroundStyle(.indigo)
+            }
+            .font(.system(size: 32, weight: .heavy, design: .rounded))
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .reveal(shown, order: 0)
+
+            VStack(alignment: .leading, spacing: 14) {
+                BenefitRow(symbol: "pencil.and.scribble", text: "Escreve do seu jeito, ele conta tudo",
+                           isShown: shown && benefits >= 1)
+                BenefitRow(symbol: "waveform", text: "Fala ou escaneia o rótulo, e pronto",
+                           isShown: shown && benefits >= 2)
+                BenefitRow(symbol: "scope", text: "Metas sob medida pro seu objetivo",
+                           isShown: shown && benefits >= 3)
+            }
+            .padding(.top, 20)
+
+            Spacer(minLength: 14)
+
+            if store.trialEligible {
+                TrialTimeline(reached: shown ? milestones : 0)
+                    .reveal(shown, order: 2)
+                Spacer(minLength: 14)
+            }
+
+            plans
+                .reveal(shown && plansIn, order: 0)
+
+            Spacer(minLength: 16)
+
+            checkout
+                .reveal(shown, order: 4)
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 4)
+    }
+
+    // MARK: Planos
+
+    private var plans: some View {
+        HStack(spacing: 12) {
+            ForEach(TobiPlan.allCases) { option in
+                PlanCard(
+                    plan: option,
+                    price: store.displayPrice(option),
+                    detail: option == .annual ? "\(store.weeklyPrice(option)) por semana" : "por semana",
+                    badge: option == .annual && store.annualSavings > 0 ? "ECONOMIZE \(store.annualSavings)%" : nil,
+                    badgeIn: badgeIn,
+                    isSelected: plan == option,
+                    namespace: selection
+                ) {
+                    guard plan != option else { return }
+                    withAnimation(Motion.surface) { plan = option }
+                    tobi.acknowledge()
+                }
+            }
+        }
+        // Espaço pro selo que sai por cima do card.
+        .padding(.top, 10)
+    }
+
+    // MARK: Compra
+
+    private var checkout: some View {
+        VStack(spacing: 10) {
+            Label("Sem cobrança hoje", systemImage: "checkmark.shield.fill")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.indigo)
+                .opacity(store.trialEligible ? 1 : 0)
+
+            PaywallButton(title: store.trialEligible ? "Começar meus \(TobiPlan.trialDays) dias grátis" : "Assinar o Tobi",
+                          isLoading: buying, action: buy)
+
+            Text(notice ?? disclosure)
+                .font(.system(size: 12))
+                .foregroundStyle(notice == nil ? .secondary : .primary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .frame(maxWidth: .infinity)
+                .contentTransition(.numericText())
+                .animation(Motion.quick, value: notice ?? disclosure)
+
+            HStack(spacing: 18) {
+                Button("Restaurar compras", action: restore)
+                Link("Termos", destination: PaywallLinks.terms)
+                if let privacy = PaywallLinks.privacy {
+                    Link("Privacidade", destination: privacy)
+                }
+            }
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(.secondary)
+            .frame(height: 22)
+        }
+    }
+
+    /// Preço, período e renovação sempre visíveis, do plano escolhido (Apple 3.1.2).
+    private var disclosure: String {
+        let price = "\(store.displayPrice(plan)) por \(plan.period)"
+        return store.trialEligible
+            ? "\(TobiPlan.trialDays) dias grátis, depois \(price). Renova sozinho, cancele quando quiser."
+            : "\(price). Renova sozinho, cancele quando quiser."
+    }
+
+    private func buy() {
+        buyTaps += 1
+        buying = true
+        Task {
+            defer { buying = false }
+            do {
+                switch try await store.purchase(plan) {
+                case .purchased: celebrate()
+                case .pending: say("Sua compra tá esperando aprovação. Assim que passar, o Tobi libera tudo.")
+                case .cancelled: break
+                }
+            } catch TobiStore.Failure.unavailable {
+                say("A App Store não respondeu. Tenta de novo daqui a pouquinho.")
+            } catch {
+                say("Não deu certo dessa vez. Tenta de novo?")
+            }
+        }
+    }
+
+    private func restore() {
+        Task {
+            if await store.restore() {
+                celebrate()
+            } else {
+                say("Não achei nenhuma assinatura nessa conta da Apple.")
+            }
+        }
+    }
+
+    private func acceptFreePass() {
+        TobiStore.grantFreePass()
+        celebrate()
+    }
+
+    /// Deu certo: confete, o Tobi comemora e o app abre.
+    private func celebrate() {
+        successes += 1
+        celebrating = true
+        tobi.celebrate()
+        Task {
+            try? await Task.sleep(for: .seconds(1.8))
+            onFinish()
+        }
+    }
+
+    /// Recado curto no lugar das letras miúdas, que volta sozinho.
+    private func say(_ message: String) {
+        warnings += 1
+        notice = message
+        Task {
+            try? await Task.sleep(for: .seconds(4))
+            if notice == message { notice = nil }
+        }
+    }
+
+    private func choreograph() async {
+        visible = true
+        try? await Task.sleep(for: .milliseconds(260))
+        for index in 1...3 {
+            withAnimation(Motion.surface) { benefits = index }
+            try? await Task.sleep(for: .milliseconds(130))
+        }
+        if store.trialEligible {
+            try? await Task.sleep(for: .milliseconds(120))
+            for index in 1...3 {
+                withAnimation(Motion.surface) { milestones = index }
+                try? await Task.sleep(for: .milliseconds(280))
+            }
+        }
+        withAnimation(Motion.surface) { plansIn = true }
+        try? await Task.sleep(for: .milliseconds(320))
+        withAnimation(Motion.surface) { badgeIn = true }
+    }
+}
+
+enum PaywallLinks {
+    /// Termos padrão da Apple pra assinaturas (EULA).
+    static let terms = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
+    /// Ainda sem página. Precisa existir antes de mandar pra revisão da Apple.
+    static let privacy: URL? = nil
+}
+
+// MARK: - Peças
+
+/// O que o Tobi faz, numa linha. O ícone se desenha quando a linha entra.
+private struct BenefitRow: View {
+    let symbol: String
+    let text: String
+    let isShown: Bool
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                if isShown {
+                    Image(systemName: symbol)
+                        .transition(.symbolEffect(.drawOn))
+                }
+            }
+            .font(.system(size: 19, weight: .semibold))
+            .foregroundStyle(.indigo)
+            .frame(width: 26)
+
+            Text(text)
+                .font(.system(size: 17, weight: .medium))
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+                .reveal(isShown, order: 0)
+        }
+    }
+}
+
+/// Hoje, o aviso e a cobrança, com as datas de verdade. Os marcos acendem um a um.
+private struct TrialTimeline: View {
+    /// Quantos marcos já acenderam (0 a 3).
+    let reached: Int
+
+    private var milestones: [(title: String, detail: String)] {
+        let calendar = Calendar.current
+        let charge = calendar.date(byAdding: .day, value: TobiPlan.trialDays, to: .now) ?? .now
+        let reminder = calendar.date(byAdding: .day, value: -1, to: charge) ?? .now
+        return [("Hoje", "Tudo liberado"),
+                (Self.day(reminder), "Te aviso antes"),
+                (Self.day(charge), "Começa a cobrança")]
+    }
+
+    private static func day(_ date: Date) -> String {
+        date.formatted(.dateTime.day().month(.abbreviated))
+    }
+
+    /// Quanto da linha está pintado: até o marco aceso mais recente.
+    private var fill: CGFloat {
+        switch reached {
+        case ...1: 0
+        case 2: 0.5
+        default: 1
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 10) {
+            GeometryReader { proxy in
+                let width = proxy.size.width
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(.primary.opacity(0.1))
+                        .frame(height: 4)
+                    Capsule()
+                        .fill(LinearGradient(colors: [.indigo.opacity(0.5), .indigo], startPoint: .leading, endPoint: .trailing))
+                        .frame(width: max(0, (width - 12) * fill + 6), height: 4)
+                        .opacity(reached >= 2 ? 1 : 0)
+                    ForEach(0..<3, id: \.self) { index in
+                        Milestone(isLit: index < reached, isNow: index == 0)
+                            .position(x: 6 + (width - 12) * CGFloat(index) / 2, y: 7)
+                    }
+                }
+            }
+            .frame(height: 14)
+            .animation(Motion.surface, value: reached)
+
+            HStack(alignment: .top) {
+                ForEach(Array(milestones.enumerated()), id: \.offset) { index, milestone in
+                    let alignment: HorizontalAlignment = index == 0 ? .leading : index == 1 ? .center : .trailing
+                    VStack(alignment: alignment, spacing: 2) {
+                        Text(milestone.title)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(index < reached ? .primary : .secondary)
+                        Text(milestone.detail)
+                            .font(.system(size: 13))
+                            .foregroundStyle(.secondary)
+                    }
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                    .frame(maxWidth: .infinity, alignment: Alignment(horizontal: alignment, vertical: .top))
+                    .animation(Motion.quick, value: reached)
+                }
+            }
+        }
+    }
+}
+
+/// Um ponto da linha do tempo. "Hoje" pulsa de leve, pra dizer que é agora.
+private struct Milestone: View {
+    let isLit: Bool
+    let isNow: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Circle()
+            .fill(isLit ? Color.indigo : Color.primary.opacity(0.15))
+            .frame(width: 12, height: 12)
+            .scaleEffect(isLit ? 1 : 0.7)
+            .shadow(color: .indigo.opacity(isLit ? 0.45 : 0), radius: 6)
+            .background {
+                if isNow && isLit && !reduceMotion {
+                    Circle()
+                        .fill(.indigo)
+                        .phaseAnimator([false, true]) { ring, expanded in
+                            ring
+                                .scaleEffect(expanded ? 2.6 : 1)
+                                .opacity(expanded ? 0 : 0.35)
+                        } animation: { expanded in
+                            expanded ? .easeOut(duration: 1.6) : nil
+                        }
+                }
+            }
+    }
+}
+
+/// Um plano em vidro. O contorno índigo desliza de um card pro outro quando a escolha muda.
+private struct PlanCard: View {
+    let plan: TobiPlan
+    let price: String
+    let detail: String
+    let badge: String?
+    let badgeIn: Bool
+    let isSelected: Bool
+    let namespace: Namespace.ID
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(plan.name)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(isSelected ? .indigo : .secondary)
+                Text(price)
+                    .font(.system(size: 25, weight: .heavy, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.primary)
+                Text(detail)
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
+            .padding(.horizontal, 16)
+            .padding(.top, 20)
+            .padding(.bottom, 16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(.rect(cornerRadius: 24))
+        }
+        .buttonStyle(.plain)
+        .glassEffect(isSelected ? .regular.tint(.indigo.opacity(0.16)).interactive() : .regular.interactive(),
+                     in: .rect(cornerRadius: 24))
+        .overlay {
+            if isSelected {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .strokeBorder(.indigo, lineWidth: 2)
+                    .matchedGeometryEffect(id: "selected", in: namespace)
+                    .allowsHitTesting(false)
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            if isSelected {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundStyle(.indigo)
+                    .padding(12)
+                    .transition(.scale.combined(with: .opacity))
+                    .allowsHitTesting(false)
+            }
+        }
+        .overlay(alignment: .top) {
+            if let badge {
+                Text(badge)
+                    .font(.system(size: 11, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(.indigo, in: .capsule)
+                    .fixedSize()
+                    .offset(y: -10)
+                    .scaleEffect(badgeIn ? 1 : 0.4)
+                    .opacity(badgeIn ? 1 : 0)
+                    .allowsHitTesting(false)
+            }
+        }
+        .animation(Motion.quick, value: isSelected)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+/// Botão de compra: vidro índigo com um brilho que passa de tempos em tempos.
+private struct PaywallButton: View {
+    let title: String
+    var isLoading = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                Text(title)
+                    .opacity(isLoading ? 0 : 1)
+                if isLoading {
+                    ProgressView()
+                        .tint(.white)
+                }
+            }
+            .font(.system(size: 18, weight: .semibold))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 11)
+        }
+        .buttonStyle(.glassProminent)
+        .tint(.indigo)
+        .overlay {
+            Shine()
+                .clipShape(.capsule)
+                .allowsHitTesting(false)
+        }
+        .disabled(isLoading)
+        .animation(Motion.quick, value: isLoading)
+    }
+}
+
+/// Faixa de luz que atravessa o botão a cada poucos segundos. Some com Reduzir Movimento.
+private struct Shine: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        if !reduceMotion {
+            GeometryReader { proxy in
+                let width = proxy.size.width
+                LinearGradient(colors: [.white.opacity(0), .white.opacity(0.4), .white.opacity(0)],
+                               startPoint: .leading, endPoint: .trailing)
+                    .frame(width: width * 0.28)
+                    .rotationEffect(.degrees(18))
+                    .keyframeAnimator(initialValue: -0.4, repeating: true) { band, position in
+                        band.offset(x: position * width)
+                    } keyframes: { _ in
+                        LinearKeyframe(-0.4, duration: 2.6)
+                        CubicKeyframe(1.15, duration: 0.85)
+                    }
+            }
+            .blendMode(.plusLighter)
+        }
+    }
+}
+
+// MARK: - X do palco
+
+/// O X no lugar do Voltar. Chega um instante depois da tela, pra oferta respirar primeiro.
+struct PaywallCloseButton: View {
+    let action: () -> Void
+    @State private var shown = false
+    @State private var taps = 0
+
+    var body: some View {
+        HStack {
+            Button("Fechar", systemImage: "xmark") {
+                taps += 1
+                action()
+            }
+            .labelStyle(.iconOnly)
+            .font(.system(size: 15, weight: .semibold))
+            .frame(width: 30, height: 30)
+            .buttonStyle(.glass)
+            .buttonBorderShape(.circle)
+            .foregroundStyle(.secondary)
+            .reveal(shown, order: 0)
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 4)
+        .sensoryFeedback(.impact(flexibility: .soft), trigger: taps)
+        .task {
+            try? await Task.sleep(for: .seconds(1.5))
+            shown = true
+        }
+    }
+}
+
+// MARK: - 24 horas por conta do Tobi
+
+/// O Tobi fala num balão que sai dele: as 24 horas de cortesia e o porquê.
+/// A frase entra palavra por palavra, com um toque leve em cada uma.
+private struct FreePassOffer: View {
+    let onAccept: () -> Void
+    let onBack: () -> Void
+
+    private static let line = "Vou te dar \(Int(TobiStore.freePassHours)) horas de graça pra testar."
+    private static let reason = "Eu pago a IA, não consigo dar o app de graça."
+    private static let words = line.split(separator: " ").map(String.init)
+
+    @State private var bubble = false
+    @State private var typed = 0
+    @State private var settled = false
+    @State private var until = Date.now.addingTimeInterval(TobiStore.freePassHours * 3600)
+    @Environment(\.tobiReactions) private var tobi
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if bubble {
+                VStack(alignment: .leading, spacing: 12) {
+                    typedLine
+                        .font(.system(size: 27, weight: .heavy, design: .rounded))
+                        .contentTransition(.interpolate)
+                        .animation(Motion.quick, value: typed)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(Self.reason)
+                        .font(.system(size: 17))
+                        .foregroundStyle(.secondary)
+                        .reveal(settled, order: 0)
+                    Label("Liberado até amanhã às \(until.formatted(date: .omitted, time: .shortened))",
+                          systemImage: "clock.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.indigo)
+                        .padding(.top, 4)
+                        .reveal(settled, order: 1)
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 22 + SpeechBubble.tail)
+                .padding(.bottom, 24)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .glassEffect(.regular, in: SpeechBubble())
+                .padding(.horizontal, 16)
+                .transition(.emerge(from: .top))
+            }
+
+            Spacer(minLength: 0)
+
+            VStack(spacing: 6) {
+                PaywallButton(title: "Quero minhas \(Int(TobiStore.freePassHours)) horas", action: onAccept)
+                Button("Prefiro ver os planos", action: onBack)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .frame(height: 36)
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 4)
+            .reveal(settled, order: 2)
+        }
+        .sensoryFeedback(.impact(weight: .light, intensity: 0.55), trigger: typed)
+        .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: settled)
+        .task {
+            withAnimation(Motion.surface) { bubble = true }
+            try? await Task.sleep(for: .milliseconds(320))
+            for count in 1...Self.words.count {
+                typed = count
+                try? await Task.sleep(for: .milliseconds(95))
+            }
+            tobi.acknowledge()
+            settled = true
+        }
+    }
+
+    /// A frase inteira já ocupa o espaço; as palavras ainda não ditas ficam transparentes.
+    private var typedLine: Text {
+        Self.words.indices.reduce(Text(verbatim: "")) { line, index in
+            let word = Text(verbatim: Self.words[index] + (index < Self.words.count - 1 ? " " : ""))
+                .foregroundStyle(index < typed ? Color.primary : Color.clear)
+            return Text("\(line)\(word)")
+        }
+    }
+}
+
+/// Balão de fala com a ponta pra cima, apontando pro Tobi.
+private struct SpeechBubble: Shape {
+    static let tail: CGFloat = 12
+    var radius: CGFloat = 30
+
+    func path(in rect: CGRect) -> Path {
+        let body = CGRect(x: rect.minX, y: rect.minY + Self.tail, width: rect.width, height: rect.height - Self.tail)
+        let bubble = Path(roundedRect: body, cornerRadius: radius, style: .continuous)
+        var point = Path()
+        let mid = rect.midX
+        let half = Self.tail * 1.3
+        point.move(to: CGPoint(x: mid - half, y: body.minY + 1))
+        point.addQuadCurve(to: CGPoint(x: mid, y: rect.minY), control: CGPoint(x: mid - half * 0.35, y: body.minY))
+        point.addQuadCurve(to: CGPoint(x: mid + half, y: body.minY + 1), control: CGPoint(x: mid + half * 0.35, y: body.minY))
+        point.closeSubpath()
+        return bubble.union(point)
+    }
+}
