@@ -205,7 +205,7 @@ struct PaywallStep: View {
     }
 
     private func acceptFreePass() {
-        TobiStore.grantFreePass()
+        store.grantFreePass()
         celebrate()
     }
 

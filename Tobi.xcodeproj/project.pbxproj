@@ -20,6 +20,7 @@
 		28B4F8F20A95E58663E901AC /* WritingScreenUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49AFBD09578FE79F28932BBC /* WritingScreenUITests.swift */; };
 		2DF31213B46DDD75D81E3D75 /* OpenFoodFacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693E1062F5E9612595AAFAE8 /* OpenFoodFacts.swift */; };
 		31AD92836C08C9713CE4457E /* DayNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2D449DF7D2B65CDE6700E42 /* DayNote.swift */; };
+		39601D0026D589F929E3B5E9 /* PaywallGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D86F24AC9372E0B5A9F6A25 /* PaywallGate.swift */; };
 		3A40FCE8DCFB7B67BC1DEB6E /* LineRewriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28C85519ACF4096B51BC3535 /* LineRewriterTests.swift */; };
 		3D8A8C1F589731F75AB33BCA /* NutritionPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = A268DB5A88EC85BC89AB5337 /* NutritionPlan.swift */; };
 		4AE4B12CEB2C1501BD2C3AAE /* Reminders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BCAAA368D3AECD109559A74 /* Reminders.swift */; };
@@ -108,6 +109,7 @@
 		49AFBD09578FE79F28932BBC /* WritingScreenUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WritingScreenUITests.swift; sourceTree = "<group>"; };
 		50C8DB4618CA48C83CE1C987 /* VoiceSpectrum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSpectrum.swift; sourceTree = "<group>"; };
 		5BCAAA368D3AECD109559A74 /* Reminders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reminders.swift; sourceTree = "<group>"; };
+		5D86F24AC9372E0B5A9F6A25 /* PaywallGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallGate.swift; sourceTree = "<group>"; };
 		5EF17015117CAFBD333185A7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		641C53C984F6E9BE0929536C /* Confetti.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Confetti.swift; sourceTree = "<group>"; };
 		65A29F5B27272F349425B6B0 /* JourneyChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyChart.swift; sourceTree = "<group>"; };
@@ -256,6 +258,7 @@
 				A268DB5A88EC85BC89AB5337 /* NutritionPlan.swift */,
 				4964A550B3F84B8605839E0D /* OnboardingView.swift */,
 				44FE4189A6E5925F21B89BC5 /* Paywall.swift */,
+				5D86F24AC9372E0B5A9F6A25 /* PaywallGate.swift */,
 				CBD850D37F024E14534FF063 /* PaywallLetter.swift */,
 				5BCAAA368D3AECD109559A74 /* Reminders.swift */,
 				49472BC1DE4C1DCD9F5E6204 /* WelcomeFood.swift */,
@@ -479,6 +482,7 @@
 				AD15A9FF6ABCCF534EFA7145 /* OnboardingView.swift in Sources */,
 				2DF31213B46DDD75D81E3D75 /* OpenFoodFacts.swift in Sources */,
 				D1EF54B92BBDE4FAAA9E9B77 /* Paywall.swift in Sources */,
+				39601D0026D589F929E3B5E9 /* PaywallGate.swift in Sources */,
 				1A8BF67A1BBADCBF8047836E /* PaywallLetter.swift in Sources */,
 				A09B974FEC943B4597B945C8 /* ProductName.swift in Sources */,
 				4AE4B12CEB2C1501BD2C3AAE /* Reminders.swift in Sources */,

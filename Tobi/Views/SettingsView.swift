@@ -11,6 +11,9 @@ struct SettingsView: View {
     @State private var confirmingErase = false
     @State private var eraseFailed = false
     @State private var destination: SettingsDestination?
+    #if DEBUG
+    @AppStorage("debugLocked") private var debugLocked = false
+    #endif
 
     private enum SettingsDestination: Hashable {
         case changelog, about
@@ -90,6 +93,10 @@ struct SettingsView: View {
                     } label: {
                         settingsLabel("Abrir \(OnboardingStep.debugJump.debugName)", systemImage: "arrow.forward.to.line")
                     }
+                    Button(action: toggleLock) {
+                        settingsLabel(debugLocked ? "Destravar o app" : "Travar o app (fim das 24h)",
+                                      systemImage: debugLocked ? "lock.open" : "lock")
+                    }
                 } header: {
                     Text("Debug").foregroundStyle(.secondary)
                 }
@@ -144,6 +151,15 @@ struct SettingsView: View {
     }
 
     #if DEBUG
+    /// Fecha os Ajustes e trava (ou destrava) o app, como quando as 24 horas acabam.
+    private func toggleLock() {
+        dismiss()
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(0.45))
+            debugLocked.toggle()
+        }
+    }
+
     /// Fecha os Ajustes primeiro e só depois troca a raiz do app pro onboarding.
     private func replayOnboarding(from step: OnboardingStep) {
         dismiss()

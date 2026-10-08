@@ -17,7 +17,9 @@ Código em `Tobi/Onboarding/OnboardingView.swift`. Toda tela tem o palco do Tobi
 - [x] 11. Formas de registrar: palco de vidro rodando Escrever, Falar e Escanear com o rótulo de calorias de verdade, e pílulas de story que enchem e pulam de cena
 - [x] 12. Tudo pronto: promessa no título ("Em março, você chega nos 65 kg"), curva do peso se desenhando com marcos vibrando, meta estourando com confete e pulso, números contando em 3 vidros, botão só no fim, depois o pedido de avaliação
 - [x] 13. Notificações: os 3 lembretes (café 9:00, almoço 12:30, jantar 20:00) chegam na tela como no iPhone; "Ativar lembretes" pede a permissão e agenda exatamente esses; "Agora não" segue
-- [ ] 14. Paywall: planos e linha do tempo do teste grátis
+- [x] 14. Paywall: anual (destacado, com a economia) e semanal, os dois com 3 dias grátis; linha do tempo do teste com as datas de verdade; StoreKit 2 em `TobiStore` (IDs e preços de reserva num lugar só, `Tobi.storekit` pra testar rodando pelo Xcode). O X abre a carta do Tobi com 24 horas de cortesia; a compra solta canhões de confete. Sem plano e sem as 24 horas, o app trava no paywall (Ajustes → Debug → "Travar o app")
+- [ ] Paywall: preços definitivos e os dois planos criados no App Store Connect (hoje R$ 99,90/ano e R$ 12,90/semana de reserva)
+- [ ] Paywall: link de Privacidade em `PaywallLinks.privacy` (site em construção); a Apple exige antes da revisão
 - [ ] Testar onboarding em formato de chat (perguntas na voz do Tobi) contra as telas atuais
 - [ ] Medir abandono em cada tela
 - [ ] Trocar o 🐶 do `TobiStage` pelas animações do Tobi (depende da arte)
@@ -30,7 +32,6 @@ Ficam pra quando o Tobi tiver o que precisa.
 - Apple Health: precisa da integração com o HealthKit
 - Widget na tela de início e na tela bloqueada: precisa do widget
 - Localização pra restaurantes: precisa de base de restaurantes
-- "24h por minha conta" quando a pessoa fecha o paywall: faz sentido quando tiver IA com custo
 - Comparação de precisão com outros apps: precisa de benchmark de verdade
 - Foto do prato, cardápio, Siri, Apple Watch
 - Tela de preferências (alta proteína, pouco carboidrato): tirada porque não mudava nada; volta se tiver receitas
