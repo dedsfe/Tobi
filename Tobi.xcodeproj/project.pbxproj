@@ -62,6 +62,7 @@
 		8CEFBEA42E2411690944065B /* WelcomeFoodBite.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45D476B718C12DF8A8B1B062 /* WelcomeFoodBite.swift */; };
 		8D24C9183E293DC3E8DC81F7 /* GoalsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 953F49314598C47639854B69 /* GoalsCard.swift */; };
 		8E3E1AA54F455F6455A96B16 /* taco.json in Resources */ = {isa = PBXBuildFile; fileRef = 3E46D592AB857DDE87A3E279 /* taco.json */; };
+		8F4E9EA745E7CA7726B0AC0B /* AppStoreScreenshots.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30AFDFE44A93014B99AC198 /* AppStoreScreenshots.swift */; };
 		904EBA54F3766F2FFAC8D665 /* FoodCoverageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F71B97092266CA6BFFAEFA /* FoodCoverageTests.swift */; };
 		92994DBBB9C2FE837CA5670E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EF17015117CAFBD333185A7 /* SettingsView.swift */; };
 		964360C5675E68D3AF4C1E5A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB8F2431FE4D24C230D6032D /* Assets.xcassets */; };
@@ -220,6 +221,7 @@
 		F114B1E25377701C98EEFCF0 /* ibge.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ibge.json; sourceTree = "<group>"; };
 		F22DD0603754279324293121 /* TobiUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TobiUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F22E96B8622A13A7FFD27968 /* FoodCorrection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCorrection.swift; sourceTree = "<group>"; };
+		F30AFDFE44A93014B99AC198 /* AppStoreScreenshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreScreenshots.swift; sourceTree = "<group>"; };
 		F7CD6A02F831A013DE88C212 /* SupplementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupplementTests.swift; sourceTree = "<group>"; };
 		FB6BC12515FB31BEA5AA5C7D /* BarcodeScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeScanner.swift; sourceTree = "<group>"; };
 		FC10422EB949975055CDB990 /* FoodTables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodTables.swift; sourceTree = "<group>"; };
@@ -439,6 +441,7 @@
 		D7FC5BB26AC27DA44D71C5E8 /* TobiUITests */ = {
 			isa = PBXGroup;
 			children = (
+				F30AFDFE44A93014B99AC198 /* AppStoreScreenshots.swift */,
 				E951F4742B5EFD8897822E6E /* LineEditingUITests.swift */,
 				B188110F3F161DF643F945A2 /* SafeLaunch.swift */,
 				49AFBD09578FE79F28932BBC /* WritingScreenUITests.swift */,
@@ -664,6 +667,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8F4E9EA745E7CA7726B0AC0B /* AppStoreScreenshots.swift in Sources */,
 				19A4554982F37800C4D916AB /* LineEditingUITests.swift in Sources */,
 				89EABA6C32FBFD3B11D2A734 /* SafeLaunch.swift in Sources */,
 				28B4F8F20A95E58663E901AC /* WritingScreenUITests.swift in Sources */,

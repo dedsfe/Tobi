@@ -29,6 +29,17 @@ struct TobiApp: App {
         }
     }
 
+    /// `-onboardingShot paywall`: abre essa tela do onboarding pros prints da App Store. Só no Debug.
+    private static var screenshotStep: OnboardingStep? {
+        #if DEBUG
+        let args = ProcessInfo.processInfo.arguments
+        guard let index = args.firstIndex(of: "-onboardingShot"), args.indices.contains(index + 1) else { return nil }
+        return OnboardingStep.allCases.first { $0.analyticsName == args[index + 1] }
+        #else
+        return nil
+        #endif
+    }
+
     /// Sem plano e sem as 24 horas, o app trava. No Debug, quem manda é o botão dos Ajustes.
     private var shouldLock: Bool {
         guard didCompleteOnboarding, !inMemory else { return false }
@@ -49,7 +60,10 @@ struct TobiApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if didCompleteOnboarding || inMemory {
+                if inMemory, let step = Self.screenshotStep {
+                    // Prints da App Store: a tela do onboarding no modo de teste, sem salvar nada.
+                    OnboardingView(start: step) {}
+                } else if didCompleteOnboarding || inMemory {
                     if locked {
                         LockedPaywall(onUnlock: unlock)
                             .transition(.emerge)
