@@ -31,6 +31,7 @@ struct PaywallStep: View {
     enum Page: Int { case value, trial, plans }
     @State private var page = Page.value
     @State private var pageTaps = 0
+    @State private var showingWhy = false
     @State private var visible = false
     /// Coreografia da entrada: benefícios desenhados, marcos da linha do tempo acesos, planos na tela.
     @State private var benefits = 0
@@ -94,6 +95,7 @@ struct PaywallStep: View {
         .onChange(of: page, initial: true) { _, current in
             onPlans.wrappedValue = story != .onboarding || current == .plans
         }
+        .sheet(isPresented: $showingWhy) { FounderLetter() }
         .task { await store.load() }
         .task {
             if story == .onboarding { track("paywall_page_viewed", ["page": "value"]) }
@@ -121,6 +123,22 @@ struct PaywallStep: View {
             if story != .onboarding || page == .plans {
                 plans
                     .reveal(shown && plansIn, order: 0)
+
+                Button {
+                    track("paywall_why_price")
+                    showingWhy = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Text("Por que o Tobi custa isso?")
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .bold))
+                    }
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.indigo)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 14)
+                }
+                .reveal(shown && plansIn, order: 1)
 
                 Spacer(minLength: 16)
 

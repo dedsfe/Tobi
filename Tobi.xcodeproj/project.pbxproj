@@ -95,6 +95,7 @@
 		F4B3AC4236FA8F00BA88FC24 /* FoodCorrection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F22E96B8622A13A7FFD27968 /* FoodCorrection.swift */; };
 		F4F03DB08A9EB42588CE07CE /* InputMethodsShowcase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E169475F08FF10FB129498E /* InputMethodsShowcase.swift */; };
 		F629E96C5891DFAA0E5AF0BC /* ConfettiCannons.swift in Sources */ = {isa = PBXBuildFile; fileRef = D776BAEAF45963A2D807E30C /* ConfettiCannons.swift */; };
+		F65FC358ED34EFB005A5DFE8 /* FounderLetter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E879FC43F4532A952334A75E /* FounderLetter.swift */; };
 		F90651BCAF45D616918D5187 /* WelcomeFood.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49472BC1DE4C1DCD9F5E6204 /* WelcomeFood.swift */; };
 		FAAE64B7C7E77D5DD57C8FDC /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = BFE74D4BCEDBAC94581CB0A8 /* RevenueCat */; };
 		FB452BB1ED37189C55EFF16B /* LineRewriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C87CE0B25D3C707E51A6DBA /* LineRewriter.swift */; };
@@ -224,6 +225,7 @@
 		E1994A7BED207538543F656B /* Motion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion.swift; sourceTree = "<group>"; };
 		E3CC70140F1D4009A913383C /* Tracking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tracking.swift; sourceTree = "<group>"; };
 		E75C5C4C8C0241704136815F /* WelcomeFoodFlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFoodFlight.swift; sourceTree = "<group>"; };
+		E879FC43F4532A952334A75E /* FounderLetter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FounderLetter.swift; sourceTree = "<group>"; };
 		E951F4742B5EFD8897822E6E /* LineEditingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineEditingUITests.swift; sourceTree = "<group>"; };
 		EA37006553B03C4361C0334B /* tobi-face.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "tobi-face.json"; sourceTree = "<group>"; };
 		F114B1E25377701C98EEFCF0 /* ibge.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ibge.json; sourceTree = "<group>"; };
@@ -403,6 +405,7 @@
 			children = (
 				D776BAEAF45963A2D807E30C /* ConfettiCannons.swift */,
 				C751682A98CEC2AF35AC1405 /* FirstMealDemo.swift */,
+				E879FC43F4532A952334A75E /* FounderLetter.swift */,
 				3E169475F08FF10FB129498E /* InputMethodsShowcase.swift */,
 				65A29F5B27272F349425B6B0 /* JourneyChart.swift */,
 				A268DB5A88EC85BC89AB5337 /* NutritionPlan.swift */,
@@ -707,6 +710,7 @@
 				C43FE44916787D7ADD1601DA /* FoodDatabase.swift in Sources */,
 				FDD953D0FE09F4316F02D6DC /* FoodParser.swift in Sources */,
 				DB0945C61BAA86B1575D2F49 /* FoodTables.swift in Sources */,
+				F65FC358ED34EFB005A5DFE8 /* FounderLetter.swift in Sources */,
 				8D24C9183E293DC3E8DC81F7 /* GoalsCard.swift in Sources */,
 				F4F03DB08A9EB42588CE07CE /* InputMethodsShowcase.swift in Sources */,
 				52B996030ED4D7BA451F2FDD /* JourneyChart.swift in Sources */,
