@@ -37,7 +37,7 @@ enum OnboardingStep: Int, CaseIterable {
 
     #if DEBUG
     /// Tela em revisão: o atalho do Debug nos Ajustes abre direto nela. Trocar aqui quando a revisão mudar.
-    static let debugJump: OnboardingStep = .widget
+    static let debugJump: OnboardingStep = .paywall
 
     var debugName: String {
         switch self {

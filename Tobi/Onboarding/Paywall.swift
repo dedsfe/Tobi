@@ -2,7 +2,8 @@ import SwiftUI
 
 // MARK: - 14 · Paywall
 
-/// Última tela: o que o Tobi faz, como corre o teste grátis e os dois planos.
+/// Última tela, em três partes no onboarding: o que o Tobi libera, como corre o teste grátis e os planos.
+/// Valor antes do preço converte mais que tudo numa tela só (Superwall, 2026: 12,4% contra 9,1%).
 /// O X mora no palco (`PaywallCloseButton`) e liga `declined`; aí chega a carta do Tobi (`TobiLetter`).
 /// Com o app travado, a parte de cima vira o resumo do que a pessoa fez nas 24 horas (`RecapHero`).
 struct PaywallStep: View {
@@ -22,6 +23,10 @@ struct PaywallStep: View {
 
     @State private var store = TobiStore.shared
     @State private var plan = TobiPlan.annual
+    /// No onboarding o paywall vem em três partes; travado, vai direto aos planos.
+    enum Page: Int { case value, trial, plans }
+    @State private var page = Page.value
+    @State private var pageTaps = 0
     @State private var visible = false
     /// Coreografia da entrada: benefícios desenhados, marcos da linha do tempo acesos, planos na tela.
     @State private var benefits = 0
@@ -61,6 +66,7 @@ struct PaywallStep: View {
                     .ignoresSafeArea()
             }
         }
+        .sensoryFeedback(.impact(weight: .light), trigger: pageTaps)
         .sensoryFeedback(.selection, trigger: benefits)
         .sensoryFeedback(.impact(weight: .light), trigger: milestones)
         .sensoryFeedback(.impact(weight: .medium, intensity: 0.7), trigger: plansIn)
@@ -82,14 +88,21 @@ struct PaywallStep: View {
             }
         }
         .task { await store.load() }
-        .task { await choreograph() }
+        .task {
+            if story == .onboarding { track("paywall_page_viewed", ["page": "value"]) }
+            await choreograph(story == .onboarding ? .value : .plans)
+        }
     }
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 0) {
             switch story {
             case .onboarding:
-                promise
+                switch page {
+                case .value: valuePage.transition(.opacity)
+                case .trial: trialPage.transition(.opacity)
+                case .plans: promise.transition(.opacity)
+                }
             case .recap(let recap):
                 RecapHero(recap: recap, isShown: shown)
                 Spacer(minLength: 14)
@@ -98,21 +111,103 @@ struct PaywallStep: View {
                 Spacer(minLength: 14)
             }
 
-            plans
-                .reveal(shown && plansIn, order: 0)
+            if story != .onboarding || page == .plans {
+                plans
+                    .reveal(shown && plansIn, order: 0)
 
-            Spacer(minLength: 16)
+                Spacer(minLength: 16)
 
-            checkout
-                .reveal(shown, order: 4)
+                checkout
+                    .reveal(shown, order: 4)
+            }
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 4)
     }
 
-    /// A promessa: o que o Tobi faz e como corre o teste grátis.
+    // MARK: Partes do onboarding
+
+    /// 1 de 3: tudo o que o Tobi libera.
+    private var valuePage: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            title("Libere tudo", "o que o Tobi faz")
+                .reveal(shown, order: 0)
+
+            VStack(alignment: .leading, spacing: 15) {
+                ForEach(Array(Self.benefitList.enumerated()), id: \.offset) { index, benefit in
+                    BenefitRow(symbol: benefit.symbol, text: benefit.text, isShown: shown && benefits > index)
+                }
+            }
+            .padding(.top, 22)
+
+            Spacer(minLength: 16)
+
+            PaywallButton(title: "Continuar", isLoading: false) { turn(to: store.trialEligible ? .trial : .plans) }
+                .reveal(shown, order: 3)
+        }
+    }
+
+    /// 2 de 3: como corre o teste, com as datas de verdade e o preço do plano.
+    private var trialPage: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            backButton(to: .value)
+            title("Como funciona", "seu teste grátis")
+                .reveal(shown, order: 0)
+
+            TrialSteps(reached: shown ? milestones : 0, price: "\(store.displayPrice(plan)) por \(plan.period)")
+                .padding(.top, 24)
+
+            Spacer(minLength: 16)
+
+            PaywallButton(title: "Continuar", isLoading: false) { turn(to: .plans) }
+                .reveal(shown, order: 3)
+        }
+    }
+
+    private static let benefitList: [(symbol: String, text: String)] = [
+        ("pencil.and.scribble", "Escreve do seu jeito, ele conta tudo"),
+        ("waveform", "Fala ou escaneia o rótulo, e pronto"),
+        ("dumbbell.fill", "Whey, marcas e fast food no ponto"),
+        ("scope", "Calorias e macros sob medida"),
+        ("square.grid.2x2.fill", "Widgets na tela de início"),
+        ("bell.badge.fill", "Lembretes pra não esquecer de anotar"),
+    ]
+
+    private func title(_ first: String, _ second: String) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(first)
+            Text(second).foregroundStyle(.indigo)
+        }
+        .font(.system(size: 32, weight: .heavy, design: .rounded))
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+    }
+
+    private func backButton(to previous: Page) -> some View {
+        Button {
+            withAnimation(Motion.surface) { page = previous }
+        } label: {
+            Label("Voltar", systemImage: "chevron.left")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.indigo)
+        }
+        .padding(.bottom, 10)
+        .reveal(shown, order: 0)
+    }
+
+    /// Próxima parte: a de agora sai rápida, a nova entra em cascata.
+    private func turn(to next: Page) {
+        pageTaps += 1
+        tobi.acknowledge()
+        withAnimation(Motion.surface) { page = next }
+        track("paywall_page_viewed", ["page": "\(next)"])
+        Task { await choreograph(next) }
+    }
+
+    /// 3 de 3 no onboarding: o título dos planos.
     @ViewBuilder
     private var promise: some View {
+        backButton(to: store.trialEligible ? .trial : .value)
         VStack(alignment: .leading, spacing: 0) {
             Text(store.trialEligible ? "Teste o Tobi" : "Continue com o Tobi")
             Text(store.trialEligible ? "\(TobiPlan.trialDays) dias de graça" : "Escolha seu plano")
@@ -122,16 +217,6 @@ struct PaywallStep: View {
         .lineLimit(1)
         .minimumScaleFactor(0.8)
         .reveal(shown, order: 0)
-
-        VStack(alignment: .leading, spacing: 14) {
-            BenefitRow(symbol: "pencil.and.scribble", text: "Escreve do seu jeito, ele conta tudo",
-                       isShown: shown && benefits >= 1)
-            BenefitRow(symbol: "waveform", text: "Fala ou escaneia o rótulo, e pronto",
-                       isShown: shown && benefits >= 2)
-            BenefitRow(symbol: "scope", text: "Metas sob medida pro seu objetivo",
-                       isShown: shown && benefits >= 3)
-        }
-        .padding(.top, 20)
 
         Spacer(minLength: 14)
 
@@ -290,8 +375,29 @@ struct PaywallStep: View {
         }
     }
 
-    private func choreograph() async {
+    private func choreograph(_ page: Page) async {
         visible = true
+        if story == .onboarding {
+            switch page {
+            case .value:
+                try? await Task.sleep(for: .milliseconds(260))
+                for index in 1...Self.benefitList.count {
+                    withAnimation(Motion.surface) { benefits = index }
+                    try? await Task.sleep(for: .milliseconds(110))
+                }
+                return
+            case .trial:
+                milestones = 0
+                try? await Task.sleep(for: .milliseconds(280))
+                for index in 1...3 {
+                    withAnimation(Motion.surface) { milestones = index }
+                    try? await Task.sleep(for: .milliseconds(300))
+                }
+                return
+            case .plans:
+                break
+            }
+        }
         if story != .onboarding {
             // O resumo conta (ou o Tobi escreve) sozinho; os planos chegam quando a cena já respirou.
             try? await Task.sleep(for: .milliseconds(story == .nothingWritten ? 1200 : 1900))
@@ -300,13 +406,10 @@ struct PaywallStep: View {
             withAnimation(Motion.surface) { badgeIn = true }
             return
         }
-        try? await Task.sleep(for: .milliseconds(260))
-        for index in 1...3 {
-            withAnimation(Motion.surface) { benefits = index }
-            try? await Task.sleep(for: .milliseconds(130))
-        }
+        // Planos do onboarding: a linha do tempo curta reacende do lado do preço.
+        milestones = 0
         if store.trialEligible {
-            try? await Task.sleep(for: .milliseconds(120))
+            try? await Task.sleep(for: .milliseconds(200))
             for index in 1...3 {
                 withAnimation(Motion.surface) { milestones = index }
                 try? await Task.sleep(for: .milliseconds(280))
@@ -420,6 +523,74 @@ private struct TrialTimeline: View {
                 }
             }
         }
+    }
+}
+
+/// O teste em pé, na 2ª parte do paywall: um trilho que enche de cima pra baixo, com o que acontece em cada data.
+private struct TrialSteps: View {
+    /// Quantos passos já acenderam (0 a 3).
+    let reached: Int
+    /// "R$ 99,90 por ano", do plano marcado.
+    let price: String
+
+    private var steps: [(symbol: String, title: String, detail: String)] {
+        let calendar = Calendar.current
+        let charge = calendar.date(byAdding: .day, value: TobiPlan.trialDays, to: .now) ?? .now
+        let reminder = calendar.date(byAdding: .day, value: -1, to: charge) ?? .now
+        let day = { (date: Date) in date.formatted(.dateTime.day().month(.wide)) }
+        return [
+            ("lock.open.fill", "Hoje", "Tudo do Tobi liberado na hora, sem pagar nada."),
+            ("bell.fill", "Em \(day(reminder))", "O Tobi te avisa que o teste está acabando."),
+            ("creditcard.fill", "Em \(day(charge))", "Começa a cobrança de \(price), a não ser que você cancele antes."),
+        ]
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
+                HStack(alignment: .top, spacing: 16) {
+                    VStack(spacing: 0) {
+                        ZStack {
+                            if index < reached {
+                                Image(systemName: step.symbol)
+                                    .transition(.symbolEffect(.drawOn))
+                            } else {
+                                Image(systemName: step.symbol).opacity(0.25)
+                            }
+                        }
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(index < reached ? Color.indigo : Color.secondary)
+                        .frame(width: 28, height: 28)
+                        if index < steps.count - 1 {
+                            // O trilho até o próximo passo acende junto com ele.
+                            ZStack(alignment: .top) {
+                                Capsule().fill(.primary.opacity(0.1))
+                                Capsule()
+                                    .fill(LinearGradient(colors: [.indigo, .indigo.opacity(0.4)], startPoint: .top, endPoint: .bottom))
+                                    .scaleEffect(y: index + 1 < reached ? 1 : 0, anchor: .top)
+                            }
+                            .frame(width: 3)
+                            .frame(maxHeight: .infinity)
+                            .padding(.vertical, 6)
+                        }
+                    }
+                    .frame(width: 28)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(step.title)
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .foregroundStyle(index < reached ? .primary : .secondary)
+                        Text(step.detail)
+                            .font(.system(size: 15))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.bottom, index < steps.count - 1 ? 26 : 0)
+                    .reveal(index < reached, order: 0)
+                }
+            }
+        }
+        .animation(Motion.surface, value: reached)
     }
 }
 
