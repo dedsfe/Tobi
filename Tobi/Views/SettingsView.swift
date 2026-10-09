@@ -10,7 +10,6 @@ struct SettingsView: View {
     @AppStorage("fatShare") private var fatShare = 0.3
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
-    @Environment(\.requestReview) private var requestReview
     @Query(sort: \DayNote.day) private var notes: [DayNote]
 
     @State private var confirmingErase = false
@@ -126,7 +125,8 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Button { requestReview() } label: {
+                    // O pedido automático da Apple só aparece 3 vezes por ano; o link abre sempre.
+                    Link(destination: QuickActions.review) {
                         Label("Avaliar o Tobi", systemImage: "star.fill")
                     }
                     Link(destination: PaywallLinks.terms) {

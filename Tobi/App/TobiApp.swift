@@ -3,6 +3,7 @@ import SwiftData
 
 @main
 struct TobiApp: App {
+    @UIApplicationDelegateAdaptor(TobiAppDelegate.self) private var appDelegate
     /// Nos testes de interface o app começa vazio e não mexe nos dados de verdade.
     private let inMemory = ProcessInfo.processInfo.arguments.contains("-uiTesting")
     @AppStorage("didCompleteOnboarding") private var didCompleteOnboarding = false
@@ -69,6 +70,11 @@ struct TobiApp: App {
                 // O aviso de rastreamento só vem depois do onboarding, com o app já em uso.
                 guard didCompleteOnboarding, !inMemory else { return }
                 await Tracking.request()
+            }
+            .task {
+                // Atalho do ícone tocado com o app fechado: abre depois que a tela apareceu.
+                try? await Task.sleep(for: .seconds(0.6))
+                QuickActions.performPending()
             }
             .task {
                 async let parser = FoodParser.prepared()

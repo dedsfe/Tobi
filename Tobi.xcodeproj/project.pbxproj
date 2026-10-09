@@ -74,6 +74,7 @@
 		C8ADE9D17C878FC7AAC9AED2 /* tobi-face.json in Resources */ = {isa = PBXBuildFile; fileRef = EA37006553B03C4361C0334B /* tobi-face.json */; };
 		CB0F5488A843F6BA534B9498 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 641AFD9FA9A4A3FAB454B0CB /* WidgetSnapshot.swift */; };
 		D1EF54B92BBDE4FAAA9E9B77 /* Paywall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FE4189A6E5925F21B89BC5 /* Paywall.swift */; };
+		D37F49C08EC32397D58BCD15 /* QuickActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60A1B4F9BF9011FCEFAE6B0 /* QuickActions.swift */; };
 		D8FA67EB6FBF6DDB86E8BC12 /* BrazilianSlangAndPortionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A45D6744CE27A4B0857E86A /* BrazilianSlangAndPortionTests.swift */; };
 		DB0945C61BAA86B1575D2F49 /* FoodTables.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC10422EB949975055CDB990 /* FoodTables.swift */; };
 		DFB03B6045CB81552DD4F5C4 /* fastfood.json in Resources */ = {isa = PBXBuildFile; fileRef = 445349C7B857AF907783D17F /* fastfood.json */; };
@@ -200,6 +201,7 @@
 		C9B9ABA662E17E8154754CE6 /* WelcomeFoodRouteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFoodRouteTests.swift; sourceTree = "<group>"; };
 		CBD850D37F024E14534FF063 /* PaywallLetter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallLetter.swift; sourceTree = "<group>"; };
 		D5F15F5DFF3D1C5DFB4747B1 /* VoiceSpectrumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSpectrumTests.swift; sourceTree = "<group>"; };
+		D60A1B4F9BF9011FCEFAE6B0 /* QuickActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActions.swift; sourceTree = "<group>"; };
 		D776BAEAF45963A2D807E30C /* ConfettiCannons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiCannons.swift; sourceTree = "<group>"; };
 		D94DD3657B48F6EE45558C4C /* TobiFaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TobiFaceView.swift; sourceTree = "<group>"; };
 		DA5FA395EEC1B1F95F8911D0 /* BrandProductTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandProductTests.swift; sourceTree = "<group>"; };
@@ -232,6 +234,7 @@
 			isa = PBXGroup;
 			children = (
 				6565AD07DD783BF23AD3A699 /* Analytics.swift */,
+				D60A1B4F9BF9011FCEFAE6B0 /* QuickActions.swift */,
 				3C5944BEFBCE0A6BC683771E /* TobiApp.swift */,
 				E3CC70140F1D4009A913383C /* Tracking.swift */,
 				5508056D8812CD4023849196 /* WidgetBridge.swift */,
@@ -689,6 +692,7 @@
 				5681C2303AEA7D7DE5F8B33F /* PaywallJoy.swift in Sources */,
 				1A8BF67A1BBADCBF8047836E /* PaywallLetter.swift in Sources */,
 				A09B974FEC943B4597B945C8 /* ProductName.swift in Sources */,
+				D37F49C08EC32397D58BCD15 /* QuickActions.swift in Sources */,
 				4AE4B12CEB2C1501BD2C3AAE /* Reminders.swift in Sources */,
 				84625DD8D6B6443969680CE8 /* ScanSheet.swift in Sources */,
 				92994DBBB9C2FE837CA5670E /* SettingsView.swift in Sources */,
