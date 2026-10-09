@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// 1 de 3 do paywall: o Tobi trabalhando em vez de uma lista. Três linhas se escrevem numa notinha,
-/// cada uma ganha as calorias, e o widget de verdade, embaixo, acompanha o total.
+/// 1 de 3 do paywall: um bentô de vidro com o Tobi trabalhando. Em cima, três linhas se escrevem
+/// numa notinha e ganham as calorias; embaixo, seis quadradinhos, e o widget de verdade acompanha o total.
 struct PaywallShowcase: View {
     let isShown: Bool
 
@@ -19,11 +19,9 @@ struct PaywallShowcase: View {
         Line(text: "1 scoop de whey Growth", kcal: 120, carbs: 3, protein: 24, fat: 1.5),
     ]
     private static let goal = 2000
-    private static let more: [(symbol: String, text: String)] = [
-        ("dumbbell.fill", "Whey, marcas e fast food no ponto"),
-        ("scope", "Calorias e macros sob medida"),
-        ("bell.badge.fill", "Lembretes pra não esquecer de anotar"),
-    ]
+    private static let gap: CGFloat = 10
+    private static let radius: CGFloat = 24
+    private static let tileHeight: CGFloat = 100
     /// O widget da tela de início tem esse lado; aqui ele encolhe pro quadradinho.
     private static let widgetSide: CGFloat = 158
 
@@ -37,39 +35,35 @@ struct PaywallShowcase: View {
     private var protein: Int { Int(done.reduce(0) { $0 + $1.protein }.rounded()) }
 
     var body: some View {
-        VStack(spacing: 14) {
-            feature("Escreve do seu jeito, ele conta tudo") { note }
+        VStack(spacing: Self.gap) {
+            note
                 .reveal(isShown, order: 0)
-
-            HStack(alignment: .top, spacing: 14) {
-                feature("Fala") {
-                    tile {
-                        Image(systemName: "waveform")
-                            .symbolEffect(.variableColor.iterative.dimInactiveLayers, options: .repeating, isActive: isShown)
-                    }
+            HStack(spacing: Self.gap) {
+                tile("Fala", order: 1) {
+                    Image(systemName: "waveform")
+                        .symbolEffect(.variableColor.iterative.dimInactiveLayers, options: .repeating, isActive: isShown)
                 }
-                .reveal(isShown, order: 1)
-                feature("Escaneia o rótulo") {
-                    tile {
-                        Image(systemName: "barcode.viewfinder")
-                            .symbolEffect(.breathe, options: .repeating, isActive: isShown)
-                    }
+                tile("Escaneia o rótulo", order: 2) {
+                    Image(systemName: "barcode.viewfinder")
+                        .symbolEffect(.breathe, options: .repeating, isActive: isShown)
                 }
-                .reveal(isShown, order: 2)
-                feature("Widget") { widget }
+                widget
                     .reveal(isShown, order: 3)
             }
-
-            // O resto do que o Tobi faz, por escrito: não cabe em quadradinho.
-            VStack(alignment: .leading, spacing: 10) {
-                ForEach(Array(Self.more.enumerated()), id: \.offset) { index, item in
-                    Label(item.text, systemImage: item.symbol)
-                        .labelStyle(MoreLabelStyle())
-                        .reveal(isShown, order: 4 + index)
+            HStack(spacing: Self.gap) {
+                tile("Whey, marcas e fast food", order: 4) {
+                    Image(systemName: "dumbbell.fill")
+                        .symbolEffect(.bounce, value: counted == Self.lines.count)
+                }
+                tile("Macros sob medida", order: 5) {
+                    Image(systemName: "chart.pie.fill")
+                        .symbolEffect(.bounce, value: counted == Self.lines.count)
+                }
+                tile("Lembretes", order: 6) {
+                    Image(systemName: "bell.badge.fill")
+                        .symbolEffect(.wiggle, options: .repeat(.periodic(delay: 2.5)), isActive: isShown)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.top, 4)
         }
         .sensoryFeedback(.selection, trigger: counted)
         .task(id: isShown) { await play() }
@@ -77,8 +71,14 @@ struct PaywallShowcase: View {
 
     // MARK: Peças
 
+    /// O quadrado grande do bentô: a notinha se escrevendo.
     private var note: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Escreve do seu jeito, ele conta tudo", systemImage: "pencil.and.scribble")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .padding(.bottom, 2)
+
             ForEach(Self.lines.indices, id: \.self) { index in
                 HStack(spacing: 8) {
                     HStack(spacing: 1) {
@@ -87,20 +87,20 @@ struct PaywallShowcase: View {
                         if isTyping(index) {
                             Capsule()
                                 .fill(.indigo)
-                                .frame(width: 2, height: 20)
+                                .frame(width: 2, height: 19)
                         }
                     }
-                    .font(.system(size: 17))
+                    .font(.system(size: 16))
                     .lineLimit(1)
                     Spacer(minLength: 8)
                     if counted > index {
-                        Text("\(Self.lines[index].kcal)\(Text(" cal").font(.system(size: 13)))")
-                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                        Text("\(Self.lines[index].kcal)\(Text(" cal").font(.system(size: 12)))")
+                            .font(.system(size: 15, weight: .medium, design: .rounded))
                             .foregroundStyle(.secondary)
                             .transition(.emerge(from: .trailing))
                     }
                 }
-                .frame(height: 24)
+                .frame(height: 22)
             }
 
             Rectangle()
@@ -109,7 +109,7 @@ struct PaywallShowcase: View {
 
             HStack(alignment: .firstTextBaseline) {
                 Text("\(total.formatted()) cal")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(.system(size: 19, weight: .bold, design: .rounded))
                     .contentTransition(.numericText(value: Double(total)))
                 Spacer()
                 Text("\(protein) g de proteína")
@@ -119,51 +119,48 @@ struct PaywallShowcase: View {
             }
             .monospacedDigit()
         }
-        .tobiGlassSurface()
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassEffect(.regular, in: .rect(cornerRadius: Self.radius))
     }
 
-    /// O widget pequeno de verdade, com o total da notinha.
+    /// O widget pequeno de verdade, com o total da notinha. Ele mesmo diz o que é: sem legenda.
     private var widget: some View {
         let snapshot = WidgetSnapshot(day: .now, kcal: Double(total),
                                       carbs: done.reduce(0) { $0 + $1.carbs },
                                       protein: done.reduce(0) { $0 + $1.protein },
                                       fat: done.reduce(0) { $0 + $1.fat },
                                       goal: Self.goal, carbsShare: 0.5, proteinShare: 0.2, fatShare: 0.3)
-        return Color.clear
-            .aspectRatio(1, contentMode: .fit)
-            .overlay {
-                GeometryReader { proxy in
-                    SmallDay(snapshot: snapshot)
-                        .frame(width: Self.widgetSide, height: Self.widgetSide)
-                        .scaleEffect(proxy.size.width / Self.widgetSide)
-                        .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
-                }
-            }
-            .glassEffect(.regular, in: .rect(cornerRadius: 24))
-    }
-
-    private func tile(@ViewBuilder _ symbol: () -> some View) -> some View {
-        Color.clear
-            .aspectRatio(1, contentMode: .fit)
-            .overlay {
-                symbol()
-                    .font(.system(size: 40, weight: .medium))
-                    .foregroundStyle(.indigo)
-            }
-            .glassEffect(.regular, in: .rect(cornerRadius: 24))
-    }
-
-    private func feature(_ caption: String, @ViewBuilder _ content: () -> some View) -> some View {
-        VStack(spacing: 8) {
-            content()
-            Text(caption)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
+        return GeometryReader { proxy in
+            SmallDay(snapshot: snapshot)
+                .frame(width: Self.widgetSide, height: Self.widgetSide)
+                .scaleEffect(min(proxy.size.width, proxy.size.height) / Self.widgetSide)
+                .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
         }
         .frame(maxWidth: .infinity)
+        .frame(height: Self.tileHeight)
+        .glassEffect(.regular, in: .rect(cornerRadius: Self.radius))
+    }
+
+    private func tile(_ caption: String, order: Int, @ViewBuilder _ symbol: () -> some View) -> some View {
+        VStack(spacing: 6) {
+            symbol()
+                .font(.system(size: 28, weight: .medium))
+                .foregroundStyle(.indigo)
+                .frame(maxHeight: .infinity)
+            Text(caption)
+                .font(.system(size: 12, weight: .semibold))
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.85)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+        .frame(height: Self.tileHeight)
+        .glassEffect(.regular, in: .rect(cornerRadius: Self.radius))
+        .reveal(isShown, order: order)
     }
 
     private func isTyping(_ index: Int) -> Bool {
@@ -189,20 +186,5 @@ struct PaywallShowcase: View {
 
     private func wait(_ milliseconds: Int) async -> Bool {
         (try? await Task.sleep(for: .milliseconds(milliseconds))) != nil
-    }
-}
-
-private struct MoreLabelStyle: LabelStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: 12) {
-            configuration.icon
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.indigo)
-                .frame(width: 22)
-            configuration.title
-                .font(.system(size: 15, weight: .medium))
-                .lineLimit(1)
-                .minimumScaleFactor(0.85)
-        }
     }
 }
