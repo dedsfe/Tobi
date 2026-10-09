@@ -26,7 +26,7 @@ struct WidgetStep: View {
                 Text("Deixa o Tobi na\ntela de início")
                     .font(.system(size: 30, weight: .bold, design: .rounded))
                     .multilineTextAlignment(.center)
-                Text("Quanto falta pra sua meta, sem nem abrir o app.")
+                Text("Quem coloca o widget tem \(Text("75% mais chance").foregroundStyle(.indigo).fontWeight(.semibold)) de criar o hábito 👀")
                     .font(.system(size: 17))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

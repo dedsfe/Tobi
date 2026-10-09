@@ -19,6 +19,7 @@ struct SettingsView: View {
     @State private var restoreResult: RestoreResult?
     #if DEBUG
     @State private var destination: DebugDestination?
+    @State private var showingLetter = false
     @AppStorage("debugLocked") private var debugLocked = false
     #endif
 
@@ -163,6 +164,9 @@ struct SettingsView: View {
                     } label: {
                         Label("Abrir \(OnboardingStep.debugJump.debugName)", systemImage: "arrow.forward.to.line")
                     }
+                    Button { showingLetter = true } label: {
+                        Label("Carta do André", systemImage: "envelope")
+                    }
                     Button {
                         dismiss()
                         FeedbackPrompt.shared.show(after: 0.7)
@@ -188,6 +192,7 @@ struct SettingsView: View {
                 case .bodyLab: TobiAnimationLabView(bodyPreview: true)
                 }
             }
+            .sheet(isPresented: $showingLetter) { FounderLetter() }
             #endif
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
