@@ -76,6 +76,8 @@ struct SuggestionBubble: View {
     let isAsking: Bool
     var message: String?
     var onPick: (Food) -> Void
+    var requestState: FoodRequestState
+    var onRequest: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -138,6 +140,42 @@ struct SuggestionBubble: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 7)
             }
+
+            VStack(alignment: .leading, spacing: 4) {
+                switch requestState {
+                case .sent, .queued:
+                    Text(requestState == .sent ? "Pedido enviado" : "Pedido salvo")
+                        .font(.system(size: 13, weight: .medium))
+                        .accessibilityIdentifier("food-request-status")
+                    Text(requestState == .sent ? "Vamos pesquisar este produto." : "Enviaremos quando houver conexão.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                case .idle, .sending, .failed:
+                    if requestState == .failed {
+                        Text("Não foi possível salvar o pedido. Tente de novo.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                    Button(action: onRequest) {
+                        HStack(spacing: 8) {
+                            if requestState == .sending { ProgressView().controlSize(.mini) }
+                            Text(requestState == .sending ? "Enviando pedido..." : "Pedir para adicionar")
+                                .font(.system(size: 13, weight: .semibold))
+                            Spacer(minLength: 0)
+                        }
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(requestState == .sending)
+                    .accessibilityIdentifier("request-food")
+                }
+            }
+            .foregroundStyle(.primary)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 12)
+            .padding(.top, 4)
+            .padding(.bottom, 10)
         }
         .frame(width: 210, alignment: .leading)
         .helpSurface(cornerRadius: 14)
@@ -158,7 +196,7 @@ private extension View {
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                         .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
                 )
-                .shadow(color: .black.opacity(0.12), radius: 12, y: 4)
+                .shadow(color: .black.opacity(0.08), radius: 3, y: 2)
         }
     }
 }

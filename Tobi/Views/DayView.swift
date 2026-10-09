@@ -57,6 +57,7 @@ struct DayView: View {
     @State private var explaining: Explaining?
     /// Trecho sublinhado que foi tocado: as sugestões aparecem embaixo dele.
     @State private var suggesting: Suggesting?
+    @State private var suggestionHeight: CGFloat = 240
     @State private var editMenuPresented = false
 
     struct Explaining {
@@ -76,6 +77,7 @@ struct DayView: View {
         var foods: [Food]
         var isAsking = false
         var message: String?
+        var requestState: FoodRequestState = .idle
     }
 
     /// Cada texto passa pelo parser uma vez só. Sem isso, cada palavra ditada recalculava todas as
@@ -522,10 +524,13 @@ struct DayView: View {
                 let origin = geometry.frame(in: .global).origin
                 let bubbleWidth: CGFloat = 210
                 let x = min(max(suggesting.rect.minX - origin.x, 16), geometry.size.width - bubbleWidth - 16)
-                let y = suggesting.rect.maxY - origin.y + 6
-                SuggestionBubble(suggestions: suggesting.foods, isAsking: suggesting.isAsking, message: suggesting.message) { food in
-                    pick(food, for: suggesting)
-                }
+                let below = suggesting.rect.maxY - origin.y + 6
+                let y = below + suggestionHeight <= geometry.size.height - 12
+                    ? below : max(12, suggesting.rect.minY - origin.y - suggestionHeight - 6)
+                SuggestionBubble(suggestions: suggesting.foods, isAsking: suggesting.isAsking,
+                                 message: suggesting.message, onPick: { food in pick(food, for: suggesting) },
+                                 requestState: suggesting.requestState, onRequest: { requestFood(for: suggesting) })
+                .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { suggestionHeight = $0 }
                 .offset(x: x, y: y)
                 .transition(.emerge(from: .topLeading))
             }
@@ -575,11 +580,29 @@ struct DayView: View {
                   scenePhase == .active else { return }
             suggesting?.isAsking = false
             if !foods.isEmpty { suggesting?.foods = Array(foods.prefix(4)) }
-            else { suggesting?.message = "Não encontrei outra opção na base." }
+            else if suggesting?.foods.isEmpty == false { suggesting?.message = "Não encontrei outra opção na base." }
         } catch {
             guard !Task.isCancelled, suggesting?.id == target.id, lines[safe: target.line] == target.lineText else { return }
             suggesting?.isAsking = false
-            suggesting?.message = "A IA não respondeu. As opções locais continuam aqui."
+            suggesting?.message = "Não consegui buscar outras sugestões."
+        }
+    }
+
+    /// Pedido explícito: o nome tocado entra na fila, sem modificar a refeição.
+    private func requestFood(for target: Suggesting) {
+        guard suggesting?.id == target.id, lines[safe: target.line] == target.lineText,
+              target.requestState == .idle || target.requestState == .failed else { return }
+        suggesting?.requestState = .sending
+        let name = written(target.foodText, in: target.lineText)
+        Task {
+            do {
+                let result = try await FoodRequests.send(name: name)
+                guard suggesting?.id == target.id else { return }
+                suggesting?.requestState = result == .sent ? .sent : .queued
+            } catch {
+                guard suggesting?.id == target.id else { return }
+                suggesting?.requestState = .failed
+            }
         }
     }
 

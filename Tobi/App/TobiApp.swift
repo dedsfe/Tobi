@@ -3,6 +3,7 @@ import SwiftData
 
 @main
 struct TobiApp: App {
+    @Environment(\.scenePhase) private var scenePhase
     @UIApplicationDelegateAdaptor(TobiAppDelegate.self) private var appDelegate
     /// Nos testes de interface o app começa vazio e não mexe nos dados de verdade.
     private let inMemory = ProcessInfo.processInfo.arguments.contains("-uiTesting")
@@ -87,6 +88,13 @@ struct TobiApp: App {
                 await Tracking.request()
             }
             .sheet(isPresented: $feedback.isShowing) { FeedbackSheet() }
+            .task(id: scenePhase) {
+                guard scenePhase == .active else { return }
+                while !Task.isCancelled {
+                    await FoodRequests.shared.retryPending()
+                    do { try await Task.sleep(for: .seconds(30)) } catch { return }
+                }
+            }
             .task {
                 FeedbackClient.retryPending()
                 #if DEBUG
