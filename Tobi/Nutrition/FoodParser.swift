@@ -604,6 +604,8 @@ struct FoodParser: Sendable {
     private static func stem(_ word: String) -> String { String(word.prefix(4)) }
     private static let chainWords: Set<String> = [
         "mc", "mcdonald", "mequi", "bk", "burger", "king", "kfc", "subway", "bob", "habib", "outback",
+        // Marcas de suplemento.
+        "growth", "max", "titanium", "integralmedica", "probiotica", "dux", "skull", "optimum", "essential",
     ]
 
     /// O produto salvo que contém todas as palavras escritas; empatando, o de nome mais curto.

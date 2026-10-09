@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00E8D8A43016F993A8DBB259 /* VoiceGlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2872FA24B522D05EF587CF3E /* VoiceGlow.swift */; };
+		021830C66F15861BDCF64F8A /* SupplementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7CD6A02F831A013DE88C212 /* SupplementTests.swift */; };
 		033CCA7C68D736FE7D53D869 /* VoiceSpectrum.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50C8DB4618CA48C83CE1C987 /* VoiceSpectrum.swift */; };
 		06A1A1458BDBCEC051CD3FA4 /* ThinkingReveal.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8C2E089F5BB672F2BC24E98 /* ThinkingReveal.swift */; };
 		09009AB5F6BB1966DD606F58 /* FirstMealDemo.swift in Sources */ = {isa = PBXBuildFile; fileRef = C751682A98CEC2AF35AC1405 /* FirstMealDemo.swift */; };
@@ -51,6 +52,7 @@
 		76D459DF5D937386DAF12206 /* Motion.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1994A7BED207538543F656B /* Motion.swift */; };
 		7C2B6D037D7B19584CD55EA0 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 641AFD9FA9A4A3FAB454B0CB /* WidgetSnapshot.swift */; };
 		7F1E791DA4625F1175FCADEA /* PaywallRecapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DEA2923D51ECF843DD4BBED /* PaywallRecapTests.swift */; };
+		7FED395684710A36D8436CDB /* suplementos.json in Resources */ = {isa = PBXBuildFile; fileRef = D566E9F3436F427A2BDDC92E /* suplementos.json */; };
 		84625DD8D6B6443969680CE8 /* ScanSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1131CC3800D87E1B7D9072F2 /* ScanSheet.swift */; };
 		85617CBCDA00C7F8B9AE1EA5 /* TobiIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 79FD6A8D17346C2902A3582A /* TobiIcon.icon */; };
 		85A03EFDDA3D7B24646FC2DD /* TobiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C5944BEFBCE0A6BC683771E /* TobiApp.swift */; };
@@ -204,6 +206,7 @@
 		C8C2E089F5BB672F2BC24E98 /* ThinkingReveal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThinkingReveal.swift; sourceTree = "<group>"; };
 		C9B9ABA662E17E8154754CE6 /* WelcomeFoodRouteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFoodRouteTests.swift; sourceTree = "<group>"; };
 		CBD850D37F024E14534FF063 /* PaywallLetter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallLetter.swift; sourceTree = "<group>"; };
+		D566E9F3436F427A2BDDC92E /* suplementos.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = suplementos.json; sourceTree = "<group>"; };
 		D5F15F5DFF3D1C5DFB4747B1 /* VoiceSpectrumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSpectrumTests.swift; sourceTree = "<group>"; };
 		D60A1B4F9BF9011FCEFAE6B0 /* QuickActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActions.swift; sourceTree = "<group>"; };
 		D776BAEAF45963A2D807E30C /* ConfettiCannons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiCannons.swift; sourceTree = "<group>"; };
@@ -217,6 +220,7 @@
 		F114B1E25377701C98EEFCF0 /* ibge.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ibge.json; sourceTree = "<group>"; };
 		F22DD0603754279324293121 /* TobiUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TobiUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F22E96B8622A13A7FFD27968 /* FoodCorrection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodCorrection.swift; sourceTree = "<group>"; };
+		F7CD6A02F831A013DE88C212 /* SupplementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupplementTests.swift; sourceTree = "<group>"; };
 		FB6BC12515FB31BEA5AA5C7D /* BarcodeScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeScanner.swift; sourceTree = "<group>"; };
 		FC10422EB949975055CDB990 /* FoodTables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodTables.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -304,6 +308,7 @@
 				5DEA2923D51ECF843DD4BBED /* PaywallRecapTests.swift */,
 				3EB82E7EC337471EDD40D538 /* PerformanceTests.swift */,
 				28648EF45A52ECDE9C7C2C92 /* ProductNameTests.swift */,
+				F7CD6A02F831A013DE88C212 /* SupplementTests.swift */,
 				486E0C1E47B372ABC6B5B037 /* TobiFaceAssetTests.swift */,
 				D5F15F5DFF3D1C5DFB4747B1 /* VoiceSpectrumTests.swift */,
 				C9B9ABA662E17E8154754CE6 /* WelcomeFoodRouteTests.swift */,
@@ -456,6 +461,7 @@
 				445349C7B857AF907783D17F /* fastfood.json */,
 				F114B1E25377701C98EEFCF0 /* ibge.json */,
 				699D0BC35D224FF03DFF866B /* PrivacyInfo.xcprivacy */,
+				D566E9F3436F427A2BDDC92E /* suplementos.json */,
 				3E46D592AB857DDE87A3E279 /* taco.json */,
 				EA37006553B03C4361C0334B /* tobi-face.json */,
 				733787F40680C2123994FCF0 /* tobi-head@3x.png */,
@@ -605,6 +611,7 @@
 				85617CBCDA00C7F8B9AE1EA5 /* TobiIcon.icon in Resources */,
 				DFB03B6045CB81552DD4F5C4 /* fastfood.json in Resources */,
 				BEC070B5CD52869753A2C583 /* ibge.json in Resources */,
+				7FED395684710A36D8436CDB /* suplementos.json in Resources */,
 				8E3E1AA54F455F6455A96B16 /* taco.json in Resources */,
 				C8ADE9D17C878FC7AAC9AED2 /* tobi-face.json in Resources */,
 				65C464813A2DDB0CB263616C /* tobi-head@3x.png in Resources */,
@@ -646,6 +653,7 @@
 				7F1E791DA4625F1175FCADEA /* PaywallRecapTests.swift in Sources */,
 				8B64E9ECC964C5C90F3DFD97 /* PerformanceTests.swift in Sources */,
 				4F24112FDE712AF35ADB91E3 /* ProductNameTests.swift in Sources */,
+				021830C66F15861BDCF64F8A /* SupplementTests.swift in Sources */,
 				29336CAB9B41A50D812CEB39 /* TobiFaceAssetTests.swift in Sources */,
 				5B79DA8DC5FB679ABA3BD35E /* VoiceSpectrumTests.swift in Sources */,
 				1843E3F9D527F80CA22E5E1C /* WelcomeFoodRouteTests.swift in Sources */,

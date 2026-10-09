@@ -69,6 +69,7 @@ enum FoodDatabase {
     /// das redes de fast food, o IBGE (comida pronta do jeito brasileiro) e por fim a TACO (ingredientes).
     static let foods: [Food] = curated
         + FoodTables.fastfood.map { Food(table: $0, source: .chain($0.id, estimated: $0.estimated ?? false)) }
+        + FoodTables.suplementos.map { Food(table: $0, source: .chain($0.id, estimated: false)) }
         + FoodTables.ibge.map { Food(table: $0, source: .ibge($0.id)) }
         + FoodTables.taco.map { Food(table: $0, source: .taco($0.id)) }
 

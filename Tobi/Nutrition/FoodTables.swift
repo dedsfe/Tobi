@@ -44,6 +44,8 @@ enum FoodTables {
     static let taco = load("taco")
     static let ibge = load("ibge")
     static let fastfood = load("fastfood")
+    /// Whey e hipercalórico das marcas de academia (Growth, Max Titanium...), pelo rótulo.
+    static let suplementos = load("suplementos")
     static let tacoByID = Dictionary(uniqueKeysWithValues: taco.map { ($0.id, $0) })
 
     private static func load(_ name: String) -> [TableFood] {
