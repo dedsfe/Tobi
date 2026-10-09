@@ -36,6 +36,9 @@ struct PaywallStep: View {
     @State private var page = Page.value
     @State private var pageTaps = 0
     @State private var showingWhy = false
+    /// A caminhada do Tobi até a meta, em cima dos planos: começa quando os planos chegam.
+    @State private var walkStart: Date?
+    @State private var walked = false
     @State private var visible = false
     /// Coreografia da entrada: benefícios desenhados, marcos da linha do tempo acesos, planos na tela.
     @State private var benefits = 0
@@ -134,16 +137,17 @@ struct PaywallStep: View {
                     track("paywall_why_price")
                     showingWhy = true
                 } label: {
-                    HStack(spacing: 6) {
-                        Text("Por que o Tobi custa isso?")
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 13, weight: .bold))
-                    }
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.indigo)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 14)
+                    Label("Por que o Tobi custa isso?", systemImage: "envelope.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.indigo)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .contentShape(.capsule)
                 }
+                .buttonStyle(.plain)
+                .glassEffect(.regular.interactive(), in: .capsule)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 14)
                 .reveal(shown && plansIn, order: 1)
 
                 Spacer(minLength: 16)
@@ -252,31 +256,31 @@ struct PaywallStep: View {
         headline
             .reveal(shown, order: 0)
 
-        if let goal {
-            HStack(spacing: 8) {
-                GoalChip(symbol: "flame.fill", color: .orange, text: "\(goal.kcal.formatted()) cal por dia")
-                GoalChip(symbol: "fish.fill", color: Theme.protein, text: "\(goal.protein) g de proteína")
+        // O caminho até a meta no lugar do que as partes de antes já contaram.
+        if let goal, let start = goal.startKg, let target = goal.goalWeightKg, let arrival = goal.arrival {
+            TimelineView(.animation(paused: walkStart == nil || walked)) { context in
+                let elapsed = walkStart.map { context.date.timeIntervalSince($0) } ?? 0
+                JourneyChart(startKg: start, goalKg: target, arrival: arrival,
+                             progress: CGFloat(Self.ease(min(1, elapsed / Self.walk))),
+                             time: elapsed, reached: walked)
             }
-            .padding(.top, 16)
+            .frame(minHeight: 150, maxHeight: 240)
+            .layoutPriority(1)
+            .padding(.horizontal, -24)
+            .padding(.top, 6)
             .reveal(shown, order: 1)
-        }
-
-        Spacer(minLength: 14)
-
-        if store.trialEligible {
+        } else if store.trialEligible {
+            Spacer(minLength: 14)
             TrialTimeline(reached: shown ? milestones : 0)
                 .reveal(shown, order: 2)
-            Spacer(minLength: 14)
-        } else {
-            // Sem teste grátis não tem linha do tempo: o lugar fica com o que o plano libera.
-            VStack(alignment: .leading, spacing: 13) {
-                BenefitRow(symbol: "pencil.and.scribble", text: "Escreve do seu jeito, ele conta tudo", isShown: shown)
-                BenefitRow(symbol: "dumbbell.fill", text: "Whey, marcas e fast food no ponto", isShown: shown)
-                BenefitRow(symbol: "square.grid.2x2.fill", text: "Widgets na tela de início", isShown: shown)
-            }
-            .reveal(shown, order: 2)
-            Spacer(minLength: 14)
         }
+        Spacer(minLength: 14)
+    }
+
+    private static let walk = 2.6
+
+    private static func ease(_ time: Double) -> Double {
+        time * time * (3 - 2 * time)
     }
 
     // MARK: Planos
@@ -307,12 +311,12 @@ struct PaywallStep: View {
 
     private var checkout: some View {
         VStack(spacing: 8) {
-            Label(store.trialEligible ? "Sem cobrança hoje" : "Cancele quando quiser", systemImage: "checkmark.shield.fill")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(.indigo)
-
             PaywallButton(title: store.trialEligible ? "Começar meus \(TobiPlan.trialDays) dias grátis" : "Começar meu plano",
                           isLoading: buying, action: buy)
+
+            Label(store.trialEligible ? "Sem cobrança hoje" : "Cancele quando quiser", systemImage: "checkmark.shield.fill")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.secondary)
 
             Text(notice ?? disclosure)
                 .font(.system(size: 12))
@@ -457,8 +461,16 @@ struct PaywallStep: View {
             withAnimation(Motion.surface) { badgeIn = true }
             return
         }
-        // Planos do onboarding: a linha do tempo curta reacende do lado do preço.
+        // Planos do onboarding: o Tobi anda até a meta (ou a linha do tempo reacende) do lado do preço.
         milestones = 0
+        if walkStart == nil, goal?.startKg != nil, goal?.arrival != nil {
+            Task {
+                try? await Task.sleep(for: .milliseconds(250))
+                walkStart = .now
+                try? await Task.sleep(for: .seconds(Self.walk))
+                withAnimation(Motion.surface) { walked = true }
+            }
+        }
         if store.trialEligible {
             try? await Task.sleep(for: .milliseconds(200))
             for index in 1...3 {
@@ -488,29 +500,8 @@ struct PaywallGoal: Equatable {
     /// Só pra quem quer perder ou ganhar peso.
     let goalWeightKg: Double?
     let arrival: Date?
-}
-
-/// "🔥 1.780 cal por dia": um pedaço do plano da pessoa, em vidro.
-private struct GoalChip: View {
-    let symbol: String
-    let color: Color
-    let text: String
-
-    var body: some View {
-        Label {
-            Text(text)
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                .monospacedDigit()
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        } icon: {
-            Image(systemName: symbol)
-                .foregroundStyle(color)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 9)
-        .glassEffect(.regular, in: .capsule)
-    }
+    /// Peso de hoje: onde a caminhada até a meta começa.
+    var startKg: Double? = nil
 }
 
 /// O que o Tobi faz, numa linha. O ícone se desenha quando a linha entra.

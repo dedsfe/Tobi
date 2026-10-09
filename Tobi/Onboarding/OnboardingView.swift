@@ -424,7 +424,8 @@ struct OnboardingView: View {
         }
         let weeks = abs(plan.goalWeightKg - plan.weightKg) / abs(plan.weeklyChangeKg)
         let arrival = Calendar.current.date(byAdding: .day, value: Int((weeks * 7).rounded()), to: .now)
-        return PaywallGoal(kcal: plan.kcal, protein: plan.proteinGrams, goalWeightKg: plan.goalWeightKg, arrival: arrival)
+        return PaywallGoal(kcal: plan.kcal, protein: plan.proteinGrams, goalWeightKg: plan.goalWeightKg, arrival: arrival,
+                           startKg: plan.weightKg)
     }
 
     private var progress: Double {
