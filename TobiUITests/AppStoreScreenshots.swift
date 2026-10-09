@@ -61,6 +61,13 @@ final class AppStoreScreenshots: XCTestCase {
         XCUIDevice.shared.press(.home)
         pause(3)
         shot("04-widgets")
+        // Os widgets costumam ficar nas páginas seguintes da tela de início.
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        for page in 2...3 {
+            springboard.swipeLeft()
+            pause(3)
+            shot("04-widgets-pagina-\(page)")
+        }
     }
 
     func testOnboardingScreens() {
