@@ -163,6 +163,12 @@ struct SettingsView: View {
                     } label: {
                         Label("Abrir \(OnboardingStep.debugJump.debugName)", systemImage: "arrow.forward.to.line")
                     }
+                    Button {
+                        dismiss()
+                        FeedbackPrompt.shared.show(after: 0.7)
+                    } label: {
+                        Label("Pedido de opinião", systemImage: "heart.text.square")
+                    }
                     Button(action: toggleLock) {
                         Label(debugLocked ? "Destravar o app" : "Travar o app (fim das 24h)",
                               systemImage: debugLocked ? "lock.open" : "lock")

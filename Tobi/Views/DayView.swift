@@ -158,6 +158,12 @@ struct DayView: View {
         .onChange(of: total) { publishToWidget() }
         .onChange(of: goal) { publishToWidget() }
         .onChange(of: parserReady) { publishToWidget() }
+        // Fechou o teclado depois de anotar: bom momento pra perguntar o que está achando do app.
+        .onChange(of: isEditing) { _, editing in
+            guard !editing, !isDemo, parserReady, Calendar.current.isDateInToday(day) else { return }
+            let recognized = estimates.filter { $0.items.contains(where: \.isRecognized) }.count
+            FeedbackPrompt.shared.userFinishedLogging(recognizedLines: recognized)
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase != .active {
                 publishToWidget()

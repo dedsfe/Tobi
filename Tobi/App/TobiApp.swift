@@ -10,6 +10,7 @@ struct TobiApp: App {
     /// Tela em que o onboarding abre. Só o atalho do Debug muda; volta pra boas-vindas ao terminar.
     @AppStorage("onboardingStart") private var onboardingStart = 0
     @State private var store = TobiStore.shared
+    @State private var feedback = FeedbackPrompt.shared
     /// Tela travada na frente do app. Só sai pelo `unlock`, pra o confete da compra terminar antes.
     @State private var locked = false
     #if DEBUG
@@ -70,6 +71,13 @@ struct TobiApp: App {
                 // O aviso de rastreamento só vem depois do onboarding, com o app já em uso.
                 guard didCompleteOnboarding, !inMemory else { return }
                 await Tracking.request()
+            }
+            .sheet(isPresented: $feedback.isShowing) { FeedbackSheet() }
+            .task {
+                FeedbackClient.retryPending()
+                #if DEBUG
+                if ProcessInfo.processInfo.arguments.contains("-feedbackPrompt") { feedback.show(after: 1) }
+                #endif
             }
             .task {
                 // Atalho do ícone tocado com o app fechado: abre depois que a tela apareceu.

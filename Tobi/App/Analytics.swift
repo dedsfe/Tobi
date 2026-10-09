@@ -100,7 +100,7 @@ enum Analytics {
     }
 
     /// Separa teste de gente de verdade: "debug" (Xcode), "testflight" ou "appstore".
-    private static func buildEnv() async -> String {
+    static func buildEnv() async -> String {
         #if DEBUG
         return "debug"
         #else
