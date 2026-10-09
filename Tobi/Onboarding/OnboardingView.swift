@@ -1,5 +1,6 @@
 import SwiftUI
 import StoreKit
+import PostHog
 
 /// Telas do onboarding, na ordem. Só entra aqui o que já está feito; o resto vive no TODO.md.
 enum OnboardingStep: Int, CaseIterable {
@@ -757,6 +758,8 @@ private struct ValueCard: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+                // Peso, altura e nascimento ficam cobertos na gravação de sessão.
+                .postHogMask(value != nil)
                 Spacer()
                 Image(systemName: symbol)
                     .font(.system(size: 20))
@@ -784,6 +787,7 @@ private struct PickerSheet<Picker: View>: View {
                 .font(.system(size: 17, weight: .semibold))
                 .padding(.top, 20)
             picker
+                .postHogMask()
             OnboardingButton(title: "Concluir", action: onDone)
                 .padding(.horizontal, 24)
         }

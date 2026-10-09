@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import PostHog
 
 /// A tela principal: um bloco de notas do dia, com as calorias de cada linha do lado.
 struct DayView: View {
@@ -107,6 +108,8 @@ struct DayView: View {
             onPlainTap: closeHelp,
             onEditMenuChange: editMenuChanged
         )
+        // As refeições nunca aparecem na gravação de sessão do PostHog.
+        .postHogMask()
         .overlay(alignment: .topLeading) { helpCard }
         .overlay(alignment: .topLeading) { suggestionBubble }
         // Marca invisível pros testes de interface: só existe com o banco em memória. Teste que

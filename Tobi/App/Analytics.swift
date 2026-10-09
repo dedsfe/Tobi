@@ -23,7 +23,8 @@ enum Analytics {
     private static let postHogKey = "phc_sv9Nn5goGFHoZsRouMrBdSHqFn5o7BWHoxhhKtTMChvK"
 
     /// Liga o PostHog na abertura: eventos, abrir/fechar o app e a gravação da sessão.
-    /// Na gravação, tudo que é digitado aparece coberto (as refeições nunca vão).
+    /// Na gravação, os textos do app aparecem; os dados da pessoa (refeições, peso, altura, nascimento)
+    /// vão cobertos por `.postHogMask()` em cada tela.
     static func start() {
         let config = PostHogConfig(projectToken: postHogKey, host: "https://us.i.posthog.com")
         config.captureApplicationLifecycleEvents = true
@@ -31,7 +32,7 @@ enum Analytics {
         config.captureScreenViews = false
         config.sessionReplay = true
         config.sessionReplayConfig.screenshotMode = true
-        config.sessionReplayConfig.maskAllTextInputs = true
+        config.sessionReplayConfig.maskAllTextInputs = false
         config.sessionReplayConfig.maskAllImages = false
         PostHogSDK.shared.setup(config)
         // Mesmo id do Supabase: dá pra cruzar as duas bases.

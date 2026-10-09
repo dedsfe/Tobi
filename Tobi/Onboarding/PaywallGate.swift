@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import PostHog
 
 /// O app travado: sem plano e sem as 24 horas, o Tobi no palco e os planos, sem X.
 /// Em cima, a prova: o que a pessoa fez com o Tobi nas 24 horas. Sem nada anotado, o Tobi
@@ -424,6 +425,7 @@ struct NothingWrittenHero: View {
             // Uma linha só (texto longo rola pro lado): o cartão nunca cresce e empurra os planos.
             TextField("O que você comeu hoje?", text: $input)
                 .font(.system(size: 19))
+                .postHogMask()
                 .focused($focused)
                 .submitLabel(.done)
                 .onSubmit { focused = false }

@@ -83,6 +83,8 @@ final class TobiStore {
         Purchases.configure(with: Configuration.Builder(withAPIKey: Self.revenueCatKey)
             .with(purchasesAreCompletedBy: .myApp, storeKitVersion: .storeKit2)
             .build())
+        // Assinaturas, renovações e cancelamentos aparecem no PostHog na mesma pessoa dos eventos.
+        Purchases.shared.attribution.setPostHogUserID(Analytics.anonID)
         // Renovações e compras aprovadas fora do app chegam por aqui.
         updates = Task { [weak self] in
             for await result in Transaction.updates {
