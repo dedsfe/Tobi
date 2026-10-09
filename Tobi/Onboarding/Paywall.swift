@@ -20,6 +20,8 @@ struct PaywallStep: View {
     var purchased: Binding<Bool> = .constant(false)
     /// Está na parte dos planos: só ali o X aparece (antes, a pessoa vê o valor e o teste).
     var onPlans: Binding<Bool> = .constant(true)
+    /// A meta montada no onboarding: o título dos planos fala dela.
+    var goal: PaywallGoal? = nil
     var story = Story.onboarding
     let onFinish: () -> Void
 
@@ -178,6 +180,20 @@ struct PaywallStep: View {
         ("bell.badge.fill", "Lembretes pra não esquecer de anotar"),
     ]
 
+    /// "Bora chegar nos 65 kg / até dezembro"; quem mantém: "Seu plano de / 1.780 cal tá pronto".
+    private var headline: some View {
+        if let goal, let weight = goal.goalWeightKg, let arrival = goal.arrival {
+            let sameYear = Calendar.current.isDate(arrival, equalTo: .now, toGranularity: .year)
+            let when = sameYear ? arrival.formatted(.dateTime.month(.wide))
+                                : arrival.formatted(.dateTime.month(.wide).year())
+            return title("Bora chegar nos \(weight.formatted(.number.precision(.fractionLength(0...1)))) kg",
+                         "até \(when)")
+        }
+        if let goal { return title("Seu plano de", "\(goal.kcal.formatted()) cal tá pronto") }
+        return title(store.trialEligible ? "Teste o Tobi" : "Continue com o Tobi",
+                     store.trialEligible ? "\(TobiPlan.trialDays) dias de graça" : "Escolha seu plano")
+    }
+
     private func title(_ first: String, _ second: String) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(first)
@@ -209,25 +225,37 @@ struct PaywallStep: View {
         Task { await choreograph(next) }
     }
 
-    /// 3 de 3 no onboarding: o título dos planos.
+    /// 3 de 3 no onboarding: a meta da pessoa em cima dos planos. Ela acabou de montar o plano;
+    /// a tela vende o plano dela, não "um app".
     @ViewBuilder
     private var promise: some View {
         backButton(to: store.trialEligible ? .trial : .value)
-        VStack(alignment: .leading, spacing: 0) {
-            Text(store.trialEligible ? "Teste o Tobi" : "Continue com o Tobi")
-            Text(store.trialEligible ? "\(TobiPlan.trialDays) dias de graça" : "Escolha seu plano")
-                .foregroundStyle(.indigo)
+        headline
+            .reveal(shown, order: 0)
+
+        if let goal {
+            HStack(spacing: 8) {
+                GoalChip(symbol: "flame.fill", color: .orange, text: "\(goal.kcal.formatted()) cal por dia")
+                GoalChip(symbol: "fish.fill", color: Theme.protein, text: "\(goal.protein) g de proteína")
+            }
+            .padding(.top, 16)
+            .reveal(shown, order: 1)
         }
-        .font(.system(size: 32, weight: .heavy, design: .rounded))
-        .lineLimit(1)
-        .minimumScaleFactor(0.8)
-        .reveal(shown, order: 0)
 
         Spacer(minLength: 14)
 
         if store.trialEligible {
             TrialTimeline(reached: shown ? milestones : 0)
                 .reveal(shown, order: 2)
+            Spacer(minLength: 14)
+        } else {
+            // Sem teste grátis não tem linha do tempo: o lugar fica com o que o plano libera.
+            VStack(alignment: .leading, spacing: 13) {
+                BenefitRow(symbol: "pencil.and.scribble", text: "Escreve do seu jeito, ele conta tudo", isShown: shown)
+                BenefitRow(symbol: "dumbbell.fill", text: "Whey, marcas e fast food no ponto", isShown: shown)
+                BenefitRow(symbol: "square.grid.2x2.fill", text: "Widgets na tela de início", isShown: shown)
+            }
+            .reveal(shown, order: 2)
             Spacer(minLength: 14)
         }
     }
@@ -260,12 +288,11 @@ struct PaywallStep: View {
 
     private var checkout: some View {
         VStack(spacing: 8) {
-            Label("Sem cobrança hoje", systemImage: "checkmark.shield.fill")
+            Label(store.trialEligible ? "Sem cobrança hoje" : "Cancele quando quiser", systemImage: "checkmark.shield.fill")
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(.indigo)
-                .opacity(store.trialEligible ? 1 : 0)
 
-            PaywallButton(title: store.trialEligible ? "Começar meus \(TobiPlan.trialDays) dias grátis" : "Assinar o Tobi",
+            PaywallButton(title: store.trialEligible ? "Começar meus \(TobiPlan.trialDays) dias grátis" : "Começar meu plano",
                           isLoading: buying, action: buy)
 
             Text(notice ?? disclosure)
@@ -434,6 +461,38 @@ enum PaywallLinks {
 }
 
 // MARK: - Peças
+
+/// O plano que a pessoa montou no onboarding, pro paywall falar dele.
+struct PaywallGoal: Equatable {
+    let kcal: Int
+    let protein: Int
+    /// Só pra quem quer perder ou ganhar peso.
+    let goalWeightKg: Double?
+    let arrival: Date?
+}
+
+/// "🔥 1.780 cal por dia": um pedaço do plano da pessoa, em vidro.
+private struct GoalChip: View {
+    let symbol: String
+    let color: Color
+    let text: String
+
+    var body: some View {
+        Label {
+            Text(text)
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        } icon: {
+            Image(systemName: symbol)
+                .foregroundStyle(color)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 9)
+        .glassEffect(.regular, in: .capsule)
+    }
+}
 
 /// O que o Tobi faz, numa linha. O ícone se desenha quando a linha entra.
 private struct BenefitRow: View {

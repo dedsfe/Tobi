@@ -371,7 +371,7 @@ struct OnboardingView: View {
                         .transition(.opacity)
                 case .paywall:
                     PaywallStep(declined: $paywallDeclined, purchased: $paywallPurchased, onPlans: $paywallOnPlans,
-                                onFinish: onFinish)
+                                goal: paywallGoal, onFinish: onFinish)
                         .transition(.opacity)
                 case .widget:
                     WidgetStep(onContinue: advance)
@@ -400,6 +400,18 @@ struct OnboardingView: View {
             ))
         }
         .background { Theme.background }
+    }
+
+    /// A meta salva em "Suas metas" (com o que a pessoa mudou na mão), no mesmo cálculo da tela "Tudo pronto".
+    private var paywallGoal: PaywallGoal? {
+        guard let base = NutritionPlan(answers: answers) else { return nil }
+        let plan = base.adjusted(kcal: UserDefaults.standard.object(forKey: "dailyGoal") as? Int ?? base.kcal)
+        guard plan.objective != .maintain, abs(plan.weeklyChangeKg) >= 0.05 else {
+            return PaywallGoal(kcal: plan.kcal, protein: plan.proteinGrams, goalWeightKg: nil, arrival: nil)
+        }
+        let weeks = abs(plan.goalWeightKg - plan.weightKg) / abs(plan.weeklyChangeKg)
+        let arrival = Calendar.current.date(byAdding: .day, value: Int((weeks * 7).rounded()), to: .now)
+        return PaywallGoal(kcal: plan.kcal, protein: plan.proteinGrams, goalWeightKg: plan.goalWeightKg, arrival: arrival)
     }
 
     private var progress: Double {
