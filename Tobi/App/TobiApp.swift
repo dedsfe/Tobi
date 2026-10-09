@@ -64,6 +64,11 @@ struct TobiApp: App {
             .onChange(of: shouldLock, initial: true) { _, lock in
                 if lock { withAnimation(Motion.surface) { locked = true } }
             }
+            .task(id: didCompleteOnboarding) {
+                // O aviso de rastreamento só vem depois do onboarding, com o app já em uso.
+                guard didCompleteOnboarding, !inMemory else { return }
+                await Tracking.request()
+            }
             .task {
                 async let parser = FoodParser.prepared()
                 await store.refreshAccess()

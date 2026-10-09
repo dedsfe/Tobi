@@ -37,6 +37,7 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: Tobi
         INFOPLIST_KEY_NSCameraUsageDescription: "O Tobi usa a câmera pra ler o código de barras dos produtos."
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "O Tobi usa o microfone pra você ditar o que comeu."
+        INFOPLIST_KEY_NSUserTrackingUsageDescription: "Com sua permissão, o Tobi mede quais anúncios trouxeram você até aqui. O que você come e o seu peso nunca são compartilhados."
         INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "O Tobi transforma sua fala em texto pra registrar as refeições."
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES

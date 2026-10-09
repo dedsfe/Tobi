@@ -25,7 +25,8 @@ Código em `Tobi/Onboarding/OnboardingView.swift`. Toda tela tem o palco do Tobi
 - [x] Ícone do Icon Composer (`Asset-Icon/TobiIcon.icon`) e build 0.1.0 (1) enviado pro App Store Connect em 08/10/2026
 - [ ] App Store: página do app (prints, descrição, rótulos de privacidade iguais ao `PrivacyInfo.xcprivacy`, nota pro revisor sobre as 24 horas). Próximo build sobe o número (`CURRENT_PROJECT_VERSION` no project.yml)
 - [ ] Paywall: testar 7 dias de teste e plano mensal (`docs/paywall-conversao.md`)
-- [ ] Anúncios: conectar TikTok Ads e Meta Ads (SDKs + eventos de teste grátis e compra); falta criar os apps nos painéis e decidir sobre o pedido de rastreamento (`docs/anuncios.md`)
+- [x] Anúncios: pedido de rastreamento (ATT) depois do onboarding (`Tracking.swift`), RevenueCat coleta IDFA/IDFV, manifesto e política do site atualizados
+- [ ] Anúncios: SDKs do TikTok e da Meta + integrações de anúncio no RevenueCat; falta o André criar os apps nos painéis e passar os IDs (`docs/anuncios.md`)
 - [x] RevenueCat: SDK observando as compras StoreKit 2 (`purchasesAreCompletedBy: .myApp`) e notificações da Apple (produção e sandbox) apontando pro RevenueCat
 - [ ] RevenueCat: mandar os eventos de compra pras redes de anúncio (TikTok/Meta) e declarar "Compras" nos rótulos de privacidade da App Store
 - [ ] PostHog: eventos do app e funil do onboarding com painel pronto (hoje o funil está no Supabase, `onboarding_funnel`)

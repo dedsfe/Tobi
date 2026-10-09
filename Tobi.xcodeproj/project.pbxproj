@@ -34,6 +34,7 @@
 		5C7A22804DA7A3FAF5BBAFBF /* WelcomeFoodFlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = E75C5C4C8C0241704136815F /* WelcomeFoodFlight.swift */; };
 		5CF651F012F4A1CCD3A49B2E /* Dictation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C304B2749615A9C8558D00 /* Dictation.swift */; };
 		60CF9B735A8AAE014F543DC8 /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6565AD07DD783BF23AD3A699 /* Analytics.swift */; };
+		6220A68694010013418FA89C /* Tracking.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3CC70140F1D4009A913383C /* Tracking.swift */; };
 		62734DD3F35E21CA38AFACD5 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 849BBE740074FABF951F498A /* Theme.swift */; };
 		65C464813A2DDB0CB263616C /* tobi-head@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 733787F40680C2123994FCF0 /* tobi-head@3x.png */; };
 		6BE263DB44E264E08858E8CF /* LineResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 762C73C803ADECE8C3C246BC /* LineResolver.swift */; };
@@ -167,6 +168,7 @@
 		D94DD3657B48F6EE45558C4C /* TobiFaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TobiFaceView.swift; sourceTree = "<group>"; };
 		DA5FA395EEC1B1F95F8911D0 /* BrandProductTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandProductTests.swift; sourceTree = "<group>"; };
 		E1994A7BED207538543F656B /* Motion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion.swift; sourceTree = "<group>"; };
+		E3CC70140F1D4009A913383C /* Tracking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tracking.swift; sourceTree = "<group>"; };
 		E75C5C4C8C0241704136815F /* WelcomeFoodFlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFoodFlight.swift; sourceTree = "<group>"; };
 		E951F4742B5EFD8897822E6E /* LineEditingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineEditingUITests.swift; sourceTree = "<group>"; };
 		EA37006553B03C4361C0334B /* tobi-face.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "tobi-face.json"; sourceTree = "<group>"; };
@@ -194,6 +196,7 @@
 			children = (
 				6565AD07DD783BF23AD3A699 /* Analytics.swift */,
 				3C5944BEFBCE0A6BC683771E /* TobiApp.swift */,
+				E3CC70140F1D4009A913383C /* Tracking.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -590,6 +593,7 @@
 				170AA326F38A1AD559B3A979 /* TobiFaceView.swift in Sources */,
 				0ACEF781303B018194689133 /* TobiStore.swift in Sources */,
 				73A29CA35A4D4B571090FE1A /* TotalsBar.swift in Sources */,
+				6220A68694010013418FA89C /* Tracking.swift in Sources */,
 				00E8D8A43016F993A8DBB259 /* VoiceGlow.swift in Sources */,
 				033CCA7C68D736FE7D53D869 /* VoiceSpectrum.swift in Sources */,
 				F90651BCAF45D616918D5187 /* WelcomeFood.swift in Sources */,
@@ -710,6 +714,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "O Tobi usa a câmera pra ler o código de barras dos produtos.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "O Tobi usa o microfone pra você ditar o que comeu.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "O Tobi transforma sua fala em texto pra registrar as refeições.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "Com sua permissão, o Tobi mede quais anúncios trouxeram você até aqui. O que você come e o seu peso nunca são compartilhados.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
@@ -769,6 +774,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "O Tobi usa a câmera pra ler o código de barras dos produtos.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "O Tobi usa o microfone pra você ditar o que comeu.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "O Tobi transforma sua fala em texto pra registrar as refeições.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "Com sua permissão, o Tobi mede quais anúncios trouxeram você até aqui. O que você come e o seu peso nunca são compartilhados.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
