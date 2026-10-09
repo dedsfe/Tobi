@@ -39,6 +39,8 @@ struct TobiLetter: View {
     @State private var ink = Array(repeating: 0.0, count: 5)
     @State private var stamped = false
     @State private var buttonsIn = false
+    /// O cartão já saiu e abriu: só daí um toque termina de escrever. Antes, o toque pularia a carta.
+    @State private var opened = false
     @State private var skipped = false
     @State private var busy = false
     @State private var until = Date.now.addingTimeInterval(TobiStore.freePassHours * 3600)
@@ -245,6 +247,7 @@ struct TobiLetter: View {
             fold = 0
             flap = 180
             flapBehind = true
+            opened = true
             finishWriting()
             return
         }
@@ -289,18 +292,21 @@ struct TobiLetter: View {
         folds += 1
         try? await Task.sleep(for: .milliseconds(380))
         flats += 1
+        opened = true
         tobi.mood(.attentive)
 
         try? await Task.sleep(for: .milliseconds(200))
         guard await write(0, characters: Self.greeting.count),
               await write(1, characters: Self.message.count),
               await write(2, characters: Self.farewell.count) else { return }
-        withAnimation { buttonsIn = true }
         guard await write(3, characters: 4, pace: 0.13) else { return }
         stamped = true
         tobi.celebrate()
         try? await Task.sleep(for: .milliseconds(260))
-        _ = await write(4, characters: postscript.count)
+        guard await write(4, characters: postscript.count) else { return }
+        // Os botões só chegam com a carta inteira na tela: antes disso a pessoa pula a carta no dedo.
+        try? await Task.sleep(for: .milliseconds(300))
+        withAnimation(Motion.surface) { buttonsIn = true }
     }
 
     /// Escreve um bloco no ritmo do texto, com a caneta riscando no dedo. Falso se a pessoa pulou.
@@ -320,15 +326,18 @@ struct TobiLetter: View {
     }
 
     private func finishWriting() {
-        guard !skipped, !busy else { return }
+        guard opened, !skipped, !busy else { return }
         skipped = true
-        withAnimation(Motion.quick) {
-            ink = ink.map { _ in 1 }
-            buttonsIn = true
-        }
+        withAnimation(Motion.quick) { ink = ink.map { _ in 1 } }
         if !stamped {
             stamped = true
             tobi.celebrate()
+        }
+        // Pulou a escrita: a carta aparece inteira e os botões vêm um instante depois, pra ela ser lida.
+        Task {
+            try? await Task.sleep(for: .milliseconds(reduceMotion ? 0 : 700))
+            guard !busy else { return }
+            withAnimation(Motion.surface) { buttonsIn = true }
         }
     }
 

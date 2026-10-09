@@ -13,30 +13,35 @@ struct FoodPattern: View {
                                    dark: Color(red: 0.72, green: 0.62, blue: 0.98).opacity(0.24))
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var drifting = false
 
     var body: some View {
         if let image = Self.image {
-            TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { timeline in
-                let shift = reduceMotion ? 0 : CGFloat((timeline.date.timeIntervalSinceReferenceDate * Self.drift)
-                    .truncatingRemainder(dividingBy: Self.tile))
-                GeometryReader { proxy in
-                    Image(uiImage: image)
-                        .renderingMode(.template)
-                        .resizable(resizingMode: .tile)
-                        .foregroundStyle(Self.ink)
-                        .frame(width: proxy.size.width + Self.tile, height: proxy.size.height + Self.tile)
-                        .offset(x: -shift, y: -shift)
-                }
-                .clipped()
+            // O deslize é uma animação só, que o sistema interpola: nada de redesenhar a estampa a cada quadro.
+            GeometryReader { proxy in
+                Image(uiImage: image)
+                    .renderingMode(.template)
+                    .resizable(resizingMode: .tile)
+                    .foregroundStyle(Self.ink)
+                    .frame(width: proxy.size.width + Self.tile, height: proxy.size.height + Self.tile)
+                    .offset(x: drifting ? -Self.tile : 0, y: drifting ? -Self.tile : 0)
             }
+            .clipped()
             .mask {
                 LinearGradient(stops: [.init(color: .black, location: 0),
                                        .init(color: .black, location: 0.4),
                                        .init(color: .clear, location: 1)],
                                startPoint: .top, endPoint: .bottom)
             }
+            .compositingGroup()
             .allowsHitTesting(false)
             .accessibilityHidden(true)
+            .onAppear {
+                guard !reduceMotion else { return }
+                withAnimation(.linear(duration: Self.tile / Self.drift).repeatForever(autoreverses: false)) {
+                    drifting = true
+                }
+            }
         }
     }
 }

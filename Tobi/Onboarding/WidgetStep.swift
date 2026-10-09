@@ -150,6 +150,7 @@ final class TutorialPlayer: NSObject, AVPictureInPictureControllerDelegate {
     @ObservationIgnored let queue = AVQueuePlayer()
     @ObservationIgnored private var looper: AVPlayerLooper?
     @ObservationIgnored private var pip: AVPictureInPictureController?
+    @ObservationIgnored private var stopped = false
 
     override init() {
         super.init()
@@ -171,8 +172,12 @@ final class TutorialPlayer: NSObject, AVPictureInPictureControllerDelegate {
 
     func play() {
         // A Apple só abre a janelinha com a sessão de reprodução; o vídeo é mudo e não para a música de ninguém.
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.mixWithOthers])
-        try? AVAudioSession.sharedInstance().setActive(true)
+        // Ligar e desligar a sessão trava a thread de quem chama: fica fora da principal.
+        Task.detached(priority: .userInitiated) {
+            let session = AVAudioSession.sharedInstance()
+            try? session.setCategory(.playback, mode: .moviePlayback, options: [.mixWithOthers])
+            try? session.setActive(true)
+        }
         queue.play()
     }
 
@@ -181,10 +186,19 @@ final class TutorialPlayer: NSObject, AVPictureInPictureControllerDelegate {
         pip.startPictureInPicture()
     }
 
+    /// Para tudo e solta o vídeo da memória: depois do widget o paywall fica sem decodificador ligado.
     func stop() {
+        guard !stopped else { return }
+        stopped = true
         pip?.stopPictureInPicture()
+        pip = nil
         queue.pause()
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        looper?.disableLooping()
+        looper = nil
+        queue.removeAllItems()
+        Task.detached(priority: .utility) {
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        }
     }
 }
 
