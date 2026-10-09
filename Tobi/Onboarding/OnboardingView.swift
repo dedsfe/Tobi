@@ -261,6 +261,8 @@ struct OnboardingView: View {
     @State private var paywallDeclined = false
     /// Comprou: o X sai do palco e fica a tela de alegria.
     @State private var paywallPurchased = false
+    /// Só na parte dos planos o X aparece.
+    @State private var paywallOnPlans = false
 
     /// `start` diferente de boas-vindas só vem do atalho do Debug, que já entra com respostas de exemplo.
     init(start: OnboardingStep = .welcome, onFinish: @escaping () -> Void) {
@@ -314,9 +316,9 @@ struct OnboardingView: View {
                     .overlay(alignment: .top) {
                         if step == .paywall {
                             PaywallCloseButton { paywallDeclined = true }
-                                .opacity(paywallDeclined || paywallPurchased ? 0 : 1)
-                                .allowsHitTesting(!paywallDeclined && !paywallPurchased)
-                                .animation(Motion.quick, value: paywallDeclined || paywallPurchased)
+                                .opacity(paywallDeclined || paywallPurchased || !paywallOnPlans ? 0 : 1)
+                                .allowsHitTesting(!paywallDeclined && !paywallPurchased && paywallOnPlans)
+                                .animation(Motion.quick, value: paywallDeclined || paywallPurchased || !paywallOnPlans)
                         } else if step != .welcome {
                             OnboardingHeader(progress: progress, onBack: goBack)
                                 .transition(.opacity)
@@ -368,7 +370,8 @@ struct OnboardingView: View {
                     NotificationsStep(onContinue: advance)
                         .transition(.opacity)
                 case .paywall:
-                    PaywallStep(declined: $paywallDeclined, purchased: $paywallPurchased, onFinish: onFinish)
+                    PaywallStep(declined: $paywallDeclined, purchased: $paywallPurchased, onPlans: $paywallOnPlans,
+                                onFinish: onFinish)
                         .transition(.opacity)
                 case .widget:
                     WidgetStep(onContinue: advance)

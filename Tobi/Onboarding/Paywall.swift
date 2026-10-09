@@ -18,6 +18,8 @@ struct PaywallStep: View {
     @Binding var declined: Bool
     /// Comprou: quem mostra o X por cima do palco esconde ele.
     var purchased: Binding<Bool> = .constant(false)
+    /// Está na parte dos planos: só ali o X aparece (antes, a pessoa vê o valor e o teste).
+    var onPlans: Binding<Bool> = .constant(true)
     var story = Story.onboarding
     let onFinish: () -> Void
 
@@ -86,6 +88,9 @@ struct PaywallStep: View {
             } else {
                 withAnimation(Motion.exit) { offering = false }
             }
+        }
+        .onChange(of: page, initial: true) { _, current in
+            onPlans.wrappedValue = story != .onboarding || current == .plans
         }
         .task { await store.load() }
         .task {
