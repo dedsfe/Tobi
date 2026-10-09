@@ -27,8 +27,9 @@ targets:
     platform: iOS
     sources:
       - Tobi
-      # O resumo do dia que o widget lê.
+      # O resumo do dia que o widget lê e o visual dos widgets (também na tela de widget do onboarding).
       - Shared
+      - path: TobiWidget/Assets.xcassets
       # Ícone feito no Icon Composer (Liquid Glass): o Xcode compila direto do arquivo .icon.
       - path: Asset-Icon/TobiIcon.icon
         type: file
@@ -47,6 +48,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.andrefelipe.tobi
         GENERATE_INFOPLIST_FILE: YES
+        # Junta com o Info.plist gerado: só o modo de fundo do vídeo em janelinha.
+        INFOPLIST_FILE: Config/Tobi-Info.plist
         INFOPLIST_KEY_CFBundleDisplayName: Tobi
         INFOPLIST_KEY_NSCameraUsageDescription: "O Tobi usa a câmera pra ler o código de barras dos produtos."
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "O Tobi usa o microfone pra você ditar o que comeu."

@@ -18,6 +18,8 @@ enum OnboardingStep: Int, CaseIterable {
     case celebration
     case notifications
     case paywall
+    /// Depois do paywall: colocar o widget na tela de início, com o vídeo em janelinha.
+    case widget
 
     /// Total de telas planejadas (ver TODO.md), pra barra de progresso não pular quando entrar tela nova.
     static let planned = 14
@@ -25,7 +27,7 @@ enum OnboardingStep: Int, CaseIterable {
     /// Estado do Tobi em cada tela. "Suas metas" comemora na primeira vez (ver `OnboardingView.stage`).
     var tobiMood: TobiIdleBehavior.Mood {
         switch self {
-        case .welcome, .firstMeal, .inputs, .paywall: .joyful
+        case .welcome, .firstMeal, .inputs, .paywall, .widget: .joyful
         case .celebration: .celebrating
         case .sex, .birthday, .height, .weight, .pace, .notifications: .attentive
         case .objective, .activity: .curious
@@ -35,7 +37,7 @@ enum OnboardingStep: Int, CaseIterable {
 
     #if DEBUG
     /// Tela em revisão: o atalho do Debug nos Ajustes abre direto nela. Trocar aqui quando a revisão mudar.
-    static let debugJump: OnboardingStep = .paywall
+    static let debugJump: OnboardingStep = .widget
 
     var debugName: String {
         switch self {
@@ -53,6 +55,7 @@ enum OnboardingStep: Int, CaseIterable {
         case .celebration: "Tudo pronto"
         case .notifications: "Notificações"
         case .paywall: "Paywall"
+        case .widget: "Widget na tela de início"
         }
     }
     #endif
@@ -298,22 +301,25 @@ struct OnboardingView: View {
 
     private var questions: some View {
         VStack(spacing: 0) {
-            TobiStage(performance: tobi, onPet: { tobi.pets += 1 },
-                      welcomeScene: step == .welcome ? welcomeScene : nil)
-                .background {
-                    if step == .welcome { WelcomeFoodStageCapture(scene: welcomeScene) }
-                }
-                .overlay(alignment: .top) {
-                    if step == .paywall {
-                        PaywallCloseButton { paywallDeclined = true }
-                            .opacity(paywallDeclined || paywallPurchased ? 0 : 1)
-                            .allowsHitTesting(!paywallDeclined && !paywallPurchased)
-                            .animation(Motion.quick, value: paywallDeclined || paywallPurchased)
-                    } else if step != .welcome {
-                        OnboardingHeader(progress: progress, onBack: goBack)
-                            .transition(.opacity)
+            // Na tela do widget o palco é dos widgets e do vídeo.
+            if step != .widget {
+                TobiStage(performance: tobi, onPet: { tobi.pets += 1 },
+                          welcomeScene: step == .welcome ? welcomeScene : nil)
+                    .background {
+                        if step == .welcome { WelcomeFoodStageCapture(scene: welcomeScene) }
                     }
-                }
+                    .overlay(alignment: .top) {
+                        if step == .paywall {
+                            PaywallCloseButton { paywallDeclined = true }
+                                .opacity(paywallDeclined || paywallPurchased ? 0 : 1)
+                                .allowsHitTesting(!paywallDeclined && !paywallPurchased)
+                                .animation(Motion.quick, value: paywallDeclined || paywallPurchased)
+                        } else if step != .welcome, step != .widget {
+                            OnboardingHeader(progress: progress, onBack: goBack)
+                                .transition(.opacity)
+                        }
+                    }
+            }
             ZStack {
                 switch step {
                 case .welcome:
@@ -359,7 +365,10 @@ struct OnboardingView: View {
                     NotificationsStep(onContinue: advance)
                         .transition(.opacity)
                 case .paywall:
-                    PaywallStep(declined: $paywallDeclined, purchased: $paywallPurchased, onFinish: onFinish)
+                    PaywallStep(declined: $paywallDeclined, purchased: $paywallPurchased, onFinish: advance)
+                        .transition(.opacity)
+                case .widget:
+                    WidgetStep(onFinish: onFinish)
                         .transition(.opacity)
                 }
             }

@@ -166,6 +166,7 @@ extension OnboardingStep {
         case .celebration: "celebration"
         case .notifications: "notifications"
         case .paywall: "paywall"
+        case .widget: "widget"
         }
     }
 }
