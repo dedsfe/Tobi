@@ -2,10 +2,10 @@ import AVFoundation
 import AVKit
 import SwiftUI
 
-/// Última tela do onboarding: os widgets do Tobi de verdade (o anel enche, o número conta) e o vídeo
+/// Tela do onboarding antes do paywall: os widgets do Tobi de verdade (o anel enche, o número conta) e o vídeo
 /// de como colocar. Saindo do app com o vídeo tocando, ele continua numa janelinha por cima da tela de início.
 struct WidgetStep: View {
-    let onFinish: () -> Void
+    let onContinue: () -> Void
 
     @Environment(\.scenePhase) private var scenePhase
     @State private var player = TutorialPlayer()
@@ -32,7 +32,7 @@ struct WidgetStep: View {
                     .multilineTextAlignment(.center)
             }
             .padding(.horizontal, 24)
-            .padding(.top, 28)
+            .padding(.top, 12)
             .reveal(revealed, order: 0)
 
             stage
@@ -93,7 +93,7 @@ struct WidgetStep: View {
         ZStack {
             TutorialVideo(player: player)
                 .aspectRatio(590.0 / 1278.0, contentMode: .fit)
-                .frame(height: 360)
+                .frame(height: 330)
                 .clipShape(.rect(cornerRadius: 30))
                 .overlay {
                     RoundedRectangle(cornerRadius: 30)
@@ -105,13 +105,13 @@ struct WidgetStep: View {
             widget(width: 338, height: 158) { MediumDay(snapshot: snapshot) }
                 .scaleEffect(0.62)
                 .rotationEffect(.degrees(-5))
-                .offset(x: -64, y: -128)
+                .offset(x: -64, y: -118)
                 .reveal(revealed, order: 2)
 
             widget(width: 158, height: 158) { SmallDay(snapshot: snapshot) }
                 .scaleEffect(0.74)
                 .rotationEffect(.degrees(6))
-                .offset(x: 100, y: 112)
+                .offset(x: 100, y: 104)
                 .reveal(revealed, order: 3)
         }
     }
@@ -140,7 +140,7 @@ struct WidgetStep: View {
     private func finish() {
         Analytics.track("widget_step_done", properties: ["colocou": cameBack ? "sim" : "nao"])
         player.stop()
-        onFinish()
+        onContinue()
     }
 }
 

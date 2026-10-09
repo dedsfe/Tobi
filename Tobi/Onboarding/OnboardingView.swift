@@ -17,12 +17,12 @@ enum OnboardingStep: Int, CaseIterable {
     case inputs
     case celebration
     case notifications
-    case paywall
-    /// Depois do paywall: colocar o widget na tela de início, com o vídeo em janelinha.
+    /// Antes do paywall: colocar o widget na tela de início, com o vídeo em janelinha.
     case widget
+    case paywall
 
     /// Total de telas planejadas (ver TODO.md), pra barra de progresso não pular quando entrar tela nova.
-    static let planned = 14
+    static let planned = 15
 
     /// Estado do Tobi em cada tela. "Suas metas" comemora na primeira vez (ver `OnboardingView.stage`).
     var tobiMood: TobiIdleBehavior.Mood {
@@ -301,8 +301,11 @@ struct OnboardingView: View {
 
     private var questions: some View {
         VStack(spacing: 0) {
-            // Na tela do widget o palco é dos widgets e do vídeo.
-            if step != .widget {
+            // Na tela do widget o palco é dos widgets e do vídeo: fica só a barra de progresso.
+            if step == .widget {
+                OnboardingHeader(progress: progress, onBack: goBack)
+                    .transition(.opacity)
+            } else {
                 TobiStage(performance: tobi, onPet: { tobi.pets += 1 },
                           welcomeScene: step == .welcome ? welcomeScene : nil)
                     .background {
@@ -314,7 +317,7 @@ struct OnboardingView: View {
                                 .opacity(paywallDeclined || paywallPurchased ? 0 : 1)
                                 .allowsHitTesting(!paywallDeclined && !paywallPurchased)
                                 .animation(Motion.quick, value: paywallDeclined || paywallPurchased)
-                        } else if step != .welcome, step != .widget {
+                        } else if step != .welcome {
                             OnboardingHeader(progress: progress, onBack: goBack)
                                 .transition(.opacity)
                         }
@@ -365,10 +368,10 @@ struct OnboardingView: View {
                     NotificationsStep(onContinue: advance)
                         .transition(.opacity)
                 case .paywall:
-                    PaywallStep(declined: $paywallDeclined, purchased: $paywallPurchased, onFinish: advance)
+                    PaywallStep(declined: $paywallDeclined, purchased: $paywallPurchased, onFinish: onFinish)
                         .transition(.opacity)
                 case .widget:
-                    WidgetStep(onFinish: onFinish)
+                    WidgetStep(onContinue: advance)
                         .transition(.opacity)
                 }
             }
