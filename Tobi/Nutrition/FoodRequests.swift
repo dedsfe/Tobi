@@ -25,14 +25,12 @@ struct FoodRequest: Codable, Sendable, Equatable {
         self.appVersion = String(appVersion.prefix(32))
         self.buildEnv = buildEnv
     }
-
-    var duplicateKey: String { "\(anonID)/\(buildEnv)/\(normalizedName)" }
 }
 
 actor FoodRequests {
     enum Submission: Sendable { case sent, queued }
     enum Delivery: Sendable { case sent, retryLater, rejected }
-    enum Failure: Error { case invalidName, queueFull, rejected }
+    enum Failure: Error { case invalidName, rejected }
     typealias Post = @Sendable (FoodRequest) async -> Delivery
     typealias Fetch = @Sendable (URLRequest) async throws -> (Data, URLResponse)
 
@@ -63,17 +61,15 @@ actor FoodRequests {
 
     func submit(_ request: FoodRequest) async throws -> Submission {
         try load()
-        let existing = pending!.first { $0.duplicateKey == request.duplicateKey }
-        let target = existing ?? request
-        if existing == nil {
-            guard pending!.count < 100 else { throw Failure.queueFull }
+        // Cada gesto explícito tem um UUID novo. Só a repetição do mesmo envio é idempotente.
+        if !pending!.contains(where: { $0.id == request.id }) {
             // Persiste antes de tentar a rede. Se o disco falhar, a interface não promete um pedido salvo.
-            try save(pending! + [target])
-            pending!.append(target)
+            try save(pending! + [request])
+            pending!.append(request)
         }
         let outcomes = try await flush()
-        if outcomes[target.id] == .rejected { throw Failure.rejected }
-        return outcomes[target.id] == .sent ? .sent : .queued
+        if outcomes[request.id] == .rejected { throw Failure.rejected }
+        return outcomes[request.id] == .sent ? .sent : .queued
     }
 
     func retryPending() async {
@@ -128,6 +124,6 @@ actor FoodRequests {
     }
 }
 
-enum FoodRequestState {
+enum FoodRequestState: Equatable {
     case idle, sending, sent, queued, failed
 }

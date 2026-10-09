@@ -72,6 +72,7 @@ struct UnknownHelpCard: View {
 /// Sugestões que aparecem em cima ou embaixo do trecho sublinhado: o que a pessoa pode ter querido dizer.
 /// Pequeno, elegante e com opções clicáveis que substituem a palavra.
 struct SuggestionBubble: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let suggestions: [Food]
     let isAsking: Bool
     var message: String?
@@ -81,108 +82,189 @@ struct SuggestionBubble: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if suggestions.isEmpty && !isAsking {
-                HStack(spacing: 6) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                    Text("Nenhuma sugestão na base")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-            } else {
-                ForEach(Array(suggestions.prefix(4).enumerated()), id: \.element.name) { index, food in
-                    Button { onPick(food) } label: {
-                        HStack(spacing: 8) {
-                            Text(food.name)
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(.primary)
-                                .lineLimit(1)
-                            Spacer()
-                            Image(systemName: "arrow.turn.down.left")
-                                .font(.system(size: 10))
-                                .foregroundStyle(.secondary.opacity(0.4))
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("suggestion-\(index)")
-                    .transition(.emerge(from: .top))
-
-                    if index < min(suggestions.count, 4) - 1 || isAsking {
-                        Divider().padding(.leading, 12)
-                    }
-                }
-            }
-
-            if isAsking {
-                HStack(spacing: 6) {
-                    Image(systemName: "sparkles")
-                        .symbolEffect(.pulse)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.blue)
-                    Text("Entendendo com IA...")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .transition(.opacity)
-            } else if let message {
-                Text(message)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+            if requestState == .sent {
+                FoodRequestConfirmation()
+                    .frame(maxWidth: .infinity, minHeight: 44)
                     .padding(.horizontal, 12)
-                    .padding(.vertical, 7)
-            }
+                    .padding(.vertical, 8)
+            } else {
+                if suggestions.isEmpty && !isAsking {
+                    HStack(spacing: 6) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                        Text("Nenhuma sugestão na base")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                } else {
+                    ForEach(Array(suggestions.prefix(4).enumerated()), id: \.element.name) { index, food in
+                        Button { onPick(food) } label: {
+                            HStack(spacing: 8) {
+                                Text(food.name)
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(.primary)
+                                    .lineLimit(1)
+                                Spacer()
+                                Image(systemName: "arrow.turn.down.left")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(.secondary.opacity(0.4))
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("suggestion-\(index)")
+                        .transition(.emerge(from: .top))
 
-            VStack(alignment: .leading, spacing: 4) {
-                switch requestState {
-                case .sent, .queued:
-                    Text(requestState == .sent ? "Pedido enviado" : "Pedido salvo")
-                        .font(.system(size: 13, weight: .medium))
-                        .accessibilityIdentifier("food-request-status")
-                    Text(requestState == .sent ? "Vamos pesquisar este produto." : "Enviaremos quando houver conexão.")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                case .idle, .sending, .failed:
-                    if requestState == .failed {
-                        Text("Não foi possível salvar o pedido. Tente de novo.")
+                        if index < min(suggestions.count, 4) - 1 || isAsking {
+                            Divider().padding(.leading, 12)
+                        }
+                    }
+                }
+
+                if isAsking {
+                    HStack(spacing: 6) {
+                        Image(systemName: "sparkles")
+                            .symbolEffect(.pulse)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.blue)
+                        Text("Entendendo com IA...")
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
                     }
-                    Button(action: onRequest) {
-                        HStack(spacing: 8) {
-                            if requestState == .sending { ProgressView().controlSize(.mini) }
-                            Text(requestState == .sending ? "Enviando pedido..." : "Pedir para adicionar")
-                                .font(.system(size: 13, weight: .semibold))
-                            Spacer(minLength: 0)
-                        }
-                        .frame(minHeight: 44)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(requestState == .sending)
-                    .accessibilityIdentifier("request-food")
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .transition(.opacity)
+                } else if let message {
+                    Text(message)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
                 }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    switch requestState {
+                    case .queued:
+                        Text("Pedido salvo")
+                            .font(.system(size: 13, weight: .medium))
+                            .accessibilityIdentifier("food-request-status")
+                        Text("Enviaremos quando houver conexão.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    case .idle, .sending, .failed:
+                        if requestState == .failed {
+                            Text("Não foi possível salvar o pedido. Tente de novo.")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
+                        Button(action: onRequest) {
+                            HStack(spacing: 8) {
+                                if requestState == .sending { ProgressView().controlSize(.mini) }
+                                Text(requestState == .sending ? "Enviando pedido..." : "Pedir para adicionar")
+                                    .font(.system(size: 13, weight: .semibold))
+                                Spacer(minLength: 0)
+                            }
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(requestState == .sending)
+                        .accessibilityIdentifier("request-food")
+                    case .sent:
+                        EmptyView()
+                    }
+                }
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 12)
+                .padding(.top, 4)
+                .padding(.bottom, 10)
             }
-            .foregroundStyle(.primary)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, 12)
-            .padding(.top, 4)
-            .padding(.bottom, 10)
         }
         .frame(width: 210, alignment: .leading)
         .helpSurface(cornerRadius: 14)
-        .animation(Motion.quick, value: suggestions.map(\.name))
-        .animation(Motion.quick, value: isAsking)
+        .animation(reduceMotion ? nil : Motion.quick, value: suggestions.map(\.name))
+        .animation(reduceMotion ? nil : Motion.quick, value: isAsking)
+        .animation(reduceMotion ? nil : Motion.quick, value: requestState)
+        .sensoryFeedback(.success, trigger: requestState == .sent)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("suggestionBubble")
+    }
+}
+
+/// O texto já nasce legível. Só o símbolo faz o traço e o pequeno impulso de confirmação.
+private struct FoodRequestConfirmation: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var appeared = false
+
+    private struct Frame {
+        var stroke: CGFloat = 1
+        var scale: CGFloat = 1
+    }
+
+    private let green = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.41, green: 0.84, blue: 0.56, alpha: 1)
+            : UIColor(red: 0.09, green: 0.45, blue: 0.25, alpha: 1)
+    })
+
+    var body: some View {
+        HStack(spacing: 9) {
+            if reduceMotion {
+                symbol(Frame())
+            } else {
+                Color.clear
+                    .frame(width: 24, height: 24)
+                    .keyframeAnimator(initialValue: Frame(), trigger: appeared) { _, frame in
+                        symbol(frame)
+                    } keyframes: { _ in
+                        KeyframeTrack(\.stroke) {
+                            MoveKeyframe(0)
+                            CubicKeyframe(1, duration: Motion.foodRequestDrawDuration)
+                        }
+                        KeyframeTrack(\.scale) {
+                            MoveKeyframe(0.84)
+                            SpringKeyframe(1.10, duration: Motion.foodRequestPopDuration)
+                            CubicKeyframe(1, duration: Motion.foodRequestSettleDuration)
+                        }
+                    }
+            }
+            Text("Pedido enviado")
+                .font(.system(size: 13, weight: .semibold))
+                .accessibilityIdentifier("food-request-status")
+        }
+        .foregroundStyle(green)
+        .onAppear {
+            appeared = true
+            UIAccessibility.post(notification: .announcement, argument: "Pedido enviado")
+        }
+    }
+
+    nonisolated private func symbol(_ frame: Frame) -> some View {
+        ZStack {
+            Circle().inset(by: 2).stroke(lineWidth: 1.5)
+            Checkmark().trim(from: 0, to: frame.stroke)
+                .stroke(style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
+        }
+        .frame(width: 24, height: 24)
+        .scaleEffect(frame.scale)
+        .accessibilityHidden(true)
+    }
+
+    private struct Checkmark: Shape {
+        func path(in rect: CGRect) -> Path {
+            Path { path in
+                path.move(to: CGPoint(x: rect.width * 0.28, y: rect.height * 0.51))
+                path.addLine(to: CGPoint(x: rect.width * 0.44, y: rect.height * 0.66))
+                path.addLine(to: CGPoint(x: rect.width * 0.73, y: rect.height * 0.36))
+            }
+        }
     }
 }
 

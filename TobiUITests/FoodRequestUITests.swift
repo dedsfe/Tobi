@@ -25,6 +25,9 @@ final class FoodRequestUITests: XCTestCase {
         request.tap()
         XCTAssertTrue(app.staticTexts["food-request-status"].waitForExistence(timeout: 20))
         XCTAssertTrue(app.keyboards.firstMatch.exists)
+        let gone = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.descendants(matching: .any)["suggestionBubble"])
+        wait(for: [gone], timeout: 5)
+        XCTAssertTrue(app.keyboards.firstMatch.exists)
     }
 
     @MainActor
@@ -50,11 +53,25 @@ final class FoodRequestUITests: XCTestCase {
         let status = app.staticTexts["food-request-status"]
         XCTAssertTrue(status.waitForExistence(timeout: 20))
         XCTAssertEqual(status.label, "Pedido enviado")
-        XCTAssertEqual(note.value as? String, text)
-        XCTAssertFalse(app.buttons["request-food"].exists)
         let after = XCTAttachment(screenshot: app.screenshot())
         after.name = "pedido-enviado"
         after.lifetime = .keepAlways
         add(after)
+        XCTAssertFalse(app.staticTexts["Vamos pesquisar este produto."].exists)
+        XCTAssertEqual(note.value as? String, text)
+        let gone = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.descendants(matching: .any)["suggestionBubble"])
+        wait(for: [gone], timeout: 5)
+
+        // O mesmo nome pode ser enviado de novo, sem precisar mudar a nota nem esperar um prazo.
+        for _ in 0..<2 {
+            note.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 120, dy: 28)).tap()
+            XCTAssertTrue(app.buttons["request-food"].waitForExistence(timeout: 5))
+            app.buttons["request-food"].tap()
+            XCTAssertTrue(status.waitForExistence(timeout: 20))
+            XCTAssertEqual(status.label, "Pedido enviado")
+            let dismissed = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.descendants(matching: .any)["suggestionBubble"])
+            wait(for: [dismissed], timeout: 5)
+        }
+        XCTAssertEqual(note.value as? String, text)
     }
 }

@@ -25,7 +25,7 @@ struct FoodRequestTests {
         #expect(try JSONDecoder().decode([FoodRequest].self, from: Data(contentsOf: file)).isEmpty)
     }
 
-    @Test func repeatedNamesDoNotMultiplyOfflineRequests() async throws {
+    @Test func explicitRequestsCountSeparatelyButRetryingTheSameIDDoesNot() async throws {
         let file = file()
         defer { try? FileManager.default.removeItem(at: file.deletingLastPathComponent()) }
         let first = try request()
@@ -33,7 +33,10 @@ struct FoodRequestTests {
         let queue = FoodRequests(file: file, post: { _ in .retryLater })
         _ = try await queue.submit(first)
         _ = try await queue.submit(second)
-        #expect(try JSONDecoder().decode([FoodRequest].self, from: Data(contentsOf: file)) == [first])
+        _ = try await queue.submit(first)
+        #expect(first.normalizedName == second.normalizedName)
+        #expect(first.id != second.id)
+        #expect(try JSONDecoder().decode([FoodRequest].self, from: Data(contentsOf: file)) == [first, second])
     }
 
     @Test func rejectedRequestIsNotReportedAsSent() async throws {

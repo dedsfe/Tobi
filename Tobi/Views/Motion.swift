@@ -7,6 +7,11 @@ enum Motion {
     static let surface = Animation.spring(duration: 0.55, bounce: 0.24)
     /// Resposta a toque, números mudando, estados pequenos.
     static let quick = Animation.spring(duration: 0.3, bounce: 0.15)
+    /// Confirmação de pedido: traço curto, um pequeno impulso e acomodação, sem repetir.
+    static let foodRequestDrawDuration = 0.32
+    static let foodRequestPopDuration = 0.24
+    static let foodRequestSettleDuration = 0.18
+    static let foodRequestConfirmationDuration = 1.8
     /// Idle do Tobi: respiração lenta, sem quicar entre as poses.
     static let tobiIdle = Animation.easeInOut(duration: 1.6)
     /// Respiração calma (um ciclo) e ofegante, como cachorro: rápida, curta, com a língua pra fora.

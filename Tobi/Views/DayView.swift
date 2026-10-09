@@ -599,6 +599,12 @@ struct DayView: View {
                 let result = try await FoodRequests.send(name: name)
                 guard suggesting?.id == target.id else { return }
                 suggesting?.requestState = result == .sent ? .sent : .queued
+                if result == .sent {
+                    try? await Task.sleep(for: .seconds(Motion.foodRequestConfirmationDuration))
+                    // Um pedido antigo nunca fecha as sugestões que a pessoa acabou de reabrir.
+                    guard suggesting?.id == target.id, suggesting?.requestState == .sent else { return }
+                    closeHelp()
+                }
             } catch {
                 guard suggesting?.id == target.id else { return }
                 suggesting?.requestState = .failed
