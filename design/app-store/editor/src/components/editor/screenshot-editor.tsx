@@ -514,7 +514,7 @@ export function ScreenshotEditor() {
     el.style.transformOrigin = "top left";
     el.style.zIndex = "-1";
     try {
-      const dataUrl = await toPng(el, {
+      const options = {
         width: sourceW,
         height: sourceH,
         canvasWidth: exportW,
@@ -522,7 +522,16 @@ export function ScreenshotEditor() {
         pixelRatio: 1,
         cacheBust: false,
         backgroundColor: "#ffffff",
-      });
+      };
+      // Big screenshots that haven't finished decoding render blank inside
+      // html-to-image's SVG snapshot (only the small mockup frame showed up).
+      // Decode every image first, then take a throwaway warm-up capture so the
+      // real one finds them ready.
+      await Promise.all(
+        Array.from(el.querySelectorAll("img")).map((image) => image.decode().catch(() => undefined)),
+      );
+      await toPng(el, options);
+      const dataUrl = await toPng(el, options);
       return dataUrl;
     } finally {
       el.style.left = prev.left || "-99999px";
