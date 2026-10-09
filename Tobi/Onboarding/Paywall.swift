@@ -40,8 +40,7 @@ struct PaywallStep: View {
     @State private var walkStart: Date?
     @State private var walked = false
     @State private var visible = false
-    /// Coreografia da entrada: benefícios desenhados, marcos da linha do tempo acesos, planos na tela.
-    @State private var benefits = 0
+    /// Coreografia da entrada: marcos da linha do tempo acesos, planos na tela.
     @State private var milestones = 0
     @State private var plansIn = false
     @State private var badgeIn = false
@@ -79,7 +78,6 @@ struct PaywallStep: View {
             }
         }
         .sensoryFeedback(.impact(weight: .light), trigger: pageTaps)
-        .sensoryFeedback(.selection, trigger: benefits)
         .sensoryFeedback(.impact(weight: .light), trigger: milestones)
         .sensoryFeedback(.impact(weight: .medium, intensity: 0.7), trigger: plansIn)
         .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.6), trigger: badgeIn)
@@ -168,12 +166,8 @@ struct PaywallStep: View {
             title("Libere tudo", "o que o Tobi faz")
                 .reveal(shown, order: 0)
 
-            VStack(alignment: .leading, spacing: 15) {
-                ForEach(Array(Self.benefitList.enumerated()), id: \.offset) { index, benefit in
-                    BenefitRow(symbol: benefit.symbol, text: benefit.text, isShown: shown && benefits > index)
-                }
-            }
-            .padding(.top, 22)
+            PaywallShowcase(isShown: shown)
+                .padding(.top, 22)
 
             Spacer(minLength: 16)
 
@@ -197,15 +191,6 @@ struct PaywallStep: View {
                 .reveal(shown, order: 3)
         }
     }
-
-    private static let benefitList: [(symbol: String, text: String)] = [
-        ("pencil.and.scribble", "Escreve do seu jeito, ele conta tudo"),
-        ("waveform", "Fala ou escaneia o rótulo, e pronto"),
-        ("dumbbell.fill", "Whey, marcas e fast food no ponto"),
-        ("scope", "Calorias e macros sob medida"),
-        ("square.grid.2x2.fill", "Widgets na tela de início"),
-        ("bell.badge.fill", "Lembretes pra não esquecer de anotar"),
-    ]
 
     /// "Bora chegar nos 65 kg / até dezembro"; quem mantém: "Seu plano de / 1.780 cal tá pronto".
     private var headline: some View {
@@ -435,11 +420,6 @@ struct PaywallStep: View {
         if story == .onboarding {
             switch page {
             case .value:
-                try? await Task.sleep(for: .milliseconds(260))
-                for index in 1...Self.benefitList.count {
-                    withAnimation(Motion.surface) { benefits = index }
-                    try? await Task.sleep(for: .milliseconds(110))
-                }
                 return
             case .trial:
                 milestones = 0
@@ -502,33 +482,6 @@ struct PaywallGoal: Equatable {
     let arrival: Date?
     /// Peso de hoje: onde a caminhada até a meta começa.
     var startKg: Double? = nil
-}
-
-/// O que o Tobi faz, numa linha. O ícone se desenha quando a linha entra.
-private struct BenefitRow: View {
-    let symbol: String
-    let text: String
-    let isShown: Bool
-
-    var body: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                if isShown {
-                    Image(systemName: symbol)
-                        .transition(.symbolEffect(.drawOn))
-                }
-            }
-            .font(.system(size: 19, weight: .semibold))
-            .foregroundStyle(.indigo)
-            .frame(width: 26)
-
-            Text(text)
-                .font(.system(size: 17, weight: .medium))
-                .lineLimit(1)
-                .minimumScaleFactor(0.85)
-                .reveal(isShown, order: 0)
-        }
-    }
 }
 
 /// Hoje, o aviso e a cobrança, com as datas de verdade. Os marcos acendem um a um.
