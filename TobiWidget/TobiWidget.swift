@@ -84,7 +84,7 @@ struct DayWidgetView: View {
         content
             .containerBackground(for: .widget) {
                 if family == .systemSmall || family == .systemMedium {
-                    PatternBackground(clearing: family == .systemSmall ? .center : UnitPoint(x: 0.2, y: 0.5))
+                    PatternBackground()
                 } else {
                     Color.clear
                 }
@@ -103,9 +103,9 @@ struct DayWidgetView: View {
     }
 }
 
-/// A estampa de comidinhas do ícone, clareada atrás do anel pra o número respirar.
+/// A estampa de comidinhas do ícone, bem de leve: textura de papel, nunca disputando com o número.
 private struct PatternBackground: View {
-    let clearing: UnitPoint
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack {
@@ -113,9 +113,7 @@ private struct PatternBackground: View {
             Image("Pattern")
                 .resizable()
                 .scaledToFill()
-                .opacity(0.75)
-            RadialGradient(colors: [Palette.paperTop.opacity(0.92), Palette.paperTop.opacity(0)],
-                           center: clearing, startRadius: 10, endRadius: 120)
+                .opacity(colorScheme == .dark ? 0.16 : 0.28)
         }
     }
 }
@@ -131,9 +129,9 @@ private struct TobiRing: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(Palette.indigo.opacity(0.14), lineWidth: lineWidth)
+                .stroke(Palette.indigo.opacity(0.18), lineWidth: lineWidth)
             Circle()
-                .trim(from: 0, to: isOver ? 1 : max(progress, 0.001))
+                .trim(from: 0, to: isOver ? 1 : progress)
                 .stroke(
                     isOver
                         ? AnyShapeStyle(Palette.over)
@@ -142,6 +140,7 @@ private struct TobiRing: View {
                     style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
+                .opacity(isOver || progress > 0 ? 1 : 0)
                 .widgetAccentable()
             Image("TobiFace")
                 .resizable()
@@ -205,7 +204,7 @@ private struct SmallDay: View {
                         .widgetAccentable()
                     Text(remaining.label)
                         .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary.opacity(0.65))
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
                 }
@@ -220,9 +219,9 @@ private struct MediumDay: View {
     let snapshot: WidgetSnapshot?
 
     var body: some View {
-        HStack(spacing: 18) {
+        HStack(spacing: 16) {
             TobiRing(snapshot: snapshot, lineWidth: 10)
-                .frame(width: 112, height: 112)
+                .frame(width: 106, height: 106)
             if let snapshot {
                 details(snapshot)
             } else {
@@ -254,18 +253,18 @@ private struct MediumDay: View {
                     .widgetAccentable()
                 Text(remaining.label)
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.primary.opacity(0.65))
             }
             .lineLimit(1)
             .minimumScaleFactor(0.6)
             Text("\(snapshot.eaten.br) de \(snapshot.goal.br) cal")
-                .font(.system(size: 12, weight: .medium, design: .rounded))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .foregroundStyle(.primary.opacity(0.65))
                 .monospacedDigit()
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 .padding(.bottom, 10)
-            VStack(spacing: 7) {
+            Grid(alignment: .leading, horizontalSpacing: 7, verticalSpacing: 7) {
                 MacroBar(letter: "C", value: snapshot.carbs, goal: snapshot.carbsGoal, color: Palette.carbs)
                 MacroBar(letter: "P", value: snapshot.protein, goal: snapshot.proteinGoal, color: Palette.protein)
                 MacroBar(letter: "G", value: snapshot.fat, goal: snapshot.fatGoal, color: Palette.fat)
@@ -283,28 +282,27 @@ private struct MacroBar: View {
     let color: Color
 
     var body: some View {
-        HStack(spacing: 7) {
+        GridRow {
             Text(letter)
-                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                .font(.system(size: 12, weight: .heavy, design: .rounded))
                 .foregroundStyle(color)
-                .frame(width: 11)
             GeometryReader { proxy in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(color.opacity(0.18))
+                    Capsule().fill(color.opacity(0.22))
                     Capsule()
                         .fill(color)
                         .frame(width: proxy.size.width * (goal > 0 ? min(value / goal, 1) : 0))
                         .widgetAccentable()
                 }
             }
-            .frame(height: 6)
+            .frame(height: 7)
             Text("\(Int(value.rounded()).br)/\(Int(goal.rounded()).br) g")
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(.primary.opacity(0.7))
                 .monospacedDigit()
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
-                .frame(width: 66, alignment: .trailing)
+                .gridColumnAlignment(.trailing)
         }
     }
 }
