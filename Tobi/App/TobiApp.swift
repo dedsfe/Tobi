@@ -20,6 +20,7 @@ struct TobiApp: App {
         // O Tobi é brasileiro: datas e números saem em pt-BR ("dezembro", "2.820") mesmo com o
         // iPhone em outra região. Precisa vir antes de qualquer formatação.
         UserDefaults.standard.set("pt_BR", forKey: "AppleLocale")
+        Analytics.start()
         // -resetOnboarding no esquema reabre o onboarding a cada abertura.
         if ProcessInfo.processInfo.arguments.contains("-resetOnboarding") {
             UserDefaults.standard.set(false, forKey: "didCompleteOnboarding")

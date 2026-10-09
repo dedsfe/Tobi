@@ -29,7 +29,8 @@ Código em `Tobi/Onboarding/OnboardingView.swift`. Toda tela tem o palco do Tobi
 - [ ] Anúncios: SDKs do TikTok e da Meta + integrações de anúncio no RevenueCat; falta o André criar os apps nos painéis e passar os IDs (`docs/anuncios.md`)
 - [x] RevenueCat: SDK observando as compras StoreKit 2 (`purchasesAreCompletedBy: .myApp`) e notificações da Apple (produção e sandbox) apontando pro RevenueCat
 - [ ] RevenueCat: mandar os eventos de compra pras redes de anúncio (TikTok/Meta) e declarar "Compras" nos rótulos de privacidade da App Store
-- [ ] PostHog: eventos do app e funil do onboarding com painel pronto (hoje o funil está no Supabase, `onboarding_funnel`)
+- [x] PostHog (US, projeto 654398): os mesmos eventos do Supabase com o mesmo `anon_id`, abrir/fechar o app e gravação de sessão com o que é digitado coberto
+- [ ] PostHog: montar o funil do onboarding e o painel
 - [ ] Testar onboarding em formato de chat (perguntas na voz do Tobi) contra as telas atuais
 - [x] Medir abandono em cada tela: eventos anônimos no Supabase (`analytics_events`, coluna `ambiente` = debug ou producao), funil na view `onboarding_funnel`; sem rede, o evento espera no aparelho (`Tobi/App/Analytics.swift`)
 - [ ] Trocar o 🐶 do `TobiStage` pelas animações do Tobi (depende da arte)

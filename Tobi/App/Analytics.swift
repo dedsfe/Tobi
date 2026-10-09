@@ -1,7 +1,8 @@
 import Foundation
+import PostHog
 import StoreKit
 
-/// Eventos anônimos pro Supabase (tabela `analytics_events`): mede onde as pessoas param no onboarding.
+/// Eventos anônimos pro Supabase (tabela `analytics_events`) e pro PostHog: mede onde as pessoas param.
 /// Sem login e sem resposta da pessoa (peso, idade...), só qual tela apareceu e o que foi tocado.
 /// Nunca segura a tela: sem rede, o evento espera no aparelho e vai junto com o próximo.
 enum Analytics {
@@ -16,6 +17,28 @@ enum Analytics {
         let new = UUID().uuidString
         UserDefaults.standard.set(new, forKey: key)
         return new
+    }
+
+    /// Chave do PostHog: só grava evento, feita pra ir dentro do app.
+    private static let postHogKey = "phc_sv9Nn5goGFHoZsRouMrBdSHqFn5o7BWHoxhhKtTMChvK"
+
+    /// Liga o PostHog na abertura: eventos, abrir/fechar o app e a gravação da sessão.
+    /// Na gravação, tudo que é digitado aparece coberto (as refeições nunca vão).
+    static func start() {
+        let config = PostHogConfig(projectToken: postHogKey, host: "https://us.i.posthog.com")
+        config.captureApplicationLifecycleEvents = true
+        // As telas do SwiftUI chegam com nomes internos sem sentido; as do onboarding já vão pelo `stepViewed`.
+        config.captureScreenViews = false
+        config.sessionReplay = true
+        config.sessionReplayConfig.screenshotMode = true
+        config.sessionReplayConfig.maskAllTextInputs = true
+        config.sessionReplayConfig.maskAllImages = false
+        PostHogSDK.shared.setup(config)
+        // Mesmo id do Supabase: dá pra cruzar as duas bases.
+        PostHogSDK.shared.identify(anonID)
+        Task.detached(priority: .utility) {
+            PostHogSDK.shared.register(["build_env": await buildEnv()])
+        }
     }
 
     static func stepViewed(_ step: OnboardingStep) {
@@ -38,6 +61,12 @@ enum Analytics {
         #if DEBUG
         print("[Analytics] \(event) \(step?.analyticsName ?? "") \(properties)")
         #endif
+        var postHogProperties: [String: Any] = properties
+        if let step {
+            postHogProperties["step"] = step.analyticsName
+            postHogProperties["step_index"] = step.rawValue
+        }
+        PostHogSDK.shared.capture(event, properties: postHogProperties)
         guard let event = try? JSONSerialization.data(withJSONObject: body) else { return }
         Task.detached(priority: .utility) {
             await AnalyticsOutbox.shared.add(event)

@@ -18,6 +18,7 @@
 		19A4554982F37800C4D916AB /* LineEditingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E951F4742B5EFD8897822E6E /* LineEditingUITests.swift */; };
 		1A8BF67A1BBADCBF8047836E /* PaywallLetter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD850D37F024E14534FF063 /* PaywallLetter.swift */; };
 		20B22F7DA26123021C214509 /* FirstMealDemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB62EBAB89589280BD3E789 /* FirstMealDemoTests.swift */; };
+		22AD44338B56D02F080729D3 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 010164A50F012D21FDD70FAF /* PostHog */; };
 		23EA2267367F2B4DABA06DFE /* NoteCSV.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578EB1D891D049FA917EE424 /* NoteCSV.swift */; };
 		28B4F8F20A95E58663E901AC /* WritingScreenUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49AFBD09578FE79F28932BBC /* WritingScreenUITests.swift */; };
 		29336CAB9B41A50D812CEB39 /* TobiFaceAssetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486E0C1E47B372ABC6B5B037 /* TobiFaceAssetTests.swift */; };
@@ -185,6 +186,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FAAE64B7C7E77D5DD57C8FDC /* RevenueCat in Frameworks */,
+				22AD44338B56D02F080729D3 /* PostHog in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -411,6 +413,7 @@
 			name = Tobi;
 			packageProductDependencies = (
 				BFE74D4BCEDBAC94581CB0A8 /* RevenueCat */,
+				010164A50F012D21FDD70FAF /* PostHog */,
 			);
 			productName = Tobi;
 			productReference = 6DDD333EB71EFBF77A7476E6 /* Tobi.app */;
@@ -484,6 +487,7 @@
 			mainGroup = 1050D008790E920C10D84724;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				5F6F4D014CDCC9981AFD9789 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 				28F16F2A9C3501D10E8A1FD7 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -914,9 +918,22 @@
 				minimumVersion = 5.94.0;
 			};
 		};
+		5F6F4D014CDCC9981AFD9789 /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/PostHog/posthog-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.91.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		010164A50F012D21FDD70FAF /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5F6F4D014CDCC9981AFD9789 /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
+		};
 		BFE74D4BCEDBAC94581CB0A8 /* RevenueCat */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 28F16F2A9C3501D10E8A1FD7 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;

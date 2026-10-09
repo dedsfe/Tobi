@@ -11,6 +11,10 @@ packages:
   RevenueCat:
     url: https://github.com/RevenueCat/purchases-ios-spm
     from: 5.94.0
+  # Funil, telas e gravação de sessão: mostra onde as pessoas saem.
+  PostHog:
+    url: https://github.com/PostHog/posthog-ios
+    from: 3.91.0
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -30,6 +34,8 @@ targets:
     dependencies:
       - package: RevenueCat
         product: RevenueCat
+      - package: PostHog
+        product: PostHog
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.andrefelipe.tobi
