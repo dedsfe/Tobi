@@ -168,7 +168,7 @@
 		309F9AA6258B1C07AABF120A /* ProductName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductName.swift; sourceTree = "<group>"; };
 		30CA4C9B21F8C3BEFF79C118 /* DayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayView.swift; sourceTree = "<group>"; };
 		330296912C2E99B26C68D398 /* FoodDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodDatabase.swift; sourceTree = "<group>"; };
-		3A9D6431B5A9C5C2885FD4BE /* widget-tutorial.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "widget-tutorial.mp4"; sourceTree = "<group>"; };
+		3A9D6431B5A9C5C2885FD4BE /* widget-tutorial.mp4 */ = {isa = PBXFileReference; path = "widget-tutorial.mp4"; sourceTree = "<group>"; };
 		3C5944BEFBCE0A6BC683771E /* TobiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TobiApp.swift; sourceTree = "<group>"; };
 		3E169475F08FF10FB129498E /* InputMethodsShowcase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputMethodsShowcase.swift; sourceTree = "<group>"; };
 		3E46D592AB857DDE87A3E279 /* taco.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = taco.json; sourceTree = "<group>"; };
@@ -199,8 +199,8 @@
 		6565AD07DD783BF23AD3A699 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		65A29F5B27272F349425B6B0 /* JourneyChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyChart.swift; sourceTree = "<group>"; };
 		693E1062F5E9612595AAFAE8 /* OpenFoodFacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenFoodFacts.swift; sourceTree = "<group>"; };
-		699D0BC35D224FF03DFF866B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		6DDD333EB71EFBF77A7476E6 /* Tobi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tobi.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		699D0BC35D224FF03DFF866B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		6DDD333EB71EFBF77A7476E6 /* Tobi.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tobi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		733787F40680C2123994FCF0 /* tobi-head@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "tobi-head@3x.png"; sourceTree = "<group>"; };
 		75ECB48C3EDC7FA0CFE250EA /* LineHelp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineHelp.swift; sourceTree = "<group>"; };
 		762C73C803ADECE8C3C246BC /* LineResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineResolver.swift; sourceTree = "<group>"; };
@@ -593,6 +593,10 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					9C44C406D4E47A5A63E3B149 = {
+						DevelopmentTeam = 4ZQ8PBTL5U;
+						ProvisioningStyle = Automatic;
+					};
 					CC8D50720BB5B3037F66D80B = {
 						DevelopmentTeam = 4ZQ8PBTL5U;
 					};
@@ -829,7 +833,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 4ZQ8PBTL5U;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -849,7 +853,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -883,9 +887,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = TobiIcon;
 				CODE_SIGN_ENTITLEMENTS = Tobi/Tobi.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 4ZQ8PBTL5U;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/Tobi-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Tobi;
@@ -902,7 +905,6 @@
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.andrefelipe.tobi;
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -983,9 +985,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = TobiIcon;
 				CODE_SIGN_ENTITLEMENTS = Tobi/Tobi.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 4ZQ8PBTL5U;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/Tobi-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Tobi;
@@ -1002,7 +1003,6 @@
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.andrefelipe.tobi;
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -1059,7 +1059,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4ZQ8PBTL5U;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -1073,7 +1073,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
