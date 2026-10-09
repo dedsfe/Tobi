@@ -72,7 +72,9 @@
 		988D62DB0C9E2AB97C0914A3 /* Nutrition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA65013DB3626F696AD1207 /* Nutrition.swift */; };
 		A09B974FEC943B4597B945C8 /* ProductName.swift in Sources */ = {isa = PBXBuildFile; fileRef = 309F9AA6258B1C07AABF120A /* ProductName.swift */; };
 		A17543C64D9C4306850BE85F /* DayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30CA4C9B21F8C3BEFF79C118 /* DayView.swift */; };
+		A1C4B21EFC1A5429E6B0C2DB /* FoodPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00671C4B14A200F00350A067 /* FoodPattern.swift */; };
 		AD15A9FF6ABCCF534EFA7145 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964A550B3F84B8605839E0D /* OnboardingView.swift */; };
+		B3D0C3C5D26C9AAE63686E2F /* food-pattern.png in Resources */ = {isa = PBXBuildFile; fileRef = 7ED581DDA0EE245908B4C28F /* food-pattern.png */; };
 		B7CFC256A15133CCE2655D22 /* KeyboardBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2751B53BA08C6765765F0715 /* KeyboardBar.swift */; };
 		BCCC37DD29FD6993CA619AFA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 498D19ABF1432DAA1778FA8E /* Assets.xcassets */; };
 		BCE692C7B16CC9F12D118FD3 /* LineResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6562E987766EA6B250D0F0 /* LineResolverTests.swift */; };
@@ -142,6 +144,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		00671C4B14A200F00350A067 /* FoodPattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodPattern.swift; sourceTree = "<group>"; };
 		1131CC3800D87E1B7D9072F2 /* ScanSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanSheet.swift; sourceTree = "<group>"; };
 		12F7B90D9D89B6E13A30F181 /* BrandProduct.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandProduct.swift; sourceTree = "<group>"; };
 		14F381F9A54EDB692CEAD471 /* TobiWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TobiWidget.entitlements; sourceTree = "<group>"; };
@@ -198,6 +201,7 @@
 		75ECB48C3EDC7FA0CFE250EA /* LineHelp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineHelp.swift; sourceTree = "<group>"; };
 		762C73C803ADECE8C3C246BC /* LineResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineResolver.swift; sourceTree = "<group>"; };
 		79FD6A8D17346C2902A3582A /* TobiIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = TobiIcon.icon; sourceTree = "<group>"; };
+		7ED581DDA0EE245908B4C28F /* food-pattern.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "food-pattern.png"; sourceTree = "<group>"; };
 		80F69022F2967AEB798A50F5 /* TobiWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TobiWidget.swift; sourceTree = "<group>"; };
 		849BBE740074FABF951F498A /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		8734C3998A0F55F94AAD8688 /* NutritionPlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionPlanTests.swift; sourceTree = "<group>"; };
@@ -380,6 +384,7 @@
 				641C53C984F6E9BE0929536C /* Confetti.swift */,
 				30CA4C9B21F8C3BEFF79C118 /* DayView.swift */,
 				17DDC0D4457B430C6FE50D69 /* FeedbackSheet.swift */,
+				00671C4B14A200F00350A067 /* FoodPattern.swift */,
 				953F49314598C47639854B69 /* GoalsCard.swift */,
 				2751B53BA08C6765765F0715 /* KeyboardBar.swift */,
 				75ECB48C3EDC7FA0CFE250EA /* LineHelp.swift */,
@@ -477,6 +482,7 @@
 			children = (
 				BB8F2431FE4D24C230D6032D /* Assets.xcassets */,
 				445349C7B857AF907783D17F /* fastfood.json */,
+				7ED581DDA0EE245908B4C28F /* food-pattern.png */,
 				BA680DFDD0EF1E4477D6A6F8 /* founder.jpg */,
 				F114B1E25377701C98EEFCF0 /* ibge.json */,
 				699D0BC35D224FF03DFF866B /* PrivacyInfo.xcprivacy */,
@@ -631,6 +637,7 @@
 				75921BBD618E283954DC1EF1 /* PrivacyInfo.xcprivacy in Resources */,
 				85617CBCDA00C7F8B9AE1EA5 /* TobiIcon.icon in Resources */,
 				DFB03B6045CB81552DD4F5C4 /* fastfood.json in Resources */,
+				B3D0C3C5D26C9AAE63686E2F /* food-pattern.png in Resources */,
 				E0E251BE60E2B21F6C1AEE97 /* founder.jpg in Resources */,
 				BEC070B5CD52869753A2C583 /* ibge.json in Resources */,
 				7FED395684710A36D8436CDB /* suplementos.json in Resources */,
@@ -713,6 +720,7 @@
 				F4B3AC4236FA8F00BA88FC24 /* FoodCorrection.swift in Sources */,
 				C43FE44916787D7ADD1601DA /* FoodDatabase.swift in Sources */,
 				FDD953D0FE09F4316F02D6DC /* FoodParser.swift in Sources */,
+				A1C4B21EFC1A5429E6B0C2DB /* FoodPattern.swift in Sources */,
 				DB0945C61BAA86B1575D2F49 /* FoodTables.swift in Sources */,
 				F65FC358ED34EFB005A5DFE8 /* FounderLetter.swift in Sources */,
 				8D24C9183E293DC3E8DC81F7 /* GoalsCard.swift in Sources */,

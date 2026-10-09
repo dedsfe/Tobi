@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Última tela, em três partes no onboarding: o que o Tobi libera, como corre o teste grátis e os planos.
 /// Valor antes do preço converte mais que tudo numa tela só (Superwall, 2026: 12,4% contra 9,1%).
-/// O X mora no palco (`PaywallCloseButton`) e liga `declined`; aí chega a carta do Tobi (`TobiLetter`).
+/// Voltar e X moram no palco (`PaywallTopBar`); o X liga `declined`; aí chega a carta do Tobi (`TobiLetter`).
 /// Com o app travado, a parte de cima vira o resumo do que a pessoa fez nas 24 horas (`RecapHero`).
 struct PaywallStep: View {
     /// O que vende em cima dos planos: a promessa (onboarding) ou a prova (o que já foi feito).
@@ -20,6 +20,10 @@ struct PaywallStep: View {
     var purchased: Binding<Bool> = .constant(false)
     /// Está na parte dos planos: só ali o X aparece (antes, a pessoa vê o valor e o teste).
     var onPlans: Binding<Bool> = .constant(true)
+    /// Está numa parte com volta (teste ou planos): o Voltar do palco aparece.
+    var canGoBack: Binding<Bool> = .constant(false)
+    /// Cada toque no Voltar do palco soma um aqui.
+    var backTaps = 0
     /// A meta montada no onboarding: o título dos planos fala dela.
     var goal: PaywallGoal? = nil
     var story = Story.onboarding
@@ -94,7 +98,9 @@ struct PaywallStep: View {
         }
         .onChange(of: page, initial: true) { _, current in
             onPlans.wrappedValue = story != .onboarding || current == .plans
+            canGoBack.wrappedValue = story == .onboarding && current != .value
         }
+        .onChange(of: backTaps) { goBack() }
         .sheet(isPresented: $showingWhy) { FounderLetter() }
         .task { await store.load() }
         .task {
@@ -175,7 +181,6 @@ struct PaywallStep: View {
     /// 2 de 3: como corre o teste, com as datas de verdade e o preço do plano.
     private var trialPage: some View {
         VStack(alignment: .leading, spacing: 0) {
-            backButton(to: .value)
             title("Como funciona", "seu teste grátis")
                 .reveal(shown, order: 0)
 
@@ -222,16 +227,13 @@ struct PaywallStep: View {
         .minimumScaleFactor(0.8)
     }
 
-    private func backButton(to previous: Page) -> some View {
-        Button {
-            withAnimation(Motion.surface) { page = previous }
-        } label: {
-            Label("Voltar", systemImage: "chevron.left")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.indigo)
+    private func goBack() {
+        let previous: Page = switch page {
+        case .plans: store.trialEligible ? .trial : .value
+        case .trial, .value: .value
         }
-        .padding(.bottom, 10)
-        .reveal(shown, order: 0)
+        guard previous != page else { return }
+        withAnimation(Motion.surface) { page = previous }
     }
 
     /// Próxima parte: a de agora sai rápida, a nova entra em cascata.
@@ -247,7 +249,6 @@ struct PaywallStep: View {
     /// a tela vende o plano dela, não "um app".
     @ViewBuilder
     private var promise: some View {
-        backButton(to: store.trialEligible ? .trial : .value)
         headline
             .reveal(shown, order: 0)
 
@@ -859,19 +860,40 @@ private struct Shine: View {
     }
 }
 
-// MARK: - X do palco
+// MARK: - Voltar e X do palco
 
-/// O X no lugar do Voltar. Chega um instante depois da tela, pra oferta respirar primeiro.
-struct PaywallCloseButton: View {
-    let action: () -> Void
-    @State private var shown = false
-    @State private var taps = 0
+/// Voltar no canto esquerdo e X no direito, por cima do Tobi. O X chega um instante depois da
+/// tela, pra oferta respirar primeiro.
+struct PaywallTopBar: View {
+    let showsBack: Bool
+    let showsClose: Bool
+    let onBack: () -> Void
+    let onClose: () -> Void
+    @State private var closeReady = false
+    @State private var backTaps = 0
+    @State private var closeTaps = 0
 
     var body: some View {
         HStack {
+            Button("Voltar", systemImage: "chevron.left") {
+                backTaps += 1
+                onBack()
+            }
+            .labelStyle(.iconOnly)
+            .font(.system(size: 17, weight: .semibold))
+            .frame(width: 30, height: 30)
+            .buttonStyle(.glass)
+            .buttonBorderShape(.circle)
+            .foregroundStyle(.primary)
+            .opacity(showsBack ? 1 : 0)
+            .scaleEffect(showsBack ? 1 : 0.6)
+            .allowsHitTesting(showsBack)
+
+            Spacer()
+
             Button("Fechar", systemImage: "xmark") {
-                taps += 1
-                action()
+                closeTaps += 1
+                onClose()
             }
             .labelStyle(.iconOnly)
             .font(.system(size: 15, weight: .semibold))
@@ -879,15 +901,19 @@ struct PaywallCloseButton: View {
             .buttonStyle(.glass)
             .buttonBorderShape(.circle)
             .foregroundStyle(.secondary)
-            .reveal(shown, order: 0)
-            Spacer()
+            .opacity(showsClose && closeReady ? 1 : 0)
+            .scaleEffect(showsClose && closeReady ? 1 : 0.6)
+            .allowsHitTesting(showsClose && closeReady)
         }
+        .animation(Motion.surface, value: showsBack)
+        .animation(Motion.surface, value: showsClose && closeReady)
         .padding(.horizontal, 20)
         .padding(.top, 4)
-        .sensoryFeedback(.impact(flexibility: .soft), trigger: taps)
+        .sensoryFeedback(.impact(weight: .light), trigger: backTaps)
+        .sensoryFeedback(.impact(flexibility: .soft), trigger: closeTaps)
         .task {
             try? await Task.sleep(for: .seconds(1.5))
-            shown = true
+            closeReady = true
         }
     }
 }

@@ -263,6 +263,8 @@ struct OnboardingView: View {
     @State private var paywallPurchased = false
     /// Só na parte dos planos o X aparece.
     @State private var paywallOnPlans = false
+    @State private var paywallCanGoBack = false
+    @State private var paywallBackTaps = 0
 
     /// `start` diferente de boas-vindas só vem do atalho do Debug, que já entra com respostas de exemplo.
     init(start: OnboardingStep = .welcome, onFinish: @escaping () -> Void) {
@@ -313,12 +315,22 @@ struct OnboardingView: View {
                     .background {
                         if step == .welcome { WelcomeFoodStageCapture(scene: welcomeScene) }
                     }
+                    .background(alignment: .top) {
+                        // No paywall a estampa de comidinhas fica atrás do Tobi e some antes do título.
+                        if step == .paywall {
+                            FoodPattern()
+                                .frame(height: TobiStage.height + 30)
+                                .ignoresSafeArea(edges: .top)
+                                .transition(.opacity)
+                        }
+                    }
+                    // O Tobi do paywall cabe com folga no palco: o título sobe pra perto dele.
+                    .padding(.bottom, step == .paywall ? -40 : 0)
                     .overlay(alignment: .top) {
                         if step == .paywall {
-                            PaywallCloseButton { paywallDeclined = true }
-                                .opacity(paywallDeclined || paywallPurchased || !paywallOnPlans ? 0 : 1)
-                                .allowsHitTesting(!paywallDeclined && !paywallPurchased && paywallOnPlans)
-                                .animation(Motion.quick, value: paywallDeclined || paywallPurchased || !paywallOnPlans)
+                            let open = !paywallDeclined && !paywallPurchased
+                            PaywallTopBar(showsBack: open && paywallCanGoBack, showsClose: open && paywallOnPlans,
+                                          onBack: { paywallBackTaps += 1 }, onClose: { paywallDeclined = true })
                         } else if step != .welcome {
                             OnboardingHeader(progress: progress, onBack: goBack)
                                 .transition(.opacity)
@@ -371,6 +383,7 @@ struct OnboardingView: View {
                         .transition(.opacity)
                 case .paywall:
                     PaywallStep(declined: $paywallDeclined, purchased: $paywallPurchased, onPlans: $paywallOnPlans,
+                                canGoBack: $paywallCanGoBack, backTaps: paywallBackTaps,
                                 goal: paywallGoal, onFinish: onFinish)
                         .transition(.opacity)
                 case .widget:
