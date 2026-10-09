@@ -14,6 +14,7 @@
 		0ACEF781303B018194689133 /* TobiStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 963E22CC66A5C7545DF75EB1 /* TobiStore.swift */; };
 		108E7241B747FCAA46004206 /* NutritionPlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8734C3998A0F55F94AAD8688 /* NutritionPlanTests.swift */; };
 		170AA326F38A1AD559B3A979 /* TobiFaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D94DD3657B48F6EE45558C4C /* TobiFaceView.swift */; };
+		176581EF5F529F4EB016BA03 /* WidgetBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5508056D8812CD4023849196 /* WidgetBridge.swift */; };
 		1843E3F9D527F80CA22E5E1C /* WelcomeFoodRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B9ABA662E17E8154754CE6 /* WelcomeFoodRouteTests.swift */; };
 		19A4554982F37800C4D916AB /* LineEditingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E951F4742B5EFD8897822E6E /* LineEditingUITests.swift */; };
 		1A8BF67A1BBADCBF8047836E /* PaywallLetter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD850D37F024E14534FF063 /* PaywallLetter.swift */; };
@@ -27,6 +28,7 @@
 		39601D0026D589F929E3B5E9 /* PaywallGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D86F24AC9372E0B5A9F6A25 /* PaywallGate.swift */; };
 		3A40FCE8DCFB7B67BC1DEB6E /* LineRewriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28C85519ACF4096B51BC3535 /* LineRewriterTests.swift */; };
 		3D8A8C1F589731F75AB33BCA /* NutritionPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = A268DB5A88EC85BC89AB5337 /* NutritionPlan.swift */; };
+		470DDFF183C9096538F8E6F3 /* TobiWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80F69022F2967AEB798A50F5 /* TobiWidget.swift */; };
 		4AE4B12CEB2C1501BD2C3AAE /* Reminders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BCAAA368D3AECD109559A74 /* Reminders.swift */; };
 		4F24112FDE712AF35ADB91E3 /* ProductNameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28648EF45A52ECDE9C7C2C92 /* ProductNameTests.swift */; };
 		52B996030ED4D7BA451F2FDD /* JourneyChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65A29F5B27272F349425B6B0 /* JourneyChart.swift */; };
@@ -45,6 +47,7 @@
 		73A29CA35A4D4B571090FE1A /* TotalsBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0047EB4EB0B56B8E2ED251B /* TotalsBar.swift */; };
 		75921BBD618E283954DC1EF1 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 699D0BC35D224FF03DFF866B /* PrivacyInfo.xcprivacy */; };
 		76D459DF5D937386DAF12206 /* Motion.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1994A7BED207538543F656B /* Motion.swift */; };
+		7C2B6D037D7B19584CD55EA0 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 641AFD9FA9A4A3FAB454B0CB /* WidgetSnapshot.swift */; };
 		7F1E791DA4625F1175FCADEA /* PaywallRecapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DEA2923D51ECF843DD4BBED /* PaywallRecapTests.swift */; };
 		84625DD8D6B6443969680CE8 /* ScanSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1131CC3800D87E1B7D9072F2 /* ScanSheet.swift */; };
 		85617CBCDA00C7F8B9AE1EA5 /* TobiIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 79FD6A8D17346C2902A3582A /* TobiIcon.icon */; };
@@ -63,16 +66,19 @@
 		A17543C64D9C4306850BE85F /* DayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30CA4C9B21F8C3BEFF79C118 /* DayView.swift */; };
 		AD15A9FF6ABCCF534EFA7145 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964A550B3F84B8605839E0D /* OnboardingView.swift */; };
 		B7CFC256A15133CCE2655D22 /* KeyboardBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2751B53BA08C6765765F0715 /* KeyboardBar.swift */; };
+		BCCC37DD29FD6993CA619AFA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 498D19ABF1432DAA1778FA8E /* Assets.xcassets */; };
 		BCE692C7B16CC9F12D118FD3 /* LineResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6562E987766EA6B250D0F0 /* LineResolverTests.swift */; };
 		BEC070B5CD52869753A2C583 /* ibge.json in Resources */ = {isa = PBXBuildFile; fileRef = F114B1E25377701C98EEFCF0 /* ibge.json */; };
 		C43FE44916787D7ADD1601DA /* FoodDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 330296912C2E99B26C68D398 /* FoodDatabase.swift */; };
 		C7B649C008949A3DA1A9FD57 /* NoteEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 308590FF1E48DD45DCA78605 /* NoteEditor.swift */; };
 		C8ADE9D17C878FC7AAC9AED2 /* tobi-face.json in Resources */ = {isa = PBXBuildFile; fileRef = EA37006553B03C4361C0334B /* tobi-face.json */; };
+		CB0F5488A843F6BA534B9498 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 641AFD9FA9A4A3FAB454B0CB /* WidgetSnapshot.swift */; };
 		D1EF54B92BBDE4FAAA9E9B77 /* Paywall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FE4189A6E5925F21B89BC5 /* Paywall.swift */; };
 		D8FA67EB6FBF6DDB86E8BC12 /* BrazilianSlangAndPortionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A45D6744CE27A4B0857E86A /* BrazilianSlangAndPortionTests.swift */; };
 		DB0945C61BAA86B1575D2F49 /* FoodTables.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC10422EB949975055CDB990 /* FoodTables.swift */; };
 		DFB03B6045CB81552DD4F5C4 /* fastfood.json in Resources */ = {isa = PBXBuildFile; fileRef = 445349C7B857AF907783D17F /* fastfood.json */; };
 		E493A9B7173AFAF4F9A42F3D /* WelcomeFoodRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9155A902428D8604F628C436 /* WelcomeFoodRoute.swift */; };
+		EA86F559E4DEC049BC92A19B /* TobiWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2F2EF17516413CFFB93751F3 /* TobiWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F10047776139D6EE95053CB9 /* FoodParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A61D93B4C4C2B1562F8CBA23 /* FoodParserTests.swift */; };
 		F2C99AD4E9968F2808061B39 /* LineHelp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75ECB48C3EDC7FA0CFE250EA /* LineHelp.swift */; };
 		F4B3AC4236FA8F00BA88FC24 /* FoodCorrection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F22E96B8622A13A7FFD27968 /* FoodCorrection.swift */; };
@@ -92,6 +98,13 @@
 			remoteGlobalIDString = 9C44C406D4E47A5A63E3B149;
 			remoteInfo = Tobi;
 		};
+		6254AE61B072CBB234CE8A80 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1FDF005C269014936688677A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DA02A5E21BA4011FF6D54988;
+			remoteInfo = TobiWidget;
+		};
 		B8A37C21BE495723A4809FBF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 1FDF005C269014936688677A /* Project object */;
@@ -101,15 +114,33 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		948D4B6E8ABA64681F20809D /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				EA86F559E4DEC049BC92A19B /* TobiWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		1131CC3800D87E1B7D9072F2 /* ScanSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanSheet.swift; sourceTree = "<group>"; };
 		12F7B90D9D89B6E13A30F181 /* BrandProduct.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandProduct.swift; sourceTree = "<group>"; };
+		14F381F9A54EDB692CEAD471 /* TobiWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TobiWidget.entitlements; sourceTree = "<group>"; };
 		1C87CE0B25D3C707E51A6DBA /* LineRewriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineRewriter.swift; sourceTree = "<group>"; };
 		1FB62EBAB89589280BD3E789 /* FirstMealDemoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstMealDemoTests.swift; sourceTree = "<group>"; };
+		24A968E58270082D0B4D900E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2751B53BA08C6765765F0715 /* KeyboardBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardBar.swift; sourceTree = "<group>"; };
 		28648EF45A52ECDE9C7C2C92 /* ProductNameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductNameTests.swift; sourceTree = "<group>"; };
 		2872FA24B522D05EF587CF3E /* VoiceGlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceGlow.swift; sourceTree = "<group>"; };
 		28C85519ACF4096B51BC3535 /* LineRewriterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineRewriterTests.swift; sourceTree = "<group>"; };
+		2C55AD3DAF7E4423AA5D2BBF /* Tobi.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Tobi.entitlements; sourceTree = "<group>"; };
+		2F2EF17516413CFFB93751F3 /* TobiWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TobiWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F6562E987766EA6B250D0F0 /* LineResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineResolverTests.swift; sourceTree = "<group>"; };
 		308590FF1E48DD45DCA78605 /* NoteEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditor.swift; sourceTree = "<group>"; };
 		309F9AA6258B1C07AABF120A /* ProductName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductName.swift; sourceTree = "<group>"; };
@@ -129,14 +160,17 @@
 		486E0C1E47B372ABC6B5B037 /* TobiFaceAssetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TobiFaceAssetTests.swift; sourceTree = "<group>"; };
 		49472BC1DE4C1DCD9F5E6204 /* WelcomeFood.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFood.swift; sourceTree = "<group>"; };
 		4964A550B3F84B8605839E0D /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		498D19ABF1432DAA1778FA8E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		49AFBD09578FE79F28932BBC /* WritingScreenUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WritingScreenUITests.swift; sourceTree = "<group>"; };
 		4A45D6744CE27A4B0857E86A /* BrazilianSlangAndPortionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrazilianSlangAndPortionTests.swift; sourceTree = "<group>"; };
 		50C8DB4618CA48C83CE1C987 /* VoiceSpectrum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSpectrum.swift; sourceTree = "<group>"; };
+		5508056D8812CD4023849196 /* WidgetBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetBridge.swift; sourceTree = "<group>"; };
 		578EB1D891D049FA917EE424 /* NoteCSV.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCSV.swift; sourceTree = "<group>"; };
 		5BCAAA368D3AECD109559A74 /* Reminders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reminders.swift; sourceTree = "<group>"; };
 		5D86F24AC9372E0B5A9F6A25 /* PaywallGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallGate.swift; sourceTree = "<group>"; };
 		5DEA2923D51ECF843DD4BBED /* PaywallRecapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallRecapTests.swift; sourceTree = "<group>"; };
 		5EF17015117CAFBD333185A7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		641AFD9FA9A4A3FAB454B0CB /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
 		641C53C984F6E9BE0929536C /* Confetti.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Confetti.swift; sourceTree = "<group>"; };
 		6565AD07DD783BF23AD3A699 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		65A29F5B27272F349425B6B0 /* JourneyChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyChart.swift; sourceTree = "<group>"; };
@@ -147,6 +181,7 @@
 		75ECB48C3EDC7FA0CFE250EA /* LineHelp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineHelp.swift; sourceTree = "<group>"; };
 		762C73C803ADECE8C3C246BC /* LineResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineResolver.swift; sourceTree = "<group>"; };
 		79FD6A8D17346C2902A3582A /* TobiIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = TobiIcon.icon; sourceTree = "<group>"; };
+		80F69022F2967AEB798A50F5 /* TobiWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TobiWidget.swift; sourceTree = "<group>"; };
 		849BBE740074FABF951F498A /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		8734C3998A0F55F94AAD8688 /* NutritionPlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionPlanTests.swift; sourceTree = "<group>"; };
 		9155A902428D8604F628C436 /* WelcomeFoodRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFoodRoute.swift; sourceTree = "<group>"; };
@@ -199,6 +234,7 @@
 				6565AD07DD783BF23AD3A699 /* Analytics.swift */,
 				3C5944BEFBCE0A6BC683771E /* TobiApp.swift */,
 				E3CC70140F1D4009A913383C /* Tracking.swift */,
+				5508056D8812CD4023849196 /* WidgetBridge.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -215,11 +251,21 @@
 			isa = PBXGroup;
 			children = (
 				DC16048050945594E5019867 /* Asset-Icon */,
+				1C383F945F517AA8785865CA /* Shared */,
 				ACCE96EE5608DD8053FEBD4E /* Tobi */,
 				22717634C632AF809F7A655B /* TobiTests */,
 				D7FC5BB26AC27DA44D71C5E8 /* TobiUITests */,
+				5111FACE6ADD270789BCD289 /* TobiWidget */,
 				34AEF3B9EB6A46C994955C63 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		1C383F945F517AA8785865CA /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				641AFD9FA9A4A3FAB454B0CB /* WidgetSnapshot.swift */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 		2067EA3ADB64A7D60255A807 /* Nutrition */ = {
@@ -263,8 +309,20 @@
 				6DDD333EB71EFBF77A7476E6 /* Tobi.app */,
 				45A6CD938A64353750C04F9A /* TobiTests.xctest */,
 				F22DD0603754279324293121 /* TobiUITests.xctest */,
+				2F2EF17516413CFFB93751F3 /* TobiWidget.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		5111FACE6ADD270789BCD289 /* TobiWidget */ = {
+			isa = PBXGroup;
+			children = (
+				498D19ABF1432DAA1778FA8E /* Assets.xcassets */,
+				24A968E58270082D0B4D900E /* Info.plist */,
+				14F381F9A54EDB692CEAD471 /* TobiWidget.entitlements */,
+				80F69022F2967AEB798A50F5 /* TobiWidget.swift */,
+			);
+			path = TobiWidget;
 			sourceTree = "<group>";
 		};
 		7F67FF23429A7B508996553F /* Input */ = {
@@ -340,6 +398,7 @@
 		ACCE96EE5608DD8053FEBD4E /* Tobi */ = {
 			isa = PBXGroup;
 			children = (
+				2C55AD3DAF7E4423AA5D2BBF /* Tobi.entitlements */,
 				043BB0472D4B09E963CFC188 /* App */,
 				82B00CD4FC82EBE1B6D61523 /* Brands */,
 				0F8A01ABFCFF9E1F95E1CABA /* Character */,
@@ -405,10 +464,12 @@
 				E68827120B8E412B31D46DC3 /* Sources */,
 				75F731371E45F2AC1E05CEDE /* Resources */,
 				FC9B540CE5B8B2E87CB3B5AA /* Frameworks */,
+				948D4B6E8ABA64681F20809D /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				E78113B6C94F9E823B970F10 /* PBXTargetDependency */,
 			);
 			name = Tobi;
 			packageProductDependencies = (
@@ -436,6 +497,24 @@
 			productName = TobiTests;
 			productReference = 45A6CD938A64353750C04F9A /* TobiTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		DA02A5E21BA4011FF6D54988 /* TobiWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8D809B928CB08F8642C91EEB /* Build configuration list for PBXNativeTarget "TobiWidget" */;
+			buildPhases = (
+				5C5FE9C08681F67F4CB03F1F /* Sources */,
+				E9CF0B74816FD323560FE0B1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TobiWidget;
+			packageProductDependencies = (
+			);
+			productName = TobiWidget;
+			productReference = 2F2EF17516413CFFB93751F3 /* TobiWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		F714602D9BD1127C287099E4 /* TobiUITests */ = {
 			isa = PBXNativeTarget;
@@ -471,6 +550,10 @@
 					CC8D50720BB5B3037F66D80B = {
 						DevelopmentTeam = 4ZQ8PBTL5U;
 					};
+					DA02A5E21BA4011FF6D54988 = {
+						DevelopmentTeam = 4ZQ8PBTL5U;
+						ProvisioningStyle = Automatic;
+					};
 					F714602D9BD1127C287099E4 = {
 						DevelopmentTeam = 4ZQ8PBTL5U;
 						TestTargetID = 9C44C406D4E47A5A63E3B149;
@@ -496,6 +579,7 @@
 			projectRoot = "";
 			targets = (
 				9C44C406D4E47A5A63E3B149 /* Tobi */,
+				DA02A5E21BA4011FF6D54988 /* TobiWidget */,
 				CC8D50720BB5B3037F66D80B /* TobiTests */,
 				F714602D9BD1127C287099E4 /* TobiUITests */,
 			);
@@ -518,9 +602,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E9CF0B74816FD323560FE0B1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BCCC37DD29FD6993CA619AFA /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		5C5FE9C08681F67F4CB03F1F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				470DDFF183C9096538F8E6F3 /* TobiWidget.swift in Sources */,
+				7C2B6D037D7B19584CD55EA0 /* WidgetSnapshot.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6383F8C426F3022EDFDF83DA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -604,6 +705,8 @@
 				8CEFBEA42E2411690944065B /* WelcomeFoodBite.swift in Sources */,
 				5C7A22804DA7A3FAF5BBAFBF /* WelcomeFoodFlight.swift in Sources */,
 				E493A9B7173AFAF4F9A42F3D /* WelcomeFoodRoute.swift in Sources */,
+				176581EF5F529F4EB016BA03 /* WidgetBridge.swift in Sources */,
+				CB0F5488A843F6BA534B9498 /* WidgetSnapshot.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -619,6 +722,11 @@
 			isa = PBXTargetDependency;
 			target = 9C44C406D4E47A5A63E3B149 /* Tobi */;
 			targetProxy = B8A37C21BE495723A4809FBF /* PBXContainerItemProxy */;
+		};
+		E78113B6C94F9E823B970F10 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DA02A5E21BA4011FF6D54988 /* TobiWidget */;
+			targetProxy = 6254AE61B072CBB234CE8A80 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -710,6 +818,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = TobiIcon;
+				CODE_SIGN_ENTITLEMENTS = Tobi/Tobi.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -749,6 +858,42 @@
 			};
 			name = Debug;
 		};
+		6C95E0442EC9F236AA8CBC72 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TobiWidget/TobiWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = TobiWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.andrefelipe.tobi.widget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		71FCAC1D3C54238905DFEC05 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = TobiWidget/TobiWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = TobiWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.andrefelipe.tobi.widget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
 		8EB1E62C60E7F0C65BBB8825 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -770,6 +915,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = TobiIcon;
+				CODE_SIGN_ENTITLEMENTS = Tobi/Tobi.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -885,6 +1031,15 @@
 			buildConfigurations = (
 				3C7AF4ABAE4D9D61BAB5B20E /* Debug */,
 				23AA8D54BC3F612AA8DDE35C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8D809B928CB08F8642C91EEB /* Build configuration list for PBXNativeTarget "TobiWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				71FCAC1D3C54238905DFEC05 /* Debug */,
+				6C95E0442EC9F236AA8CBC72 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

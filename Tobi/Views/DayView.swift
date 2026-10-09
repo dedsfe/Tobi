@@ -154,8 +154,13 @@ struct DayView: View {
             if let explaining, !(lines.indices.contains(explaining.line) && estimate(lines[explaining.line]).hasUnknown) { closeHelp() }
         }
         .onChange(of: dictation.transcript) { _, spoken in applyDictation(spoken) }
+        // O widget mostra o dia de hoje: acompanha o total, a meta e o fim da carga da base.
+        .onChange(of: total) { publishToWidget() }
+        .onChange(of: goal) { publishToWidget() }
+        .onChange(of: parserReady) { publishToWidget() }
         .onChange(of: scenePhase) { _, phase in
             if phase != .active {
+                publishToWidget()
                 stopDictation()
                 cancelBrandSearches()
                 closeHelp()
@@ -713,6 +718,12 @@ struct DayView: View {
         loadedNote = note(for: day)
         loadedDay = day
         text = loadedNote?.text ?? ""
+    }
+
+    /// Só o dia de hoje, já carregado e com a base pronta: antes disso o total ainda é zero.
+    private func publishToWidget() {
+        guard !isDemo, parserReady, loadedDay == day, Calendar.current.isDateInToday(day) else { return }
+        WidgetBridge.publish(total, goal: goal)
     }
 
     private func save() {
