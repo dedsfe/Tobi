@@ -230,16 +230,23 @@ struct FoodParser: Sendable {
     /// Quantidade + comida de um pedaço. Número no fim ("arroz 3") só vale como quantidade se
     /// não fizer parte do nome: "nescau 2.0" é um produto, não dois Nescau.
     private func resolve(_ piece: String) -> Parse {
+        // "YoPRO 25g", "BOLD 14g" e "3 Whey": o número pertence ao produto.
+        // Só separa a quantidade fora de um apelido completo, nunca dentro dele.
+        if let product = numberedProduct(in: piece) { return product }
         var (quantity, tokens, trailing) = Self.parseQuantity(piece)
         // Medida que também é começo de nome: "prato feito", "2 pratos feitos", "barra de cereal", "barra de proteína".
-        // Se com a medida o nome fecha e sem ela não, a medida era parte do nome.
-        if let measure = quantity.measure, !matchFoods(in: tokens).complete {
+        // Uma marca sozinha também pode nomear outro produto: "dr peanut" é pasta,
+        // mas "barra dr peanut" deve escolher a barra antes de consumir a medida.
+        if let measure = quantity.measure {
             let whole = Self.tokenize(measure) + tokens
             let wholeWithDe = Self.tokenize(measure) + ["de"] + tokens
-            if matchFoods(in: whole).complete {
+            let match = matchFoods(in: whole)
+            let namedSupplement = match.matches.count == 1
+                && match.matches.first.map { isSupplementPortion($0.food, measure: measure) } == true
+            if match.complete && (!matchFoods(in: tokens).complete || namedSupplement) {
                 quantity.measure = nil
                 tokens = whole
-            } else if matchFoods(in: wholeWithDe).complete {
+            } else if !matchFoods(in: tokens).complete, matchFoods(in: wholeWithDe).complete {
                 quantity.measure = nil
                 tokens = wholeWithDe
             }
@@ -264,6 +271,24 @@ struct FoodParser: Sendable {
             if !match.matches.isEmpty, match.complete { return Parse(quantity: whole.0, tokens: whole.1) }
         }
         return Parse(quantity: quantity, tokens: tokens)
+    }
+
+    private func numberedProduct(in piece: String) -> Parse? {
+        let words = piece.split(separator: " ").map(String.init)
+        let tokens = words.map(Self.singularize)
+        for start in tokens.indices {
+            for entry in entries[tokens[start], default: []]
+            where entry.tokens.contains(where: { $0.first?.isNumber == true }) {
+                let end = start + entry.tokens.count
+                guard end <= tokens.count,
+                      tokens[start..<end].elementsEqual(entry.tokens) else { continue }
+                let outside = (Array(words[..<start]) + Array(words[end...])).joined(separator: " ")
+                let (quantity, rest, _) = Self.parseQuantity(outside)
+                guard rest.isEmpty else { continue }
+                return Parse(quantity: quantity, tokens: entry.tokens)
+            }
+        }
+        return nil
     }
 
     /// Separa a quantidade do resto, onde quer que ela esteja: "2 colheres de leite condensado",
@@ -606,6 +631,8 @@ struct FoodParser: Sendable {
         "mc", "mcdonald", "mequi", "bk", "burger", "king", "kfc", "subway", "bob", "habib", "outback",
         // Marcas de suplemento.
         "growth", "max", "titanium", "integralmedica", "probiotica", "dux", "skull", "optimum", "essential",
+        "atlhetica", "athletica", "atletica", "vitafor", "soldier", "nutrata", "bold", "peanut",
+        "drpeanut", "maismu", "mu", "yopro", "piracanjuba", "proforce", "darkness", "naturovo",
     ]
 
     /// O produto salvo que contém todas as palavras escritas; empatando, o de nome mais curto.
@@ -619,6 +646,7 @@ struct FoodParser: Sendable {
         guard let measure else { return food.portion }
         if let grams = food.measures[measure] { return grams }
         if FoodDatabase.portionWords.contains(measure) { return food.portion }
+        if isSupplementPortion(food, measure: measure) { return food.portion }
         if measure == "colher de sopa", let grams = food.measures["colher"] { return grams }
         return FoodDatabase.measures[measure] ?? food.portion
     }
@@ -627,8 +655,38 @@ struct FoodParser: Sendable {
     private func hasKnownMeasure(_ food: Food, measure: String?) -> Bool {
         guard let measure else { return true }
         return food.measures[measure] != nil || FoodDatabase.portionWords.contains(measure)
+            || isSupplementPortion(food, measure: measure)
             || FoodDatabase.absoluteMeasures.contains(measure)
             || (measure == "colher de sopa" && food.measures["colher"] != nil)
+    }
+
+    // A embalagem de um snack não tem o peso da medida caseira genérica. Os JSONs
+    // mantêm só a porção, sem transformar barra/garrafa em um scoop fictício.
+    private static let supplementPortionMeasures: [String: Set<String>] = Dictionary(
+        uniqueKeysWithValues: FoodTables.suplementos.compactMap { product in
+            guard product.measures.isEmpty else { return nil }
+            let name = product.name
+            let measures: Set<String>
+            if name.hasPrefix("Barra ") || name.hasPrefix("Doctor Bar ") || name.hasPrefix("Crunch ") {
+                measures = ["barra"]
+            } else if name.hasPrefix("Bebida Láctea ") {
+                measures = ["garrafa", "caixinha"]
+            } else if name.hasPrefix("Iogurte Líquido ") {
+                measures = ["garrafa"]
+            } else if name.hasPrefix("Iogurte ") {
+                measures = ["pote"]
+            } else if name.contains("Energy Gel") {
+                measures = ["sache"]
+            } else if name.hasPrefix("Pasta de Amendoim ") {
+                measures = ["colher", "colher de sopa"]
+            } else { return nil }
+            return (product.id, measures)
+        }
+    )
+
+    private func isSupplementPortion(_ food: Food, measure: String) -> Bool {
+        guard case .chain(let id, _) = food.source else { return false }
+        return Self.supplementPortionMeasures[id]?.contains(measure) == true
     }
 
     private struct Match {
@@ -754,7 +812,7 @@ struct FoodParser: Sendable {
             .replacing(/(\d),(\d)/) { "\($0.1).\($0.2)" }
     }
 
-    private static let separatorWords: Set<String> = ["e", "com", "mais"]
+    private static let separatorWords = Set(["e", "com", "mais"].map(singularize))
 
     /// "arroz, feijão e bife com salada" → ["arroz", "feijão", "bife", "salada"] ("e meia" não separa), mas
     /// "pão com manteiga e café com leite" → ["pão com manteiga", "café com leite"]: o que é
@@ -790,6 +848,8 @@ struct FoodParser: Sendable {
     private func splitMeasureNumber(_ piece: String) -> [String] {
         let words = piece.split(separator: " ").map(String.init)
         guard words.count >= 3 else { return [piece] }
+        // Protege também a ordem marca-primeiro: "atlhetica barra 12g".
+        if numberedProduct(in: Self.clean(Self.normalize(piece))) != nil { return [piece] }
         var pieces: [String] = []
         var start = 0
         // Iterativo: uma nota colada com muitas medidas não cresce a pilha de chamadas.
@@ -803,6 +863,9 @@ struct FoodParser: Sendable {
             guard isMeasure else { continue }
             let next = words[i + 1].lowercased()
             if Self.parseNumber(next) != nil || next.range(of: #"^\d+"#, options: .regularExpression) != nil {
+                // "1 dose 3 whey probiotica" é um produto, não dois itens colados.
+                let remainder = words[(i + 1)...].joined(separator: " ")
+                if numberedProduct(in: Self.clean(Self.normalize(remainder))) != nil { continue }
                 pieces.append(words[start...i].joined(separator: " "))
                 start = i + 1
             }
