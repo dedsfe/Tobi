@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 2,
+  "appName": "Tobi",
+  "themeId": "tobi",
+  "connectedCanvas": true,
+  "locales": [
+    "pt"
+  ],
+  "locale": "pt",
+  "device": "iphone",
+  "orientation": "portrait",
+  "appIcon": "/app-icon.png",
+  "slidesByDevice": {
+    "iphone": [
+      {
+        "id": "tobi_1",
+        "layout": "hero",
+        "inverted": false,
+        "label": {
+          "pt": "CONTADOR DE CALORIAS"
+        },
+        "headline": {
+          "pt": "Escreve o que comeu.\nO Tobi *conta*."
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/01.png"
+      },
+      {
+        "id": "tobi_2",
+        "layout": "device-bottom",
+        "inverted": false,
+        "label": {
+          "pt": "COMIDA BRASILEIRA"
+        },
+        "headline": {
+          "pt": "Ele entende\n*comida de verdade*."
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/02.png"
+      },
+      {
+        "id": "tobi_3",
+        "layout": "device-top",
+        "inverted": true,
+        "label": {
+          "pt": "PROTEÍNA E MACROS"
+        },
+        "headline": {
+          "pt": "Bata a *proteína*\ntodo dia."
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/03.png"
+      },
+      {
+        "id": "tobi_4",
+        "layout": "device-bottom",
+        "inverted": true,
+        "label": {
+          "pt": "WIDGETS"
+        },
+        "headline": {
+          "pt": "Sua meta\nna *tela de início*."
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/04.png"
+      },
+      {
+        "id": "tobi_5",
+        "layout": "device-top",
+        "inverted": false,
+        "label": {
+          "pt": "META SOB MEDIDA"
+        },
+        "headline": {
+          "pt": "Calorias feitas\npro *seu corpo*."
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/05.png"
+      },
+      {
+        "id": "tobi_6",
+        "layout": "device-bottom",
+        "inverted": false,
+        "label": {
+          "pt": "SEU OBJETIVO"
+        },
+        "headline": {
+          "pt": "Veja quando\nvocê *chega lá*."
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/06.png"
+      },
+      {
+        "id": "tobi_7",
+        "layout": "no-device",
+        "inverted": true,
+        "label": {
+          "pt": "E TEM MAIS"
+        },
+        "headline": {
+          "pt": "Código de barras\nDitado por voz\nWhey de marca\nTabela TACO\n*Sem login*"
+        },
+        "screenshot": ""
+      }
+    ]
+  }
+}
