@@ -19,6 +19,11 @@ struct PaywallShowcase: View {
         Line(text: "1 scoop de whey Growth", kcal: 120, carbs: 3, protein: 24, fat: 1.5),
     ]
     private static let goal = 2000
+    private static let more: [(symbol: String, text: String)] = [
+        ("dumbbell.fill", "Whey, marcas e fast food no ponto"),
+        ("scope", "Calorias e macros sob medida"),
+        ("bell.badge.fill", "Lembretes pra não esquecer de anotar"),
+    ]
     /// O widget da tela de início tem esse lado; aqui ele encolhe pro quadradinho.
     private static let widgetSide: CGFloat = 158
 
@@ -32,7 +37,7 @@ struct PaywallShowcase: View {
     private var protein: Int { Int(done.reduce(0) { $0 + $1.protein }.rounded()) }
 
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 14) {
             feature("Escreve do seu jeito, ele conta tudo") { note }
                 .reveal(isShown, order: 0)
 
@@ -54,6 +59,17 @@ struct PaywallShowcase: View {
                 feature("Widget") { widget }
                     .reveal(isShown, order: 3)
             }
+
+            // O resto do que o Tobi faz, por escrito: não cabe em quadradinho.
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(Array(Self.more.enumerated()), id: \.offset) { index, item in
+                    Label(item.text, systemImage: item.symbol)
+                        .labelStyle(MoreLabelStyle())
+                        .reveal(isShown, order: 4 + index)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 4)
         }
         .sensoryFeedback(.selection, trigger: counted)
         .task(id: isShown) { await play() }
@@ -173,5 +189,20 @@ struct PaywallShowcase: View {
 
     private func wait(_ milliseconds: Int) async -> Bool {
         (try? await Task.sleep(for: .milliseconds(milliseconds))) != nil
+    }
+}
+
+private struct MoreLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 12) {
+            configuration.icon
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.indigo)
+                .frame(width: 22)
+            configuration.title
+                .font(.system(size: 15, weight: .medium))
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+        }
     }
 }

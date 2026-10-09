@@ -167,7 +167,7 @@ struct PaywallStep: View {
                 .reveal(shown, order: 0)
 
             PaywallShowcase(isShown: shown)
-                .padding(.top, 22)
+                .padding(.top, 16)
 
             Spacer(minLength: 16)
 
